@@ -46,12 +46,47 @@ db = st.session_state.db
 st.sidebar.title("⚙️ Cấu Hình Lớp Học")
 
 class_list = list(db["classes"].keys())
+
+# Đảm bảo luôn có ít nhất một lớp mặc định nếu database trống rỗng
 if not class_list:
     class_list = ["6A1"]
     db["classes"]["6A1"] = []
+    db["currentClass"] = "6A1"
+    save_database(db)
 
-current_class = st.sidebar.selectbox("Chọn lớp giảng dạy:", class_list, index=class_list.index(db["currentClass"]) if db["currentClass"] in class_list else 0)
-db["currentClass"] = current_class
+# CHỈNH SỬA BỐ CỤC: Đặt hộp chọn lớp và nút Xóa nằm song song nhau
+col_select, col_delete = st.sidebar.columns([3, 1.2])
+
+with col_select:
+    current_class = st.selectbox(
+        "Chọn lớp giảng dạy:", 
+        class_list, 
+        index=class_list.index(db["currentClass"]) if db["currentClass"] in class_list else 0,
+        label_visibility="collapsed" # Ẩn nhãn để đặt nằm ngang cho đẹp
+    )
+    db["currentClass"] = current_class
+
+with col_delete:
+    # Nút bấm xóa lớp hiện tại
+    if st.button("🗑️ Xóa lớp", help=f"Xóa vĩnh viễn lớp {current_class} và toàn bộ học sinh bên trong"):
+        if current_class in db["classes"]:
+            del db["classes"][current_class] # Xóa lớp khỏi bộ nhớ
+            
+            # Cập nhật lại danh sách sau khi xóa
+            remaining_classes = list(db["classes"].keys())
+            if remaining_classes:
+                db["currentClass"] = remaining_classes[0] # Chuyển sang lớp đầu tiên còn lại
+            else:
+                # Nếu không còn lớp nào, tạo lại lớp mặc định trống
+                db["classes"]["6A1"] = []
+                db["currentClass"] = "6A1"
+            
+            save_database(db)
+            st.toast(f"❌ Đã xóa lớp {current_class}!", icon="🗑️")
+            st.rerun()
+
+# Khai báo lại lớp để hiển thị nhãn trạng thái chính xác
+st.sidebar.caption(f"Lớp đang mở: **{current_class}**")
 
 # 1. Thêm lớp mới nhanh
 new_class_input = st.sidebar.text_input("➕ Tạo lớp học mới:")
@@ -65,11 +100,11 @@ if st.sidebar.button("Tạo lớp") and new_class_input.strip():
 
 st.sidebar.write("---")
 
-# 2. TÍNH NĂNG MỚI: NHẬP DÀNH SÁCH HÀNG LOẠT TỪ EXCEL
+# 2. NHẬP DÀNH SÁCH HÀNG LOẠT TỪ EXCEL
 st.sidebar.subheader("📥 Nhập danh sách từ Excel")
 st.sidebar.caption("Thầy quét khối cột 'Họ và tên' trong Excel, bấm Ctrl+C rồi dán vào ô dưới đây:")
 
-excel_paste = st.sidebar.text_area("Dán danh sách học sinh vào đây (mỗi tên 1 dòng):", height=150, key="excel_input")
+excel_paste = st.sidebar.text_area("Dán danh sách học sinh vào đây (mỗi tên 1 dòng):", height=120, key="excel_input")
 
 col_ex1, col_ex2 = st.sidebar.columns(2)
 with col_ex1:
@@ -94,7 +129,7 @@ with col_ex2:
     if st.button("🔄 Ghi đè lớp", help="Xóa sạch danh sách hiện tại của lớp này và thay bằng danh sách mới"):
         if excel_paste.strip():
             lines = [line.strip() for line in excel_paste.split("\n") if line.strip()]
-            db["classes"][current_class] = [] # Xóa sạch lớp hiện tại
+            db["classes"][current_class] = []
             for idx, name in enumerate(lines):
                 db["classes"][current_class].append({
                     "id": str(101 + idx),
