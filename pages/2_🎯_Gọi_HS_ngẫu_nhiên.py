@@ -380,7 +380,7 @@ frontend_html = f"""
                     const arcSize = (Math.PI * 2) / students.length;
                     const normalizedAngle = (Math.PI * 2 - (wheelAngle % (Math.PI * 2))) % (Math.PI * 2);
                     
-                    let correctedAngle = normalizedAngle + (Math.PI / 2);
+                    let correctedAngle = normalizedAngle - (Math.PI / 2);
                     if (correctedAngle >= Math.PI * 2) correctedAngle -= Math.PI * 2;
                     
                     const winningIndex = Math.floor(correctedAngle / arcSize);
