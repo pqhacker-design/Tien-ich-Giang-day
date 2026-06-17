@@ -84,14 +84,7 @@ with col1:
                         
                     except Exception as e:
                         st.error(f"❌ Đã xảy ra lỗi trong quá trình xử lý: {str(e)}")
-        # Nút Download File Word đã hoàn thiện
-        st.download_button(
-            label="💾 TẢI XUỐNG GIÁO ÁN TÍCH HỢP (.DOCX)",
-            data=st.session_state['processed_file'],
-            file_name="KHBD_TichHopNangLucSo.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            use_container_width=True
-        )
+        
 with col2:
     st.subheader("🖥️ 2. Kết quả & Tải về")
     
@@ -115,6 +108,14 @@ with col2:
                     st.markdown(f"**Nội dung số được chèn vào:** <span style='color:#0066CC; font-weight:bold;'>{content}</span>", unsafe_allow_html=True)
         
         st.markdown("---")
-        
+
+    # Nút Download File Word đã hoàn thiện
+        st.download_button(
+            label="💾 TẢI XUỐNG GIÁO ÁN TÍCH HỢP (.DOCX)",
+            data=st.session_state['processed_file'],
+            file_name="KHBD_TichHopNangLucSo.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            use_container_width=True
+        )
     else:
         st.info("Chưa có dữ liệu xử lý. Vui lòng hoàn thành các bước ở cột bên trái.")
