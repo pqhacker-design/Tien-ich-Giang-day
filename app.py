@@ -1,6 +1,6 @@
 import streamlit as st
 
-# 1. Cấu hình trang (Phải đặt ở dòng đầu tiên)
+# 1. Cấu hình trang
 st.set_page_config(
     page_title="Hệ sinh thái Trợ lý Giáo dục AI",
     page_icon="🎓",
@@ -13,15 +13,14 @@ st.write("Chào mừng thầy/cô đến với nền tảng công cụ công ngh
 
 st.markdown("---")
 
-# 3. QUẢN LÝ API KEY TẬP TRUNG (Dùng chung cho tất cả các app con)
+# 3. QUẢN LÝ API KEY TẬP TRUNG
 st.subheader("🔑 Cấu hình kết nối AI")
 gemini_api_key = st.text_input(
     "Nhập Google Gemini API Key của bạn tại đây:",
     type="password",
-    help="Nhập một lần tại đây, tất cả các ứng dụng thành phần (Gia sư, Tích hợp...) sẽ tự động sử dụng chung."
+    help="Nhập một lần tại đây, tất cả các ứng dụng thành phần sẽ tự động sử dụng chung."
 )
 
-# Lưu API Key vào Session State để các file trong thư mục pages/ có thể gọi ra dùng trực tiếp
 if gemini_api_key:
     st.session_state["gemini_api_key"] = gemini_api_key
     st.success("✔️ Đã đồng bộ API Key cho toàn bộ hệ thống!")
@@ -33,41 +32,47 @@ else:
 
 st.markdown("---")
 
-# 4. DANH SÁCH ỨNG DỤNG THÀNH PHẦN (Hiển thị dạng Lưới 2x2)
+# 4. DANH SÁCH ỨNG DỤNG THÀNH PHẦN (Kết hợp nút bấm chuyển trang tự động)
 st.subheader("🛠️ Danh sách các công cụ tiện ích")
 
 # Hàng 1: Gồm 2 cột cho App 1 và App 2
 col1, col2 = st.columns(2)
 
 with col1:
-    with st.container(border=True): # Tạo khung viền chuyên nghiệp
+    with st.container(border=True):
         st.markdown("### 📝 1. Tích hợp Năng lực số")
         st.write("Tự động phân tích giáo án Word (.docx) và chèn nội dung phát triển năng lực số theo đúng các vị trí hoạt động dạy học thực tế.")
-        st.markdown("**👉 Chọn `1 📝 Tich Hop` ở menu bên trái để mở.**")
+        # Sử dụng st.button để tạo hành động chuyển trang
+        if st.button("🚀 Mở ứng dụng Tích hợp KNS", key="btn_tich_hop", use_container_width=True):
+            # Đường dẫn tính từ thư mục pages/
+            st.switch_page("pages/1_📝_Tích_Hợp_KNS.py")
 
 with col2:
     with st.container(border=True):
         st.markdown("### 🤖 2. Gia sư Trợ lý AI")
         st.write("Trợ lý ảo thông minh giải đáp kiến thức chuyên sâu, xây dựng phiếu bài tập và gợi ý phương pháp sư phạm cho giáo viên.")
-        st.markdown("**👉 Chọn `2 🤖 Gia Su` ở menu bên trái để mở.**")
+        if st.button("🚀 Mở ứng dụng Gia sư AI", key="btn_gia_su", use_container_width=True):
+            st.switch_page("pages/2_🤖_Gia_Su.py")
 
-# Thêm một khoảng cách nhỏ giữa 2 hàng
-st.write("")
+st.write("") # Tạo khoảng cách dòng giữa 2 hàng
 
-# Hàng 2: Gồm 2 cột cho App 3 và App 4 (Các ứng dụng mở rộng sau này)
+# Hàng 2: Gồm 2 cột cho App 3 và App 4
 col3, col4 = st.columns(2)
 
 with col3:
     with st.container(border=True):
         st.markdown("### 🎯 3. Gọi học sinh ngẫu nhiên")
         st.write("Công cụ tạo trò chơi vòng quay may mắn, lưới ảnh học sinh để tương tác, gọi tên ngẫu nhiên trong các hoạt động trên lớp học.")
-        st.markdown("**👉 Chọn `3 🎯 Goi Ten` ở menu bên trái để mở.**")
+        # Bạn nhớ đổi lại chính xác tên file của app 3 trong thư mục pages của bạn tại đây nhé
+        if st.button("🚀 Mở ứng dụng Gọi học sinh", key="btn_goi_ten", use_container_width=True):
+            st.switch_page("pages/3_🎯_Gọi_HS_ngẫu_nhiên.py")
 
 with col4:
     with st.container(border=True):
         st.markdown("### 📈 4. Máy tính Lãi suất kép")
         st.write("Ứng dụng tính toán tài chính tích hợp trực quan sinh động, bám sát nội dung thực hành toán học Lớp 8 Bộ sách Kết nối tri thức.")
-        st.markdown("**👉 Chọn `4 📈 Lai Suat` ở menu bên trái để mở.**")
+        if st.button("🚀 Mở ứng dụng Máy tính Lãi suất", key="btn_lai_suat", use_container_width=True):
+            st.switch_page("pages/4_📈_Lai_Suat.py")
 
 st.markdown("---")
 
