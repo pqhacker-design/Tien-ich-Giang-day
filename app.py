@@ -32,7 +32,7 @@ st.sidebar.markdown("---")
 st.sidebar.info(
     "💡 **Hướng dẫn:**\n"
     "1. Nhập API Key ở trên.\n"
-    "2. Tải lên file giáo án `.docx` hiện có.\n"
+    "2. Tải lên file KHBD `.docx` hiện có.\n"
     "3. Nhấn nút xử lý để AI tự động phân tích và chèn cấu trúc năng lực số thích hợp."
 )
 
@@ -40,9 +40,9 @@ st.sidebar.info(
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    st.subheader("📂 1. Tải lên giáo án gốc")
+    st.subheader("📂 1. Tải lên KHBD gốc")
     uploaded_file = st.file_uploader(
-        "Chọn file giáo án Word (.docx)", 
+        "Chọn file KHBD Word (.docx)", 
         type=["docx"],
         help="Hệ thống chỉ hỗ trợ định dạng .docx tiêu chuẩn."
     )
