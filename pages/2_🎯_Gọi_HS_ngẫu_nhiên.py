@@ -82,7 +82,7 @@ frontend_html = f"""
         .tab-btn {{ color: #64748b; background-color: transparent; }}
         html[data-theme="dark"] .tab-btn {{ color: #94a3b8; }}
         .tab-btn.active {{ background-color: #4f46e5; color: #ffffff !important; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }}
-        .wheel-container {{ position: relative; width: 420px; height: 420px; max-width: 100%; aspect-ratio: 1/1; }}
+        .wheel-container {{ position: relative; width: 420px; height: 360px; max-width: 100%; aspect-ratio: 1/1; }}
         .wheel-pointer {{ position: absolute; top: -5px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-top: 32px solid #f43f5e; z-index: 40; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.2)); }}
         .card-flip {{ perspective: 1000px; cursor: pointer; }}
         .card-inner {{ position: relative; width: 100%; height: 130px; text-align: center; transition: transform 0.5s; transform-style: preserve-3d; }}
@@ -132,7 +132,7 @@ frontend_html = f"""
                 </div>
                 <div class="lg:col-span-2 flex flex-col items-center justify-center relative py-4">
                     <div class="wheel-pointer"></div>
-                    <div class="wheel-container shadow-xl rounded-full border-4 border-white dark:border-slate-800"><canvas id="wheelCanvas" width="420" height="420"></canvas></div>
+                    <div class="wheel-container shadow-xl rounded-full border-4 border-white dark:border-slate-800"><canvas id="wheelCanvas" width="360" height="360"></canvas></div>
                     <button id="btnSpin" class="mt-6 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-base px-10 py-3.5 rounded-full shadow-lg hover:scale-105 transition transform active:scale-95"><i class="fas fa-play mr-1"></i>BẮT ĐẦU QUAY</button>
                 </div>
             </div>
@@ -424,7 +424,7 @@ frontend_html = f"""
 """
 
 # --- NHÚNG GIAO DIỆN VÀO ỨNG DỤNG STREAMLIT HUB ---
-components.html(frontend_html, height=720, scrolling=False)
+components.html(frontend_html, height=780, scrolling=False)
 
 # --- PANEL QUẢN LÝ THÀNH VIÊN PYTHON (NẰM DƯỚI ỨNG DỤNG) ---
 st.write("---")
