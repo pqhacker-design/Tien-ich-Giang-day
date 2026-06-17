@@ -24,9 +24,9 @@ def load_database():
     return {
         "classes": {
             "6A1": [
-                {"id": "1", "name": "Nguyễn An", "class": "6A1", "gender": "Nam", "avatar": "", "score": 100},
-                {"id": "2", "name": "Trần Thị Bình", "class": "6A1", "gender": "Nữ", "avatar": "", "score": 120},
-                {"id": "3", "name": "Lê Minh Cường", "class": "6A1", "gender": "Nam", "avatar": "", "score": 90}
+                {"id": "1", "name": "Nguyễn An", "class": "6A1", "gender": "Nam", "avatar": "", "score": 0},
+                {"id": "2", "name": "Trần Thị Bình", "class": "6A1", "gender": "Nữ", "avatar": "", "score": 0},
+                {"id": "3", "name": "Lê Minh Cường", "class": "6A1", "gender": "Nam", "avatar": "", "score": 0}
             ]
         },
         "currentClass": "6A1"
@@ -53,7 +53,7 @@ if not class_list:
 current_class = st.sidebar.selectbox("Chọn lớp giảng dạy:", class_list, index=class_list.index(db["currentClass"]) if db["currentClass"] in class_list else 0)
 db["currentClass"] = current_class
 
-# Thêm lớp mới nhanh
+# 1. Thêm lớp mới nhanh
 new_class_input = st.sidebar.text_input("➕ Tạo lớp học mới:")
 if st.sidebar.button("Tạo lớp") and new_class_input.strip():
     c_name = new_class_input.strip()
@@ -62,6 +62,51 @@ if st.sidebar.button("Tạo lớp") and new_class_input.strip():
         db["currentClass"] = c_name
         save_database(db)
         st.rerun()
+
+st.sidebar.write("---")
+
+# 2. TÍNH NĂNG MỚI: NHẬP DÀNH SÁCH HÀNG LOẠT TỪ EXCEL
+st.sidebar.subheader("📥 Nhập danh sách từ Excel")
+st.sidebar.caption("Thầy quét khối cột 'Họ và tên' trong Excel, bấm Ctrl+C rồi dán vào ô dưới đây:")
+
+excel_paste = st.sidebar.text_area("Dán danh sách học sinh vào đây (mỗi tên 1 dòng):", height=150, key="excel_input")
+
+col_ex1, col_ex2 = st.sidebar.columns(2)
+with col_ex1:
+    if st.button("➕ Thêm nối tiếp", help="Giữ lại danh sách cũ, thêm tên mới vào cuối"):
+        if excel_paste.strip():
+            lines = [line.strip() for line in excel_paste.split("\n") if line.strip()]
+            start_id = len(db["classes"][current_class]) + 101
+            for idx, name in enumerate(lines):
+                db["classes"][current_class].append({
+                    "id": str(start_id + idx),
+                    "name": name,
+                    "class": current_class,
+                    "gender": "Nam",
+                    "avatar": "",
+                    "score": 0
+                })
+            save_database(db)
+            st.sidebar.success(f"Đã thêm thêm {len(lines)} học sinh!")
+            st.rerun()
+
+with col_ex2:
+    if st.button("🔄 Ghi đè lớp", help="Xóa sạch danh sách hiện tại của lớp này và thay bằng danh sách mới"):
+        if excel_paste.strip():
+            lines = [line.strip() for line in excel_paste.split("\n") if line.strip()]
+            db["classes"][current_class] = [] # Xóa sạch lớp hiện tại
+            for idx, name in enumerate(lines):
+                db["classes"][current_class].append({
+                    "id": str(101 + idx),
+                    "name": name,
+                    "class": current_class,
+                    "gender": "Nam",
+                    "avatar": "",
+                    "score": 0
+                })
+            save_database(db)
+            st.sidebar.success(f"Đã làm mới lớp với {len(lines)} học sinh!")
+            st.rerun()
 
 # --- ĐỒNG BỘ DỮ LIỆU SANG WEB COMPONENT ---
 db_json_string = json.dumps(db, ensure_ascii=False)
@@ -83,7 +128,6 @@ frontend_html = f"""
         html[data-theme="dark"] .tab-btn {{ color: #94a3b8; }}
         .tab-btn.active {{ background-color: #4f46e5; color: #ffffff !important; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }}
         
-        /* Đfont ĐÃ FIX ĐỒNG BỘ: Đặt kích thước khung chứa chuẩn 380px */
         .wheel-container {{ 
             position: relative; 
             width: 380px; 
@@ -94,7 +138,6 @@ frontend_html = f"""
             align-items: center;
             justify-content: center;
         }}
-        /* Đfont ĐÃ FIX ĐỒNG BỘ: Mũi tên đỏ trỏ chính xác từ đỉnh 12h vào tâm */
         .wheel-pointer {{ 
             position: absolute; 
             top: -12px; 
@@ -267,7 +310,6 @@ frontend_html = f"""
             }}
         }}
 
-        // Đfont ĐÃ SỬA: Hàm vẽ chuẩn tọa độ đồng tâm tuyệt đối
         function initWheelCanvas() {{
             const canvas = document.getElementById("wheelCanvas");
             if (!canvas) return;
@@ -276,7 +318,7 @@ frontend_html = f"""
             document.getElementById("wheelAttendanceStatus").innerText = `Đang tham gia: ${{students.length}} HS. Loại trừ: ${{excludedStudentIds.size}}.`;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const center = canvas.width / 2; // = 250px (Luôn luôn nằm chính giữa canvas)
+            const center = canvas.width / 2;
             
             if (students.length === 0) {{
                 ctx.fillStyle = "#94a3b8"; ctx.font = "bold 16px sans-serif"; ctx.textAlign = "center";
@@ -298,7 +340,6 @@ frontend_html = f"""
                 ctx.strokeStyle = "#ffffff"; 
                 ctx.stroke();
                 
-                // Vẽ chữ học sinh
                 ctx.save(); 
                 ctx.fillStyle = "#ffffff"; 
                 ctx.textAlign = "right"; 
@@ -309,7 +350,6 @@ frontend_html = f"""
                 ctx.restore();
             }});
             
-            // Đfont ĐÃ SỬA: Vẽ tâm tròn trắng đồng tâm tuyệt đối, không bị lệch
             ctx.beginPath(); 
             ctx.fillStyle = "#ffffff"; 
             ctx.arc(center, center, 24, 0, Math.PI * 2); 
@@ -340,7 +380,6 @@ frontend_html = f"""
                     const arcSize = (Math.PI * 2) / students.length;
                     const normalizedAngle = (Math.PI * 2 - (wheelAngle % (Math.PI * 2))) % (Math.PI * 2);
                     
-                    // Con trỏ cố định ở đỉnh 12h (tương ứng góc góc -PI/2 hay +3*PI/2)
                     let correctedAngle = normalizedAngle + (Math.PI / 2);
                     if (correctedAngle >= Math.PI * 2) correctedAngle -= Math.PI * 2;
                     
@@ -476,7 +515,6 @@ frontend_html = f"""
             initWheelCanvas();
         }});
 
-        // Chạy khởi tạo lại vòng quay sau khi giao diện render ổn định
         setTimeout(initWheelCanvas, 350);
     </script>
 </body>
