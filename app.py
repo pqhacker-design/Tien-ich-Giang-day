@@ -111,7 +111,7 @@ with col2:
 
     # Nút Download File Word đã hoàn thiện
         st.download_button(
-            label="💾 TẢI XUỐNG GIÁO ÁN TÍCH HỢP (.DOCX)",
+            label="💾 TẢI XUỐNG KHBD ĐÃ TÍCH HỢP (.DOCX)",
             data=st.session_state['processed_file'],
             file_name="KHBD_TichHopNangLucSo.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
