@@ -14,13 +14,7 @@ st.set_page_config(
 DB_FILE = "students_data.json"
 
 # --- HÀM XỬ LÝ DỮ LIỆU FILE (BACKEND PYTHON) ---
-def load_database():
-    if os.path.exists(DB_FILE):
-        try:
-            with open(DB_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            pass
+def load_default_database():
     return {
         "classes": {
             "6A1": [
@@ -32,6 +26,15 @@ def load_database():
         "currentClass": "6A1"
     }
 
+def load_database():
+    if os.path.exists(DB_FILE):
+        try:
+            with open(DB_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            pass
+    return load_default_database()
+
 def save_database(db):
     with open(DB_FILE, "w", encoding="utf-8") as f:
         json.dump(db, f, ensure_ascii=False, indent=4)
@@ -40,21 +43,54 @@ def save_database(db):
 if "db" not in st.session_state:
     st.session_state.db = load_database()
 
+# Đảm bảo cấu trúc file hợp lệ
+if "classes" not in st.session_state.db:
+    st.session_state.db = load_default_database()
+
 db = st.session_state.db
 
 # --- GIAO DIỆN QUẢN LÝ DỮ LIỆU TRÊN SIDEBAR STREAMLIT ---
 st.sidebar.title("⚙️ Cấu Hình Lớp Học")
 
-class_list = list(db["classes"].keys())
+# TÍNH NĂNG MỚI: QUẢN LÝ TỆP DỮ LIỆU CÁ NHÂN (IMPORT/EXPORT)
+st.sidebar.subheader("💾 Tệp dữ liệu riêng của thầy/cô")
+st.sidebar.caption("Giúp lưu trữ riêng tư, không lo bị người khác sửa đổi khi dùng chung link web.")
 
-# Đảm bảo luôn có ít nhất một lớp mặc định nếu database trống rỗng
+# 1. Nút Xuất (Export) dữ liệu hiện tại về máy tính cá nhân
+db_ready_to_download = json.dumps(db, ensure_ascii=False, indent=4)
+st.sidebar.download_button(
+    label="📥 Tải dữ liệu về máy (.json)",
+    data=db_ready_to_download,
+    file_name="vong_quay_data.json",
+    mime="application/json",
+    help="Bấm vào đây để sao lưu toàn bộ danh sách lớp và điểm số hiện tại về máy tính của thầy/cô."
+)
+
+# 2. Ô Nạp (Import) dữ liệu từ file có sẵn dưới máy lên
+uploaded_file = st.sidebar.file_uploader("📤 Nạp dữ liệu từ máy lên:", type=["json"], help="Chọn file dữ liệu .json đã tải về trước đó để khôi phục danh sách lớp.")
+if uploaded_file is not None:
+    try:
+        uploaded_db = json.load(uploaded_file)
+        if "classes" in uploaded_db:
+            st.session_state.db = uploaded_db
+            save_database(uploaded_db)
+            st.sidebar.success("Khôi phục dữ liệu thành công!")
+            st.rerun()
+        else:
+            st.sidebar.error("Định dạng file không hợp lệ!")
+    except Exception as e:
+        st.sidebar.error(f"Lỗi đọc file: {e}")
+
+st.sidebar.write("---")
+
+# --- KHU VỰC CHỌN LỚP VÀ QUẢN LÝ ---
+class_list = list(db["classes"].keys())
 if not class_list:
     class_list = ["6A1"]
     db["classes"]["6A1"] = []
     db["currentClass"] = "6A1"
     save_database(db)
 
-# CHỈNH SỬA BỐ CỤC: Đặt hộp chọn lớp và nút Xóa nằm song song nhau
 col_select, col_delete = st.sidebar.columns([3, 1.2])
 
 with col_select:
@@ -62,33 +98,27 @@ with col_select:
         "Chọn lớp giảng dạy:", 
         class_list, 
         index=class_list.index(db["currentClass"]) if db["currentClass"] in class_list else 0,
-        label_visibility="collapsed" # Ẩn nhãn để đặt nằm ngang cho đẹp
+        label_visibility="collapsed"
     )
     db["currentClass"] = current_class
 
 with col_delete:
-    # Nút bấm xóa lớp hiện tại
-    if st.button("🗑️ Xóa lớp", help=f"Xóa vĩnh viễn lớp {current_class} và toàn bộ học sinh bên trong"):
+    if st.button("🗑️ Xóa lớp", help=f"Xóa vĩnh viễn lớp {current_class}"):
         if current_class in db["classes"]:
-            del db["classes"][current_class] # Xóa lớp khỏi bộ nhớ
-            
-            # Cập nhật lại danh sách sau khi xóa
+            del db["classes"][current_class]
             remaining_classes = list(db["classes"].keys())
             if remaining_classes:
-                db["currentClass"] = remaining_classes[0] # Chuyển sang lớp đầu tiên còn lại
+                db["currentClass"] = remaining_classes[0]
             else:
-                # Nếu không còn lớp nào, tạo lại lớp mặc định trống
                 db["classes"]["6A1"] = []
                 db["currentClass"] = "6A1"
-            
             save_database(db)
             st.toast(f"❌ Đã xóa lớp {current_class}!", icon="🗑️")
             st.rerun()
 
-# Khai báo lại lớp để hiển thị nhãn trạng thái chính xác
 st.sidebar.caption(f"Lớp đang mở: **{current_class}**")
 
-# 1. Thêm lớp mới nhanh
+# Thêm lớp mới
 new_class_input = st.sidebar.text_input("➕ Tạo lớp học mới:")
 if st.sidebar.button("Tạo lớp") and new_class_input.strip():
     c_name = new_class_input.strip()
@@ -100,44 +130,32 @@ if st.sidebar.button("Tạo lớp") and new_class_input.strip():
 
 st.sidebar.write("---")
 
-# 2. NHẬP DÀNH SÁCH HÀNG LOẠT TỪ EXCEL
+# NHẬP DÀNH SÁCH HÀNG LOẠT TỪ EXCEL
 st.sidebar.subheader("📥 Nhập danh sách từ Excel")
-st.sidebar.caption("Thầy quét khối cột 'Họ và tên' trong Excel, bấm Ctrl+C rồi dán vào ô dưới đây:")
-
-excel_paste = st.sidebar.text_area("Dán danh sách học sinh vào đây (mỗi tên 1 dòng):", height=120, key="excel_input")
+excel_paste = st.sidebar.text_area("Dán danh sách học sinh vào đây (mỗi tên 1 dòng):", height=100, key="excel_input")
 
 col_ex1, col_ex2 = st.sidebar.columns(2)
 with col_ex1:
-    if st.button("➕ Thêm nối tiếp", help="Giữ lại danh sách cũ, thêm tên mới vào cuối"):
+    if st.button("➕ Thêm nối tiếp"):
         if excel_paste.strip():
             lines = [line.strip() for line in excel_paste.split("\n") if line.strip()]
             start_id = len(db["classes"][current_class]) + 101
             for idx, name in enumerate(lines):
                 db["classes"][current_class].append({
-                    "id": str(start_id + idx),
-                    "name": name,
-                    "class": current_class,
-                    "gender": "Nam",
-                    "avatar": "",
-                    "score": 0
+                    "id": str(start_id + idx), "name": name, "class": current_class, "gender": "Nam", "avatar": "", "score": 0
                 })
             save_database(db)
             st.sidebar.success(f"Đã thêm thêm {len(lines)} học sinh!")
             st.rerun()
 
 with col_ex2:
-    if st.button("🔄 Ghi đè lớp", help="Xóa sạch danh sách hiện tại của lớp này và thay bằng danh sách mới"):
+    if st.button("🔄 Ghi đè lớp"):
         if excel_paste.strip():
             lines = [line.strip() for line in excel_paste.split("\n") if line.strip()]
             db["classes"][current_class] = []
             for idx, name in enumerate(lines):
                 db["classes"][current_class].append({
-                    "id": str(101 + idx),
-                    "name": name,
-                    "class": current_class,
-                    "gender": "Nam",
-                    "avatar": "",
-                    "score": 0
+                    "id": str(101 + idx), "name": name, "class": current_class, "gender": "Nam", "avatar": "", "score": 0
                 })
             save_database(db)
             st.sidebar.success(f"Đã làm mới lớp với {len(lines)} học sinh!")
@@ -163,34 +181,9 @@ frontend_html = f"""
         html[data-theme="dark"] .tab-btn {{ color: #94a3b8; }}
         .tab-btn.active {{ background-color: #4f46e5; color: #ffffff !important; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }}
         
-        .wheel-container {{ 
-            position: relative; 
-            width: 380px; 
-            height: 380px; 
-            max-width: 100%; 
-            aspect-ratio: 1/1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }}
-        .wheel-pointer {{ 
-            position: absolute; 
-            top: -12px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            width: 0; 
-            height: 0; 
-            border-left: 16px solid transparent; 
-            border-right: 16px solid transparent; 
-            border-top: 28px solid #f43f5e; 
-            z-index: 50; 
-            filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.15)); 
-        }}
-        #wheelCanvas {{
-            width: 100%;
-            height: 100%;
-            display: block;
-        }}
+        .wheel-container {{ position: relative; width: 380px; height: 380px; max-width: 100%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; }}
+        .wheel-pointer {{ position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-top: 28px solid #f43f5e; z-index: 50; filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.15)); }}
+        #wheelCanvas {{ width: 100%; height: 100%; display: block; }}
         
         .card-flip {{ perspective: 1000px; cursor: pointer; }}
         .card-inner {{ position: relative; width: 100%; height: 130px; text-align: center; transition: transform 0.5s; transform-style: preserve-3d; }}
@@ -200,7 +193,6 @@ frontend_html = f"""
         .card-back {{ background-color: white; transform: rotateY(180deg); }}
         html[data-theme="dark"] .card-back {{ background-color: #1e293b; }}
         .group-drop-zone {{ min-height: 110px; }}
-        .group-drop-zone.drag-over {{ background-color: rgba(79, 70, 229, 0.1); border-color: #4f46e5 !important; }}
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
@@ -301,9 +293,7 @@ frontend_html = f"""
         let isWheelSpinning = false;
         const colors = ["#4f46e5", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#3b82f6", "#ef4444", "#06b6d4"];
 
-        function getCurrentStudents() {{
-            return database.classes[currentClassName] || [];
-        }}
+        function getCurrentStudents() {{ return database.classes[currentClassName] || []; }}
 
         function switchTab(tabId) {{
             document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
@@ -319,42 +309,33 @@ frontend_html = f"""
         function playSound(type) {{
             try {{
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
                 osc.connect(gain); gain.connect(audioCtx.destination);
                 if (type === 'tick') {{
-                    osc.frequency.setValueAtTime(550, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+                    osc.frequency.setValueAtTime(550, audioCtx.currentTime); gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04); osc.start(); osc.stop(audioCtx.currentTime + 0.05);
                 }} else if (type === 'win') {{
                     osc.type = 'triangle'; osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.25);
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+                    osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.25); gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
                 }}
             }} catch(e) {{}}
         }}
 
         function speakVietnamese(text) {{
             if ('speechSynthesis' in window) {{
-                const utter = new SpeechSynthesisUtterance(text);
-                utter.lang = 'vi-VN';
-                window.speechSynthesis.speak(utter);
+                const utter = new SpeechSynthesisUtterance(text); utter.lang = 'vi-VN'; window.speechSynthesis.speak(utter);
             }}
         }}
 
         function initWheelCanvas() {{
-            const canvas = document.getElementById("wheelCanvas");
-            if (!canvas) return;
+            const canvas = document.getElementById("wheelCanvas"); if (!canvas) return;
             const ctx = canvas.getContext("2d");
             const students = getCurrentStudents().filter(s => !excludedStudentIds.has(s.id));
             document.getElementById("wheelAttendanceStatus").innerText = `Đang tham gia: ${{students.length}} HS. Loại trừ: ${{excludedStudentIds.size}}.`;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const center = canvas.width / 2;
-            
             if (students.length === 0) {{
                 ctx.fillStyle = "#94a3b8"; ctx.font = "bold 16px sans-serif"; ctx.textAlign = "center";
                 ctx.fillText("Vòng quay trống", center, center); return;
@@ -362,36 +343,18 @@ frontend_html = f"""
             
             const arcSize = (Math.PI * 2) / students.length;
             students.forEach((s, i) => {{
-                const startAngle = wheelAngle + (i * arcSize);
-                const endAngle = startAngle + arcSize;
+                const startAngle = wheelAngle + (i * arcSize); const endAngle = startAngle + arcSize;
+                ctx.beginPath(); ctx.fillStyle = colors[i % colors.length]; ctx.moveTo(center, center);
+                ctx.arc(center, center, center - 12, startAngle, endAngle); ctx.fill();
+                ctx.lineWidth = 2; ctx.strokeStyle = "#ffffff"; ctx.stroke();
                 
-                ctx.beginPath(); 
-                ctx.fillStyle = colors[i % colors.length]; 
-                ctx.moveTo(center, center);
-                ctx.arc(center, center, center - 12, startAngle, endAngle); 
-                ctx.fill();
-                
-                ctx.lineWidth = 2; 
-                ctx.strokeStyle = "#ffffff"; 
-                ctx.stroke();
-                
-                ctx.save(); 
-                ctx.fillStyle = "#ffffff"; 
-                ctx.textAlign = "right"; 
-                ctx.font = "bold 15px sans-serif";
-                ctx.translate(center, center); 
-                ctx.rotate(startAngle + arcSize / 2);
-                ctx.fillText(s.name, center - 35, 5); 
-                ctx.restore();
+                ctx.save(); ctx.fillStyle = "#ffffff"; ctx.textAlign = "right"; ctx.font = "bold 15px sans-serif";
+                ctx.translate(center, center); ctx.rotate(startAngle + arcSize / 2);
+                ctx.fillText(s.name, center - 35, 5); ctx.restore();
             }});
             
-            ctx.beginPath(); 
-            ctx.fillStyle = "#ffffff"; 
-            ctx.arc(center, center, 24, 0, Math.PI * 2); 
-            ctx.fill();
-            ctx.strokeStyle = "#4f46e5"; 
-            ctx.lineWidth = 4; 
-            ctx.stroke();
+            ctx.beginPath(); ctx.fillStyle = "#ffffff"; ctx.arc(center, center, 24, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = "#4f46e5"; ctx.lineWidth = 4; ctx.stroke();
         }}
 
         document.getElementById("btnSpin").addEventListener("click", () => {{
@@ -404,22 +367,16 @@ frontend_html = f"""
             let lastTickAngle = 0;
             function animateWheel(timestamp) {{
                 if (!startTimestamp) startTimestamp = timestamp;
-                const progress = timestamp - startTimestamp;
-                const ratio = Math.min(progress / duration, 1);
-                const easeOutQuad = 1 - Math.pow(1 - ratio, 3);
-                wheelAngle = easeOutQuad * targetSpinAngle;
+                const progress = timestamp - startTimestamp; const ratio = Math.min(progress / duration, 1);
+                const easeOutQuad = 1 - Math.pow(1 - ratio, 3); wheelAngle = easeOutQuad * targetSpinAngle;
                 if (wheelAngle - lastTickAngle > 0.2) {{ playSound('tick'); lastTickAngle = wheelAngle; }}
                 initWheelCanvas();
                 if (ratio < 1) {{ requestAnimationFrame(animateWheel); }} else {{
-                    isWheelSpinning = false;
-                    const arcSize = (Math.PI * 2) / students.length;
+                    isWheelSpinning = false; const arcSize = (Math.PI * 2) / students.length;
                     const normalizedAngle = (Math.PI * 2 - (wheelAngle % (Math.PI * 2))) % (Math.PI * 2);
-                    
-                    let correctedAngle = normalizedAngle - (Math.PI / 2);
+                    let correctedAngle = normalizedAngle + (Math.PI / 2);
                     if (correctedAngle >= Math.PI * 2) correctedAngle -= Math.PI * 2;
-                    
-                    const winningIndex = Math.floor(correctedAngle / arcSize);
-                    triggerWinner(students[winningIndex]);
+                    const winningIndex = Math.floor(correctedAngle / arcSize); triggerWinner(students[winningIndex]);
                 }}
             }}
             requestAnimationFrame(animateWheel);
@@ -430,39 +387,29 @@ frontend_html = f"""
             confetti({{ particleCount: 100, spread: 60, origin: {{ y: 0.7 }} }});
             document.getElementById("winnerName").innerText = student.name;
             const modal = document.getElementById("winnerModal");
-            modal.classList.remove("pointer-events-none", "opacity-0");
-            modal.children[0].classList.remove("scale-95");
-            playSound('win');
-            setTimeout(() => {{ speakVietnamese(student.name); }}, 300);
-            if (document.querySelector('input[name="wheelMode"]:checked').value === 'remove') {{
-                excludedStudentIds.add(student.id);
-            }}
+            modal.classList.remove("pointer-events-none", "opacity-0"); modal.children[0].classList.remove("scale-95");
+            playSound('win'); setTimeout(() => {{ speakVietnamese(student.name); }}, 300);
+            if (document.querySelector('input[name="wheelMode"]:checked').value === 'remove') {{ excludedStudentIds.add(student.id); }}
         }}
 
         window.closeWinnerModal = function() {{
             const modal = document.getElementById("winnerModal");
-            modal.classList.add("pointer-events-none", "opacity-0");
-            modal.children[0].classList.add("scale-95");
+            modal.classList.add("pointer-events-none", "opacity-0"); modal.children[0].classList.add("scale-95");
             initWheelCanvas();
         }}
 
         window.modifyWinnerScore = function(points) {{
             const students = getCurrentStudents();
             const student = students.find(s => s.name === document.getElementById("winnerName").innerText);
-            if(student) {{
-                student.score = (student.score || 0) + points;
-            }}
+            if(student) {{ student.score = (student.score || 0) + points; }}
             closeWinnerModal();
         }}
 
         function renderInteractiveGrid() {{
-            const students = getCurrentStudents();
-            const grid = document.getElementById("interactiveGrid");
-            grid.innerHTML = "";
+            const students = getCurrentStudents(); const grid = document.getElementById("interactiveGrid"); grid.innerHTML = "";
             const isSecret = document.getElementById("chkSecretMode").checked;
             students.forEach(s => {{
-                const div = document.createElement("div");
-                div.className = `card-flip ${{isSecret ? '' : 'flipped'}}`;
+                const div = document.createElement("div"); div.className = `card-flip ${{isSecret ? '' : 'flipped'}}`;
                 div.innerHTML = `
                     <div class="card-inner">
                         <div class="card-front"><i class="fas fa-question text-xl opacity-60"></i></div>
@@ -473,9 +420,7 @@ frontend_html = f"""
                     </div>
                 `;
                 div.addEventListener("click", () => {{
-                    if (isSecret && !div.classList.contains("flipped")) {{
-                        div.classList.add("flipped"); playSound('tick');
-                    }} else {{ triggerWinner(s); }}
+                    if (isSecret && !div.classList.contains("flipped")) {{ div.classList.add("flipped"); playSound('tick'); }} else {{ triggerWinner(s); }}
                 }});
                 grid.appendChild(div);
             }});
@@ -488,37 +433,27 @@ frontend_html = f"""
             let count = 0;
             let interval = setInterval(() => {{
                 const r = students[Math.floor(Math.random() * students.length)];
-                document.getElementById("randomDisplayName").innerText = r.name.toUpperCase();
-                playSound('tick'); count++;
+                document.getElementById("randomDisplayName").innerText = r.name.toUpperCase(); playSound('tick'); count++;
                 if (count > 12) {{
-                    clearInterval(interval);
-                    const final = students[Math.floor(Math.random() * students.length)];
-                    document.getElementById("randomDisplayName").innerText = final.name.toUpperCase();
-                    triggerWinner(final);
+                    clearInterval(interval); const final = students[Math.floor(Math.random() * students.length)];
+                    document.getElementById("randomDisplayName").innerText = final.name.toUpperCase(); triggerWinner(final);
                 }}
             }}, 100);
         }});
 
         document.getElementById("btnGenerateGroups").addEventListener("click", () => {{
             const students = [...getCurrentStudents()]; if (students.length === 0) return;
-            for (let i = students.length - 1; i > 0; i--) {{
-                const j = Math.floor(Math.random() * (i + 1)); [students[i], students[j]] = [students[j], students[i]];
-            }}
-            const rule = document.getElementById("groupRule").value;
-            const val = parseInt(document.getElementById("groupValue").value) || 2;
+            for (let i = students.length - 1; i > 0; i--) {{ const j = Math.floor(Math.random() * (i + 1)); [students[i], students[j]] = [students[j], students[i]]; }}
+            const rule = document.getElementById("groupRule").value; const val = parseInt(document.getElementById("groupValue").value) || 2;
             let numG = rule === 'numGroups' ? val : Math.ceil(students.length / val);
             const container = document.getElementById("groupsContainer"); container.innerHTML = "";
-            
             for(let g=0; g<numG; g++) {{
-                const gBox = document.createElement("div");
-                gBox.className = "bg-white dark:bg-slate-800 border p-3 rounded-xl";
-                gBox.innerHTML = `<h4 class="font-bold text-xs text-indigo-600 mb-2">Nhóm ${{g+1}}</h4><div class="group-drop-zone space-y-1" data-g="${{g}}"></div>`;
-                container.appendChild(gBox);
+                const gBox = document.createElement("div"); gBox.className = "bg-white dark:bg-slate-800 border p-3 rounded-xl";
+                gBox.innerHTML = `<h4 class="font-bold text-xs text-indigo-600 mb-2">Nhóm ${{g+1}}</h4><div class="group-drop-zone space-y-1" data-g="${{g}}"></div>`; container.appendChild(gBox);
             }}
             students.forEach((s, idx) => {{
                 const targetZone = container.querySelectorAll(".group-drop-zone")[idx % numG];
-                const item = document.createElement("div");
-                item.className = "bg-slate-50 dark:bg-slate-700 p-1.5 text-[11px] font-medium rounded-lg";
+                const item = document.createElement("div"); item.className = "bg-slate-50 dark:bg-slate-700 p-1.5 text-[11px] font-medium rounded-lg";
                 item.innerText = s.name; targetZone.appendChild(item);
             }});
         }});
@@ -529,8 +464,7 @@ frontend_html = f"""
             students.forEach((s, i) => {{
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-                    <td class="p-3 text-center font-bold">${{i+1}}</td>
-                    <td class="p-3 font-bold">${{s.name}}</td>
+                    <td class="p-3 text-center font-bold">${{i+1}}</td> <td class="p-3 font-bold">${{s.name}}</td>
                     <td class="p-3 text-center text-indigo-600 font-bold">${{s.score}}đ</td>
                     <td class="p-3 text-center"><button onclick="addScoreDirect('${{s.id}}', 5)" class="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded font-bold text-[10px]">+5đ</button></td>
                 `;
@@ -539,8 +473,7 @@ frontend_html = f"""
         }}
 
         window.addScoreDirect = function(id, val) {{
-            const s = getCurrentStudents().find(x => x.id === id);
-            if(s) {{ s.score = (s.score || 0) + val; renderLeaderboard(); }}
+            const s = getCurrentStudents().find(x => x.id === id); if(s) {{ s.score = (s.score || 0) + val; renderLeaderboard(); }}
         }}
 
         document.getElementById("btnToggleTheme").addEventListener("click", () => {{
@@ -557,15 +490,14 @@ frontend_html = f"""
 """
 
 # --- NHÚNG GIAO DIỆN VÀO ỨNG DỤNG STREAMLIT HUB ---
-components.html(frontend_html, height=800, scrolling=False)
+components.html(frontend_html, height=780, scrolling=True)
 
 # --- PANEL QUẢN LÝ THÀNH VIÊN PYTHON (NẰM DƯỚI ỨNG DỤNG) ---
 st.write("---")
 st.subheader(f"📊 Bảng Chỉnh Sửa Học Sinh Lớp {current_class} (Admin Backend)")
 
-students_list = db["classes"][current_class]
+students_list = db["classes"].get(current_class, [])
 
-# Giao diện thêm nhanh học sinh bằng Python Streamlit
 with st.form("Add Student Form", clear_on_submit=True):
     col1, col2 = st.columns(2)
     with col1:
@@ -575,18 +507,12 @@ with st.form("Add Student Form", clear_on_submit=True):
     
     if st.form_submit_button("🔥 Xác Nhận Thêm Vào Lớp") and new_name.strip():
         students_list.append({
-            "id": str(len(students_list) + 101),
-            "name": new_name.strip(),
-            "class": current_class,
-            "gender": new_gender,
-            "avatar": "",
-            "score": 0
+            "id": str(len(students_list) + 101), "name": new_name.strip(), "class": current_class, "gender": new_gender, "avatar": "", "score": 0
         })
         save_database(db)
         st.success(f"Đã thêm thành công học sinh {new_name}!")
         st.rerun()
 
-# Hiển thị và xóa học sinh
 if students_list:
     for idx, s in enumerate(students_list):
         c_item1, c_item2, c_item3 = st.columns([3, 2, 1])
