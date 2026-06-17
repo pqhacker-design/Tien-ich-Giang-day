@@ -522,7 +522,7 @@ frontend_html = f"""
 """
 
 # --- NHÚNG GIAO DIỆN VÀO ỨNG DỤNG STREAMLIT HUB ---
-components.html(frontend_html, height=780, scrolling=False)
+components.html(frontend_html, height=800, scrolling=False)
 
 # --- PANEL QUẢN LÝ THÀNH VIÊN PYTHON (NẰM DƯỚI ỨNG DỤNG) ---
 st.write("---")
