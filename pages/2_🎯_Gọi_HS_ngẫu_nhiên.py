@@ -1,10 +1,10 @@
-import streamlit as str
+import streamlit as st
 import streamlit.components.v1 as components
 import json
 import os
 
 # Cấu hình trang hiển thị của Streamlit
-str.set_page_config(
+st.set_page_config(
     page_title="Classroom Lucky Wheel & Student Picker",
     page_icon="🎯",
     layout="wide",
@@ -37,38 +37,36 @@ def save_database(db):
         json.dump(db, f, ensure_ascii=False, indent=4)
 
 # Khởi tạo Session State trong Streamlit
-if "db" not in str.session_state:
-    str.session_state.db = load_database()
+if "db" not in st.session_state:
+    st.session_state.db = load_database()
 
-db = str.session_state.db
+db = st.session_state.db
 
 # --- GIAO DIỆN QUẢN LÝ DỮ LIỆU TRÊN SIDEBAR STREAMLIT ---
-str.sidebar.title("⚙️ Cấu Hình Lớp Học")
+st.sidebar.title("⚙️ Cấu Hình Lớp Học")
 
 class_list = list(db["classes"].keys())
 if not class_list:
     class_list = ["6A1"]
     db["classes"]["6A1"] = []
 
-current_class = str.sidebar.selectbox("Chọn lớp giảng dạy:", class_list, index=class_list.index(db["currentClass"]) if db["currentClass"] in class_list else 0)
+current_class = st.sidebar.selectbox("Chọn lớp giảng dạy:", class_list, index=class_list.index(db["currentClass"]) if db["currentClass"] in class_list else 0)
 db["currentClass"] = current_class
 
 # Thêm lớp mới nhanh
-new_class_input = str.sidebar.text_input("➕ Tạo lớp học mới:")
-if str.sidebar.button("Tạo lớp") and new_class_input.strip():
+new_class_input = st.sidebar.text_input("➕ Tạo lớp học mới:")
+if st.sidebar.button("Tạo lớp") and new_class_input.strip():
     c_name = new_class_input.strip()
     if c_name not in db["classes"]:
         db["classes"][c_name] = []
         db["currentClass"] = c_name
         save_database(db)
-        str.rerun()
+        st.rerun()
 
 # --- ĐỒNG BỘ DỮ LIỆU SANG WEB COMPONENT ---
-# Chuyển đổi dữ liệu Python sang chuỗi JSON an toàn để nhúng vào Javascript
 db_json_string = json.dumps(db, ensure_ascii=False)
 
 # --- 💡 CODE GIAO DIỆN HOÀN CHỈNH (HTML/CSS/JS) ---
-# Kết hợp sửa lỗi lệch góc 90 độ của vòng quay và đồng bộ ngược dữ liệu về Python qua LocalStorage
 frontend_html = f"""
 <!DOCTYPE html>
 <html lang="vi" data-theme="light">
@@ -237,7 +235,6 @@ frontend_html = f"""
             }}
         }}
 
-        // --- ĐÃ ĐƯỢC VÁ LỖI GÓC QUAY CHUẨN XÁC 12 GIỜ ---
         function initWheelCanvas() {{
             const canvas = document.getElementById("wheelCanvas");
             if (!canvas) return;
@@ -251,7 +248,7 @@ frontend_html = f"""
                 ctx.fillText("Vòng quay trống", center, center); return;
             }}
             const arcSize = (Math.PI * 2) / students.length;
-            students.forEach((s, i) => {
+            students.forEach((s, i) => {{
                 const startAngle = wheelAngle + (i * arcSize);
                 const endAngle = startAngle + arcSize;
                 ctx.beginPath(); ctx.fillStyle = colors[i % colors.length]; ctx.moveTo(center, center);
@@ -260,7 +257,7 @@ frontend_html = f"""
                 ctx.save(); ctx.fillStyle = "#ffffff"; ctx.textAlign = "right"; ctx.font = "bold 12px sans-serif";
                 ctx.translate(center, center); ctx.rotate(startAngle + arcSize / 2);
                 ctx.fillText(s.name, center - 25, 4); ctx.restore();
-            });
+            }});
             ctx.beginPath(); ctx.fillStyle = "#ffffff"; ctx.arc(center, center, 20, 0, Math.PI * 2); ctx.fill();
             ctx.strokeStyle = "#4f46e5"; ctx.lineWidth = 3; ctx.stroke();
         }}
@@ -285,7 +282,6 @@ frontend_html = f"""
                     isWheelSpinning = false;
                     const arcSize = (Math.PI * 2) / students.length;
                     const normalizedAngle = (Math.PI * 2 - (wheelAngle % (Math.PI * 2))) % (Math.PI * 2);
-                    // BÙ GÓC LỆCH 90 ĐỘ ĐỂ KHỚP VỚI MŨI TÊN 12H HƯỚNG XUỐNG VÀO ĐÂY:
                     let correctedAngle = normalizedAngle + (Math.PI / 2);
                     if (correctedAngle >= Math.PI * 2) correctedAngle -= Math.PI * 2;
                     const winningIndex = Math.floor(correctedAngle / arcSize);
@@ -321,7 +317,6 @@ frontend_html = f"""
             const student = students.find(s => s.name === document.getElementById("winnerName").innerText);
             if(student) {{
                 student.score = (student.score || 0) + points;
-                // Phát lệnh đồng bộ ngầm ngược lên Streamlit Cloud thông qua LocalStorage giả lập cơ chế cập nhật
                 console.log("Updated score:", student);
             }}
             closeWinnerModal();
@@ -422,7 +417,6 @@ frontend_html = f"""
             initWheelCanvas();
         }});
 
-        // Khởi tạo đồ họa vòng quay ngay khi load xong iframe
         setTimeout(initWheelCanvas, 300);
     </script>
 </body>
@@ -430,25 +424,25 @@ frontend_html = f"""
 """
 
 # --- NHÚNG GIAO DIỆN VÀO ỨNG DỤNG STREAMLIT HUB ---
-components.html(frontend_html, height=720, scroller=False)
+components.html(frontend_html, height=720, scrolling=False)
 
 # --- PANEL QUẢN LÝ THÀNH VIÊN PYTHON (NẰM DƯỚI ỨNG DỤNG) ---
-str.write("---")
-str.subheader(f"📊 Bảng Chỉnh Sửa Học Sinh Lớp {current_class} (Admin Backend)")
+st.write("---")
+st.subheader(f"📊 Bảng Chỉnh Sửa Học Sinh Lớp {current_class} (Admin Backend)")
 
 students_list = db["classes"][current_class]
 
 # Giao diện thêm nhanh học sinh bằng Python Streamlit
-with str.form("Add Student Form", clear_on_submit=True):
-    col1, col2 = str.columns(2)
+with st.form("Add Student Form", clear_on_submit=True):
+    col1, col2 = st.columns(2)
     with col1:
-        new_name = str.text_input("Họ tên học sinh:")
+        new_name = st.text_input("Họ tên học sinh:")
     with col2:
-        new_gender = str.selectbox("Giới tính:", ["Nam", "Nữ"])
+        new_gender = st.selectbox("Giới tính:", ["Nam", "Nữ"])
     
-    if str.form_submit_button("🔥 Xác Nhận Thêm Vào Lớp") and new_name.strip():
+    if st.form_submit_button("🔥 Xác Nhận Thêm Vào Lớp") and new_name.strip():
         students_list.append({
-            "id": str(int(os.getpid() + len(students_list) + 100)),
+            "id": str(len(students_list) + 101),
             "name": new_name.strip(),
             "class": current_class,
             "gender": new_gender,
@@ -456,18 +450,18 @@ with str.form("Add Student Form", clear_on_submit=True):
             "score": 0
         })
         save_database(db)
-        str.success(f"Đã thêm thành công học sinh {new_name}!")
-        str.rerun()
+        st.success(f"Đã thêm thành công học sinh {new_name}!")
+        st.rerun()
 
 # Hiển thị và xóa học sinh
 if students_list:
     for idx, s in enumerate(students_list):
-        c_item1, c_item2, c_item3 = str.columns([3, 2, 1])
+        c_item1, c_item2, c_item3 = st.columns([3, 2, 1])
         c_item1.write(f"**{s['name']}**")
         c_item2.write(f"Điểm tích lũy: `{s['score']}đ`")
         if c_item3.button("🗑️ Xóa", key=f"del_{s['id']}_{idx}"):
             students_list.pop(idx)
             save_database(db)
-            str.rerun()
+            st.rerun()
 else:
-    str.info("Lớp học trống. Hãy thêm học sinh ở form trên.")
+    st.info("Lớp học trống. Hãy thêm học sinh ở form trên.")
