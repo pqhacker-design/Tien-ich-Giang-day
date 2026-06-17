@@ -66,7 +66,7 @@ if st.sidebar.button("Tạo lớp") and new_class_input.strip():
 # --- ĐỒNG BỘ DỮ LIỆU SANG WEB COMPONENT ---
 db_json_string = json.dumps(db, ensure_ascii=False)
 
-# --- 💡 CODE GIAO DIỆN HOÀN CHỈNH (HTML/CSS/JS) ---
+# --- CODE GIAO DIỆN HOÀN CHỈNH (HTML/CSS/JS) ---
 frontend_html = f"""
 <!DOCTYPE html>
 <html lang="vi" data-theme="light">
@@ -82,8 +82,38 @@ frontend_html = f"""
         .tab-btn {{ color: #64748b; background-color: transparent; }}
         html[data-theme="dark"] .tab-btn {{ color: #94a3b8; }}
         .tab-btn.active {{ background-color: #4f46e5; color: #ffffff !important; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }}
-        .wheel-container {{ position: relative; width: 420px; height: 360px; max-width: 100%; aspect-ratio: 1/1; }}
-        .wheel-pointer {{ position: absolute; top: -5px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-top: 32px solid #f43f5e; z-index: 40; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.2)); }}
+        
+        /* Đfont ĐÃ FIX ĐỒNG BỘ: Đặt kích thước khung chứa chuẩn 380px */
+        .wheel-container {{ 
+            position: relative; 
+            width: 380px; 
+            height: 380px; 
+            max-width: 100%; 
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        /* Đfont ĐÃ FIX ĐỒNG BỘ: Mũi tên đỏ trỏ chính xác từ đỉnh 12h vào tâm */
+        .wheel-pointer {{ 
+            position: absolute; 
+            top: -12px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 0; 
+            height: 0; 
+            border-left: 16px solid transparent; 
+            border-right: 16px solid transparent; 
+            border-top: 28px solid #f43f5e; 
+            z-index: 50; 
+            filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.15)); 
+        }}
+        #wheelCanvas {{
+            width: 100%;
+            height: 100%;
+            display: block;
+        }}
+        
         .card-flip {{ perspective: 1000px; cursor: pointer; }}
         .card-inner {{ position: relative; width: 100%; height: 130px; text-align: center; transition: transform 0.5s; transform-style: preserve-3d; }}
         .card-flip.flipped .card-inner {{ transform: rotateY(180deg); }}
@@ -130,10 +160,12 @@ frontend_html = f"""
                     </div>
                     <div id="wheelAttendanceStatus" class="text-xs text-slate-400 pt-2 border-t"></div>
                 </div>
-                <div class="lg:col-span-2 flex flex-col items-center justify-center relative py-4">
-                    <div class="wheel-pointer"></div>
-                    <div class="wheel-container shadow-xl rounded-full border-4 border-white dark:border-slate-800"><canvas id="wheelCanvas" width="360" height="360"></canvas></div>
-                    <button id="btnSpin" class="mt-6 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-base px-10 py-3.5 rounded-full shadow-lg hover:scale-105 transition transform active:scale-95"><i class="fas fa-play mr-1"></i>BẮT ĐẦU QUAY</button>
+                <div class="lg:col-span-2 flex flex-col items-center justify-center relative py-6">
+                    <div class="wheel-container shadow-2xl rounded-full border-4 border-white dark:border-slate-800 relative">
+                        <div class="wheel-pointer"></div>
+                        <canvas id="wheelCanvas" width="500" height="500"></canvas>
+                    </div>
+                    <button id="btnSpin" class="mt-8 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-base px-12 py-3.5 rounded-full shadow-lg hover:scale-105 transition transform active:scale-95"><i class="fas fa-play mr-1"></i>BẮT ĐẦU QUAY</button>
                 </div>
             </div>
         </section>
@@ -235,31 +267,56 @@ frontend_html = f"""
             }}
         }}
 
+        // Đfont ĐÃ SỬA: Hàm vẽ chuẩn tọa độ đồng tâm tuyệt đối
         function initWheelCanvas() {{
             const canvas = document.getElementById("wheelCanvas");
             if (!canvas) return;
             const ctx = canvas.getContext("2d");
             const students = getCurrentStudents().filter(s => !excludedStudentIds.has(s.id));
             document.getElementById("wheelAttendanceStatus").innerText = `Đang tham gia: ${{students.length}} HS. Loại trừ: ${{excludedStudentIds.size}}.`;
+            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const center = canvas.width / 2;
+            const center = canvas.width / 2; // = 250px (Luôn luôn nằm chính giữa canvas)
+            
             if (students.length === 0) {{
-                ctx.fillStyle = "#94a3b8"; ctx.font = "bold 13px sans-serif"; ctx.textAlign = "center";
+                ctx.fillStyle = "#94a3b8"; ctx.font = "bold 16px sans-serif"; ctx.textAlign = "center";
                 ctx.fillText("Vòng quay trống", center, center); return;
             }}
+            
             const arcSize = (Math.PI * 2) / students.length;
             students.forEach((s, i) => {{
                 const startAngle = wheelAngle + (i * arcSize);
                 const endAngle = startAngle + arcSize;
-                ctx.beginPath(); ctx.fillStyle = colors[i % colors.length]; ctx.moveTo(center, center);
-                ctx.arc(center, center, center - 8, startAngle, endAngle); ctx.fill();
-                ctx.lineWidth = 1.5; ctx.strokeStyle = "#ffffff"; ctx.stroke();
-                ctx.save(); ctx.fillStyle = "#ffffff"; ctx.textAlign = "right"; ctx.font = "bold 12px sans-serif";
-                ctx.translate(center, center); ctx.rotate(startAngle + arcSize / 2);
-                ctx.fillText(s.name, center - 25, 4); ctx.restore();
+                
+                ctx.beginPath(); 
+                ctx.fillStyle = colors[i % colors.length]; 
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, center - 12, startAngle, endAngle); 
+                ctx.fill();
+                
+                ctx.lineWidth = 2; 
+                ctx.strokeStyle = "#ffffff"; 
+                ctx.stroke();
+                
+                // Vẽ chữ học sinh
+                ctx.save(); 
+                ctx.fillStyle = "#ffffff"; 
+                ctx.textAlign = "right"; 
+                ctx.font = "bold 15px sans-serif";
+                ctx.translate(center, center); 
+                ctx.rotate(startAngle + arcSize / 2);
+                ctx.fillText(s.name, center - 35, 5); 
+                ctx.restore();
             }});
-            ctx.beginPath(); ctx.fillStyle = "#ffffff"; ctx.arc(center, center, 20, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = "#4f46e5"; ctx.lineWidth = 3; ctx.stroke();
+            
+            // Đfont ĐÃ SỬA: Vẽ tâm tròn trắng đồng tâm tuyệt đối, không bị lệch
+            ctx.beginPath(); 
+            ctx.fillStyle = "#ffffff"; 
+            ctx.arc(center, center, 24, 0, Math.PI * 2); 
+            ctx.fill();
+            ctx.strokeStyle = "#4f46e5"; 
+            ctx.lineWidth = 4; 
+            ctx.stroke();
         }}
 
         document.getElementById("btnSpin").addEventListener("click", () => {{
@@ -282,8 +339,11 @@ frontend_html = f"""
                     isWheelSpinning = false;
                     const arcSize = (Math.PI * 2) / students.length;
                     const normalizedAngle = (Math.PI * 2 - (wheelAngle % (Math.PI * 2))) % (Math.PI * 2);
+                    
+                    // Con trỏ cố định ở đỉnh 12h (tương ứng góc góc -PI/2 hay +3*PI/2)
                     let correctedAngle = normalizedAngle + (Math.PI / 2);
                     if (correctedAngle >= Math.PI * 2) correctedAngle -= Math.PI * 2;
+                    
                     const winningIndex = Math.floor(correctedAngle / arcSize);
                     triggerWinner(students[winningIndex]);
                 }}
@@ -317,7 +377,6 @@ frontend_html = f"""
             const student = students.find(s => s.name === document.getElementById("winnerName").innerText);
             if(student) {{
                 student.score = (student.score || 0) + points;
-                console.log("Updated score:", student);
             }}
             closeWinnerModal();
         }}
@@ -417,7 +476,8 @@ frontend_html = f"""
             initWheelCanvas();
         }});
 
-        setTimeout(initWheelCanvas, 300);
+        // Chạy khởi tạo lại vòng quay sau khi giao diện render ổn định
+        setTimeout(initWheelCanvas, 350);
     </script>
 </body>
 </html>
