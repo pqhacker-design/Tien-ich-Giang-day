@@ -52,7 +52,7 @@ with col2:
         st.markdown("### 📚 2. Trợ lý AI - Soạn KHBD")
         st.write("Trợ lý ảo thông minh giúp giáo viên soạn kế hoạch bài dạy tất cả các môn học.")
         if st.button("🚀 Mở ứng dụng Soạn KHBD", key="btn_soan_khbd", use_container_width=True):
-            st.switch_page("pages/2_🤖_Gia_Su.py")
+            st.switch_page("pages/2_📚_Trợ_lý_Soạn_KHBD.py")
 
 st.write("") # Tạo khoảng cách dòng giữa 2 hàng
 
@@ -65,7 +65,7 @@ with col3:
         st.write("Công cụ tạo trò chơi vòng quay may mắn, lưới ảnh học sinh để tương tác, gọi tên ngẫu nhiên trong các hoạt động trên lớp học.")
         # Bạn nhớ đổi lại chính xác tên file của app 3 trong thư mục pages của bạn tại đây nhé
         if st.button("🚀 Mở ứng dụng Gọi học sinh", key="btn_goi_ten", use_container_width=True):
-            st.switch_page("pages/2_🎯_Gọi_HS_ngẫu_nhiên.py")
+            st.switch_page("pages/3_🎯_Gọi_HS_ngẫu_nhiên.py")
 
 with col4:
     with st.container(border=True):
