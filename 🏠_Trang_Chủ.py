@@ -57,8 +57,6 @@ with col3:
         if st.button("🚀 Mở ứng dụng Gọi học sinh", key="btn_goi_ten", use_container_width=True):
             st.switch_page("pages/3_🎯_Gọi_HS_ngẫu_nhiên.py")
             
-st.write("") # Khoảng cách nhẹ giữa 2 hàng
-
 # Hàng 2: Gồm 3 cột cho App 4, App 5, App 6
 col4, col5, col6 = st.columns(3)
 
