@@ -75,7 +75,7 @@ with col4:
         st.markdown("### 📝 4. Sửa lỗi chính tả và ngữ pháp Tiếng Việt")
         st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
         if st.button("🚀 Mở ứng dụng Máy tính Lãi suất", key="btn_sua_loi_chinh_ta", use_container_width=True):
-            st.switch_page("vietnamese-word-corrector/4_📝_Sửa_lỗi_chính_tả.py")
+            st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
 
 st.markdown("---")
 
