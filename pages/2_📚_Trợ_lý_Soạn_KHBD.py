@@ -58,7 +58,7 @@ else: level_detected = "THPT"
 st.sidebar.info(f"Hệ thống tự động kích hoạt Khung năng lực số cấp: **{level_detected}**")
 
 # --- Thân Giao Diện Chính Ứng Dụng ---
-st.title("🚀 Hệ thống Tối ưu & Thiết kế Giáo án tự động 5512")
+st.title("🚀 Hệ thống Tối ưu & Thiết kế KHBD tự động 5512")
 st.write("Tải giáo án cũ (.docx, .pdf) hoặc nhập văn bản thô để AI tự động chuyển đổi số hóa hành chính học tập.")
 
 # Thiết kế Tab phân vùng các tính năng xử lý đầu vào dữ liệu khác nhau
