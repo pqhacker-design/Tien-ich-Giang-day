@@ -33,8 +33,8 @@ cap_hoc = st.sidebar.selectbox(
 st.sidebar.markdown("---")
 st.sidebar.info(
     "💡 **Hướng dẫn:**\n"
-    "1. Nhập API Key ở trên.\n"
-    "2. Tải lên file giáo án `.docx` hiện có.\n"
+    "1. Nhập API Key ở Trang chủ.\n"
+    "2. Tải lên file giáo án `.docx` hiện có ở cột bên trái.\n"
     "3. Nhấn nút xử lý để AI tự động phân tích và chèn cấu trúc năng lực số thích hợp."
 )
 
@@ -53,36 +53,36 @@ with col1:
         file_bytes = uploaded_file.read()
         st.success(f"✔️ Đã tải lên file thành công: **{uploaded_file.name}**")
         
-        # Nút kích hoạt xử lý tích hợp
+        # Nút kích hoạt xử lý tích hợp (Đã loại bỏ điều kiện kiểm tra biến trùng lặp gây lỗi)
         if st.button("🚀 Bắt đầu tích hợp năng lực số", type="primary"):
             with st.spinner("🔄 Đang đọc dữ liệu và gửi phân tích tới Gemini AI..."):
                 try:
                     # Bước 1: Trích xuất nội dung văn bản giáo án
                     progress_bar = st.progress(10, text="Đang đọc nội dung file Word...")
                     doc_text = WordProcessor.extract_text(file_bytes)
+                    
+                    if not doc_text.strip():
+                        st.error("❌ File Word trống hoặc không tìm thấy nội dung văn bản hợp lệ.")
+                        st.stop()
                         
-                        if not doc_text.strip():
-                            st.error("❌ File Word trống hoặc không tìm thấy nội dung văn bản hợp lệ.")
-                            st.stop()
-                            
-                        # Bước 2: Gọi AI xử lý nội dung
-                        progress_bar.progress(40, text="AI đang phân tích và thiết kế năng lực số...")
-                        ai_handler = GeminiService(api_key=gemini_api_key)
-                        ai_result = ai_handler.analyze_and_integrate(doc_text, cap_hoc)
-                        
-                        # Lưu kết quả AI vào session state để hiển thị preview
-                        st.session_state['ai_result'] = ai_result
-                        
-                        # Bước 3: Tạo và lưu file Word mới
-                        progress_bar.progress(80, text="Đang chèn nội dung và tô màu định dạng Word...")
-                        processed_file = WordProcessor.integrate_digital_capacity(file_bytes, ai_result)
-                        st.session_state['processed_file'] = processed_file
-                        
-                        progress_bar.progress(100, text="Hoàn tất xử lý!")
-                        st.success("🎉 Tích hợp năng lực số thành công!")
-                        
-                    except Exception as e:
-                        st.error(f"❌ Đã xảy ra lỗi trong quá trình xử lý: {str(e)}")
+                    # Bước 2: Gọi AI xử lý nội dung bằng biến api_key dùng chung
+                    progress_bar.progress(40, text="AI đang phân tích và thiết kế năng lực số...")
+                    ai_handler = GeminiService(api_key=api_key)
+                    ai_result = ai_handler.analyze_and_integrate(doc_text, cap_hoc)
+                    
+                    # Lưu kết quả AI vào session state để hiển thị preview
+                    st.session_state['ai_result'] = ai_result
+                    
+                    # Bước 3: Tạo và lưu file Word mới
+                    progress_bar.progress(80, text="Đang chèn nội dung và tô màu định dạng Word...")
+                    processed_file = WordProcessor.integrate_digital_capacity(file_bytes, ai_result)
+                    st.session_state['processed_file'] = processed_file
+                    
+                    progress_bar.progress(100, text="Hoàn tất xử lý!")
+                    st.success("🎉 Tích hợp năng lực số thành công!")
+                    
+                except Exception as e:
+                    st.error(f"❌ Đã xảy ra lỗi trong quá trình xử lý: {str(e)}")
 
 with col2:
     st.subheader("🖥️ 2. Kết quả & Tải về")
