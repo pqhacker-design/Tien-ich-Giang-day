@@ -44,6 +44,9 @@ def generate_powerpoint_data_ai(api_key, raw_text, metadata, style_choice):
         "    }\n"
         "  ]\n"
         "}"
+        "BẮT BUỘC: Không được sử dụng ký hiệu toán học dạng mã LaTeX (như $...$ hoặc $$...$$). "
+        "Hãy sử dụng các ký tự Unicode toán học thông thường (ví dụ: dùng ², ³, √, ±, ∈, →) "
+        "để đảm bảo PowerPoint hiển thị được trực quan, không bị lỗi font."
     )
     
     user_content = f"""
