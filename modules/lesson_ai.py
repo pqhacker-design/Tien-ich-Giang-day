@@ -14,9 +14,11 @@ def generate_lesson_plan_ai(api_key, raw_text, metadata, competency_framework):
         "response_mime_type": "application/json"
     }
     
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-pro",
-        generation_config=generation_config
+    # Thay vì chỉ viết tên ngắn gọn, hãy thêm "models/" vào trước tên model
+model = genai.GenerativeModel(
+    model_name="models/gemini-2.5-flash",  # Thêm tiền tố models/
+    generation_config=generation_config
+)
     )
     
     system_prompt = (
