@@ -80,7 +80,30 @@ with col6:
         st.write("Thiết kế nhanh các câu hỏi tương tác, kịch bản trò chơi khởi động và ôn tập bài học sinh động.")
         if st.button("🚀 Mở ứng dụng Thiết kế Game", key="btn_game_hoc_tap", use_container_width=True):
             st.switch_page("pages/6_🎮_Trò_chơi_học_tập.py")
-            
+
+# Hàng 3: Gồm 3 cột cho App 7, App 8, App 9
+col7, col8, col9 = st.columns(3)
+
+with col7:
+    with st.container(border=True):
+        st.markdown("### 📊 7. Thiết kế PowerPoint bài giảng")
+        st.write("Quy trình 1 nút bấm: Tự động chuyển đổi giáo án Word thành slide bài giảng sinh động, đầy đủ câu hỏi và ghi chú Notes.")
+        if st.button("🚀 Mở ứng dụng tạo PowerPoint", key="btn_taoppt", use_container_width=True):
+            st.switch_page("pages/7_📊_Tự_động_tạo_PowerPoint.py")
+
+with col8:
+    with st.container(border=True):
+        st.markdown("### 📝 8. Ra đề kiểm tra")
+        st.write("Ứng dụng hỗ trợ ma trận, đặc tả và sinh đề kiểm tra định kỳ nhanh chóng, bám sát thông tư hướng dẫn mới.")
+        if st.button("🚀 Mở ứng dụng Ra đề kiểm tra", key="btn_chuabiet1", use_container_width=True):
+            st.switch_page("pages/8_📝_Ra_đề_kiểm_tra.py")
+
+with col9:
+    with st.container(border=True):
+        st.markdown("### 🎮 9. Trò chơi học tập")
+        st.write("Thiết kế nhanh các câu hỏi tương tác, kịch bản trò chơi khởi động và ôn tập bài học sinh động.")
+        if st.button("🚀 Mở ứng dụng Thiết kế Game", key="btn_chuabiet2", use_container_width=True):
+            st.switch_page("pages/9_🎮_Trò_chơi_học_tập.py")
 st.markdown("---")
 
 # 5. Chân trang (Footer)
