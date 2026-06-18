@@ -34,11 +34,14 @@ st.sidebar.title("AI GIÁO ÁN THÔNG MINH")
 st.sidebar.caption("Hệ thống trợ lý số hóa Giáo dục thời đại 4.0")
 st.sidebar.markdown("---")
 
-# Cấu hình nhập khóa bảo mật API bảo mật thông minh
-api_key_input = st.sidebar.text_input("Nhập Gemini API Key của bạn:", type="password", help="Lấy mã khóa bảo mật từ Google AI Studio")
-if not api_key_input:
-    # Thử lấy từ Secrets nếu cấu hình deploy máy chủ đám mây
-    api_key_input = ""
+# --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
+if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
+    api_key_input = st.session_state["gemini_api_key"]
+else:
+    # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
+    st.warning("⚠️ Vui lòng quay lại **Trang chủ (app)** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
+    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
+    st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
 
 # Form thu thập dữ liệu định danh cấu trúc lớp học từ giáo viên
 st.sidebar.subheader("Cấu hình Nhận diện bài dạy")
@@ -96,9 +99,7 @@ with tab_history:
 
 # Nút lệnh cốt lõi kích hoạt AI điều phối hoạt động chuyển dịch cấu trúc giáo án số
 if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN GIÁO ÁN 4.0", type="primary", use_container_width=True):
-    if not api_key_input:
-        st.error("Lỗi cấu hình hệ thống: Vui lòng nhập đầy đủ mã Gemini API Key tại thanh Sidebar bên trái để bắt đầu.")
-    elif not raw_input_text.strip():
+    if not raw_input_text.strip():
         st.warning("Cảnh báo nghiệp vụ: Chưa có dữ liệu đầu vào. Vui lòng tải file giáo án cũ hoặc nhập nội dung ý tưởng bài học.")
     else:
         with st.spinner("Trợ lý AI đang phân tích chuỗi sư phạm, đồng bộ hóa Công văn 5512 và tích hợp Khung năng lực số..."):
@@ -116,7 +117,7 @@ if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN GIÁO ÁN 4.0", type="
             framework = get_digital_competency_framework(level_detected)
             my_bar.progress(40)
             
-            # Thực thi tác vụ gọi AI Gemini Pro
+            # Thực thi tác vụ gọi AI Gemini Pro sử dụng biến api_key_input đồng bộ
             result_json = generate_lesson_plan_ai(api_key_input, raw_input_text, meta_config, framework)
             my_bar.progress(80)
             
