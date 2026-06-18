@@ -81,15 +81,15 @@ with col5:
     with st.container(border=True):
         st.markdown("### 📝 4. Sửa lỗi chính tả và ngữ pháp Tiếng Việt")
         st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
-        if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_sua_loi_chinh_ta", use_container_width=True):
-            st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
+        if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_ra_de_kt", use_container_width=True):
+            st.switch_page("pages/5_📝_Sửa_lỗi_chính_tả.py")
 
 with col6:
     with st.container(border=True):
         st.markdown("### 📝 4. Sửa lỗi chính tả và ngữ pháp Tiếng Việt")
         st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
-        if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_sua_loi_chinh_ta", use_container_width=True):
-            st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
+        if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_game_hoc_tap", use_container_width=True):
+            st.switch_page("pages/6_📝_Sửa_lỗi_chính_tả.py")
             
 st.markdown("---")
 
