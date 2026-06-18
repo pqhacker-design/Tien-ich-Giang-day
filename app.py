@@ -39,7 +39,7 @@ st.markdown("---")
 st.subheader("🛠️ Danh sách các công cụ tiện ích")
 
 # Hàng 1: Gồm 2 cột cho App 1 và App 2
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
     with st.container(border=True):
@@ -57,11 +57,6 @@ with col2:
         if st.button("🚀 Mở ứng dụng Soạn KHBD", key="btn_soan_khbd", use_container_width=True):
             st.switch_page("pages/2_📚_Trợ_lý_Soạn_KHBD.py")
 
-st.write("") # Tạo khoảng cách dòng giữa 2 hàng
-
-# Hàng 2: Gồm 2 cột cho App 3 và App 4
-col3, col4 = st.columns(2)
-
 with col3:
     with st.container(border=True):
         st.markdown("### 🎯 3. Gọi học sinh ngẫu nhiên")
@@ -69,6 +64,11 @@ with col3:
         # Bạn nhớ đổi lại chính xác tên file của app 3 trong thư mục pages của bạn tại đây nhé
         if st.button("🚀 Mở ứng dụng Gọi học sinh", key="btn_goi_ten", use_container_width=True):
             st.switch_page("pages/3_🎯_Gọi_HS_ngẫu_nhiên.py")
+            
+st.write("") # Tạo khoảng cách dòng giữa 2 hàng
+
+# Hàng 2: Gồm 2 cột cho App 3 và App 4
+col4, col5, col6 = st.columns(3)
 
 with col4:
     with st.container(border=True):
@@ -77,6 +77,20 @@ with col4:
         if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_sua_loi_chinh_ta", use_container_width=True):
             st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
 
+with col5:
+    with st.container(border=True):
+        st.markdown("### 📝 4. Sửa lỗi chính tả và ngữ pháp Tiếng Việt")
+        st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
+        if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_sua_loi_chinh_ta", use_container_width=True):
+            st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
+
+with col6:
+    with st.container(border=True):
+        st.markdown("### 📝 4. Sửa lỗi chính tả và ngữ pháp Tiếng Việt")
+        st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
+        if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_sua_loi_chinh_ta", use_container_width=True):
+            st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
+            
 st.markdown("---")
 
 # 5. Chân trang (Footer)
