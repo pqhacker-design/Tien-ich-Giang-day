@@ -1,8 +1,11 @@
 import streamlit as st
 
 # 1. Cấu hình trang
+import streamlit as st
+
+# Cấu hình trang chủ
 st.set_page_config(
-    page_title="Hệ sinh thái Trợ lý Giáo dục AI",
+    page_title="🏠 Trang chủ",  # <-- Streamlit sẽ dùng chuỗi này thay thế chữ "app" trên menu
     page_icon="🎓",
     layout="wide"
 )
