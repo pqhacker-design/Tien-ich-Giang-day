@@ -14,11 +14,10 @@ def generate_lesson_plan_ai(api_key, raw_text, metadata, competency_framework):
         "response_mime_type": "application/json"
     }
     
-    # Thay vì chỉ viết tên ngắn gọn, hãy thêm "models/" vào trước tên model
+    # Đã sửa lại chuẩn tên model có tiền tố models/
     model = genai.GenerativeModel(
-        model_name="models/gemini-2.5-flash",  # Thêm tiền tố models/
+        model_name="models/gemini-2.5-flash",
         generation_config=generation_config
-    )
     )
     
     system_prompt = (
@@ -59,7 +58,6 @@ def generate_lesson_plan_ai(api_key, raw_text, metadata, competency_framework):
     response = model.generate_content([system_prompt, user_content])
     
     try:
-        # Làm sạch chuỗi JSON nếu mô hình cố tình thêm markdown bọc ngoài
         clean_text = response.text.strip()
         if clean_text.startswith("```json"):
             clean_text = clean_text[7:]
@@ -67,5 +65,4 @@ def generate_lesson_plan_ai(api_key, raw_text, metadata, competency_framework):
             clean_text = clean_text[:-3]
         return json.loads(clean_text.strip())
     except Exception as e:
-        # Dự phòng trường hợp lỗi phân tách JSON cấu trúc phức tạp
         return {"error": f"Lỗi phân tích cú pháp AI: {str(e)}", "raw_response": response.text}
