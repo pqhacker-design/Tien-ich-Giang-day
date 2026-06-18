@@ -1,3 +1,9 @@
 streamlit
 python-docx
 google-genai
+google-generativeai
+docxcompose
+mammoth
+pandas
+openpyxl
+pypdf
