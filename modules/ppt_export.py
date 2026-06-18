@@ -69,19 +69,23 @@ def create_powerpoint_file(slide_data_json, style_choice):
             
             body_shape = slide.placeholders[1]
             tf = body_shape.text_frame
+            tf.text = "" # Khởi tạo text frame rỗng
             
-            if "bullets" in s_data:
-                tf.text = ""
-                for idx, bullet in enumerate(s_data.get("bullets", [])):
+            # Kiểm tra tất cả các trường hợp AI có thể trả về (bullets, content, body)
+            raw_content = s_data.get("bullets", s_data.get("content", s_data.get("body", "")))
+            
+            # LƯU Ý SỬA LỖI: Nếu dữ liệu là một danh sách (List), duyệt qua từng phần tử để thêm dòng
+            if isinstance(raw_content, list):
+                for idx, item in enumerate(raw_content):
                     p = tf.add_paragraph() if idx > 0 else tf.paragraphs[0]
-                    p.text = f"• {bullet}"
+                    p.text = f"• {item}"
                     p.font.size = Pt(18)
                     p.font.color.rgb = text_color
             else:
-                tf.text = s_data.get("body", s_data.get("content", ""))
+                # Nếu dữ liệu là chuỗi văn bản thông thường (String)
+                tf.text = str(raw_content)
                 tf.paragraphs[0].font.size = Pt(18)
                 tf.paragraphs[0].font.color.rgb = text_color
-                
         # --- TỰ ĐỘNG CHÈN GHI CHÚ CHO GIÁO VIÊN (TEACHER NOTES) ---
         notes_slide = slide.notes_slide
         text_frame = notes_slide.notes_text_frame
