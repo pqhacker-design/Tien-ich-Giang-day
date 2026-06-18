@@ -1,53 +1,46 @@
 import streamlit as st
 
-# 1. Cấu hình trang
-import streamlit as st
-
-# Cấu hình trang chủ
+# 1. Cấu hình trang chủ
 st.set_page_config(
-    page_title="Thầy Ngô Hùng - 0913117321",  # <-- Streamlit sẽ dùng chuỗi này thay thế chữ "app" trên menu
+    page_title="Thầy Ngô Hùng - 0913117321",
     page_icon="🎓",
     layout="wide"
 )
 
-# 2. Tiêu đề chính của hệ thống
-st.title("🎓 Hệ sinh thái Trợ lý Giáo dục AI")
-st.write("Chào mừng thầy/cô đến với nền tảng công cụ công nghệ thông tin và AI hỗ trợ giảng dạy bám sát Chương trình GDPT 2018.")
+# 2. Tiêu đề chính tối ưu siêu gọn (Kết hợp H2 và Caption để tiết kiệm dòng)
+st.markdown("## 🎓 Hệ sinh thái Trợ lý Giáo dục AI")
+st.caption("Nền tảng CNTT và AI hỗ trợ giảng dạy bám sát Chương trình GDPT 2018.")
 
-st.markdown("---")
+# 3. QUẢN LÝ API KEY TẬP TRUNG (Thu gọn vào Expander - Mặc định ĐÓNG để đỡ chiếm chỗ)
+with st.expander("🔑 Cấu hình kết nối AI (Click để kiểm tra hoặc thay đổi API Key)", expanded=False):
+    gemini_api_key = st.text_input(
+        "Nhập Google Gemini API Key của bạn tại đây:",
+        type="password",
+        help="Nhập một lần tại đây, tất cả các ứng dụng thành phần sẽ tự động sử dụng chung."
+    )
 
-# 3. QUẢN LÝ API KEY TẬP TRUNG
-st.subheader("🔑 Cấu hình kết nối AI")
-gemini_api_key = st.text_input(
-    "Nhập Google Gemini API Key của bạn tại đây:",
-    type="password",
-    help="Nhập một lần tại đây, tất cả các ứng dụng thành phần sẽ tự động sử dụng chung."
-)
-
-if gemini_api_key:
-    st.session_state["gemini_api_key"] = gemini_api_key
-    st.success("✔️ Đã đồng bộ API Key cho toàn bộ hệ thống!")
-else:
-    if "gemini_api_key" in st.session_state:
-        st.info("ℹ️ Hệ thống đang sử dụng API Key đã lưu từ trước.")
+    if gemini_api_key:
+        st.session_state["gemini_api_key"] = gemini_api_key
+        st.success("✔️ Đã đồng bộ API Key cho toàn bộ hệ thống!")
     else:
-        st.warning("⚠️ Vui lòng nhập Gemini API Key để kích hoạt các tính năng AI trong các ứng dụng con.")
+        if "gemini_api_key" in st.session_state:
+            st.info("ℹ️ Hệ thống đang sử dụng API Key đã lưu từ trước.")
+        else:
+            st.warning("⚠️ Vui lòng nhập Gemini API Key để kích hoạt các tính năng AI trong các ứng dụng con.")
 
 st.markdown("---")
 
-# 4. DANH SÁCH ỨNG DỤNG THÀNH PHẦN (Kết hợp nút bấm chuyển trang tự động)
-st.subheader("🛠️ Danh sách các công cụ tiện ích")
+# 4. DANH SÁCH ỨNG DỤNG THÀNH PHẦN (Được đẩy lên sát bên trên)
+st.markdown("### 🛠️ Danh sách các công cụ tiện ích")
 
-# Hàng 1: Gồm 2 cột cho App 1 và App 2
+# Hàng 1: Gồm 3 cột cho App 1, App 2, App 3
 col1, col2, col3 = st.columns(3)
 
 with col1:
     with st.container(border=True):
         st.markdown("### 📝 1. Tích hợp Năng lực số")
         st.write("Tự động phân tích giáo án Word (.docx) và chèn nội dung phát triển năng lực số theo đúng các vị trí hoạt động dạy học thực tế.")
-        # Sử dụng st.button để tạo hành động chuyển trang
         if st.button("🚀 Mở ứng dụng Tích hợp KNS", key="btn_tich_hop", use_container_width=True):
-            # Đường dẫn tính từ thư mục pages/
             st.switch_page("pages/1_📝_Tích_Hợp_KNS.py")
 
 with col2:
@@ -61,35 +54,34 @@ with col3:
     with st.container(border=True):
         st.markdown("### 🎯 3. Gọi học sinh ngẫu nhiên")
         st.write("Công cụ tạo trò chơi vòng quay may mắn, lưới ảnh học sinh để tương tác, gọi tên ngẫu nhiên trong các hoạt động trên lớp học.")
-        # Bạn nhớ đổi lại chính xác tên file của app 3 trong thư mục pages của bạn tại đây nhé
         if st.button("🚀 Mở ứng dụng Gọi học sinh", key="btn_goi_ten", use_container_width=True):
             st.switch_page("pages/3_🎯_Gọi_HS_ngẫu_nhiên.py")
             
-st.write("") # Tạo khoảng cách dòng giữa 2 hàng
+st.write("") # Khoảng cách nhẹ giữa 2 hàng
 
-# Hàng 2: Gồm 2 cột cho App 3 và App 4
+# Hàng 2: Gồm 3 cột cho App 4, App 5, App 6
 col4, col5, col6 = st.columns(3)
 
 with col4:
     with st.container(border=True):
-        st.markdown("### 📝 4. Sửa lỗi chính tả và ngữ pháp Tiếng Việt")
+        st.markdown("### 📝 4. Sửa lỗi chính tả")
         st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
         if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_sua_loi_chinh_ta", use_container_width=True):
             st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
 
 with col5:
     with st.container(border=True):
-        st.markdown("### 📝 4. Sửa lỗi chính tả và ngữ pháp Tiếng Việt")
-        st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
-        if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_ra_de_kt", use_container_width=True):
-            st.switch_page("pages/5_📝_Sửa_lỗi_chính_tả.py")
+        st.markdown("### 📝 5. Ra đề kiểm tra")
+        st.write("Ứng dụng hỗ trợ ma trận, đặc tả và sinh đề kiểm tra định kỳ nhanh chóng, bám sát thông tư hướng dẫn mới.")
+        if st.button("🚀 Mở ứng dụng Ra đề kiểm tra", key="btn_ra_de_kt", use_container_width=True):
+            st.switch_page("pages/5_📝_Ra_đề_kiểm_tra.py")
 
 with col6:
     with st.container(border=True):
-        st.markdown("### 📝 4. Sửa lỗi chính tả và ngữ pháp Tiếng Việt")
-        st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
-        if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_game_hoc_tap", use_container_width=True):
-            st.switch_page("pages/6_📝_Sửa_lỗi_chính_tả.py")
+        st.markdown("### 🎮 6. Trò chơi học tập")
+        st.write("Thiết kế nhanh các câu hỏi tương tác, kịch bản trò chơi khởi động và ôn tập bài học sinh động.")
+        if st.button("🚀 Mở ứng dụng Thiết kế Game", key="btn_game_hoc_tap", use_container_width=True):
+            st.switch_page("pages/6_🎮_Trò_chơi_học_tập.py")
             
 st.markdown("---")
 
