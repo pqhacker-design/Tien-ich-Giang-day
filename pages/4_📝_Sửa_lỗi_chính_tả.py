@@ -106,7 +106,7 @@ with col2:
         st.dataframe(df_show, use_container_width=True)
         
         st.markdown("---")
-        if st.button("🪄 Áp dụng sửa tất cả lỗi & Giữ nguyên định dạng gốc", type="secondary", use_container_width=True):
+        if st.button("🔄 Áp dụng sửa tất cả lỗi & Giữ nguyên định dạng gốc", type="secondary", use_container_width=True):
             with st.spinner("Hệ thống đang thay thế thông minh các khối văn bản..."):
                 for err in errors:
                     doc = WordProcessor.replace_text_keep_format(doc, err["sai"], err["dung"])
