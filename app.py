@@ -12,7 +12,7 @@ st.markdown("## 🎓 Hệ sinh thái Trợ lý Giáo dục AI")
 st.caption("Nền tảng CNTT và AI hỗ trợ giảng dạy bám sát Chương trình GDPT 2018.")
 
 # 3. QUẢN LÝ API KEY TẬP TRUNG (Thu gọn vào Expander - Mặc định ĐÓNG để đỡ chiếm chỗ)
-with st.expander("🔑 Cấu hình kết nối AI (Click để kiểm tra hoặc thay đổi API Key)", expanded=False):
+with st.expander("🔑 Cấu hình kết nối AI (Nhập API key của bạn để sử dụng các tiện ích)", expanded=False):
     gemini_api_key = st.text_input(
         "Nhập Google Gemini API Key của bạn tại đây:",
         type="password",
