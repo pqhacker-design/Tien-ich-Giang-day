@@ -494,7 +494,7 @@ components.html(frontend_html, height=780, scrolling=True)
 
 # --- PANEL QUẢN LÝ THÀNH VIÊN PYTHON (NẰM DƯỚI ỨNG DỤNG) ---
 st.write("---")
-st.subheader(f"📊 Bảng Chỉnh Sửa Học Sinh Lớp {current_class} (Admin Backend)")
+st.subheader(f"📊 Thêm bớt Học Sinh Lớp {current_class} (Thêm lớp hoặc thêm HS hàng loạt mở thanh bên)")
 
 students_list = db["classes"].get(current_class, [])
 
