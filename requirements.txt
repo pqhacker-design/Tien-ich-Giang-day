@@ -1,5 +1,6 @@
 streamlit
 python-docx
+python-pptx
 google-genai
 google-generativeai
 docxcompose
