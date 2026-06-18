@@ -13,7 +13,7 @@ def generate_powerpoint_data_ai(api_key, raw_text, metadata, style_choice):
     }
     
     model = genai.GenerativeModel(
-        model_name="models/gemini-1.5-pro",
+        model_name="models/gemini-2.5-flash",
         generation_config=generation_config
     )
     
