@@ -87,7 +87,7 @@ col7, col8, col9 = st.columns(3)
 with col7:
     with st.container(border=True):
         st.markdown("### 📊 7. Thiết kế PowerPoint bài giảng")
-        st.write("Quy trình 1 nút bấm: Tự động chuyển đổi giáo án Word thành slide bài giảng sinh động, đầy đủ câu hỏi và ghi chú Notes.")
+        st.write("Quy trình 1 nút bấm: Tự động chuyển đổi giáo án Word thành slide bài giảng PowerPoint sinh động, đầy đủ câu hỏi và ghi chú Notes.")
         if st.button("🚀 Mở ứng dụng tạo PowerPoint", key="btn_taoppt", use_container_width=True):
             st.switch_page("pages/7_📊_Tự_động_tạo_PowerPoint.py")
 
