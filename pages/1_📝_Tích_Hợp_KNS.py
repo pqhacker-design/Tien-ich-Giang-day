@@ -55,14 +55,11 @@ with col1:
         
         # Nút kích hoạt xử lý tích hợp
         if st.button("🚀 Bắt đầu tích hợp năng lực số", type="primary"):
-            if not gemini_api_key:
-                st.error("❌ Vui lòng nhập Gemini API Key ở thanh bên trước khi thực hiện!")
-            else:
-                with st.spinner("🔄 Đang đọc dữ liệu và gửi phân tích tới Gemini AI..."):
-                    try:
-                        # Bước 1: Trích xuất nội dung văn bản giáo án
-                        progress_bar = st.progress(10, text="Đang đọc nội dung file Word...")
-                        doc_text = WordProcessor.extract_text(file_bytes)
+            with st.spinner("🔄 Đang đọc dữ liệu và gửi phân tích tới Gemini AI..."):
+                try:
+                    # Bước 1: Trích xuất nội dung văn bản giáo án
+                    progress_bar = st.progress(10, text="Đang đọc nội dung file Word...")
+                    doc_text = WordProcessor.extract_text(file_bytes)
                         
                         if not doc_text.strip():
                             st.error("❌ File Word trống hoặc không tìm thấy nội dung văn bản hợp lệ.")
