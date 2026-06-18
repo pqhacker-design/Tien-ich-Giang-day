@@ -49,9 +49,9 @@ with col1:
 
 with col2:
     with st.container(border=True):
-        st.markdown("### 🤖 2. Gia sư Trợ lý AI")
-        st.write("Trợ lý ảo thông minh giải đáp kiến thức chuyên sâu, xây dựng phiếu bài tập và gợi ý phương pháp sư phạm cho giáo viên.")
-        if st.button("🚀 Mở ứng dụng Gia sư AI", key="btn_gia_su", use_container_width=True):
+        st.markdown("### 📚 2. Trợ lý AI - Soạn KHBD")
+        st.write("Trợ lý ảo thông minh giúp giáo viên soạn kế hoạch bài dạy tất cả các môn học.")
+        if st.button("🚀 Mở ứng dụng Soạn KHBD", key="btn_soan_khbd", use_container_width=True):
             st.switch_page("pages/2_🤖_Gia_Su.py")
 
 st.write("") # Tạo khoảng cách dòng giữa 2 hàng
