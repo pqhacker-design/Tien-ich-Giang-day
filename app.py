@@ -75,7 +75,7 @@ with col4:
         st.markdown("### 📈 4. Máy tính Lãi suất kép")
         st.write("Ứng dụng tính toán tài chính tích hợp trực quan sinh động, bám sát nội dung thực hành toán học Lớp 8 Bộ sách Kết nối tri thức.")
         if st.button("🚀 Mở ứng dụng Máy tính Lãi suất", key="btn_lai_suat", use_container_width=True):
-            st.switch_page("pages/4_📈_Lai_Suat.py")
+            st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
 
 st.markdown("---")
 
