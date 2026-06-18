@@ -5,7 +5,7 @@ import streamlit as st
 
 # Cấu hình trang chủ
 st.set_page_config(
-    page_title="Trang chủ",  # <-- Streamlit sẽ dùng chuỗi này thay thế chữ "app" trên menu
+    page_title="Thầy Ngô Hùng - 0913117321",  # <-- Streamlit sẽ dùng chuỗi này thay thế chữ "app" trên menu
     page_icon="🎓",
     layout="wide"
 )
