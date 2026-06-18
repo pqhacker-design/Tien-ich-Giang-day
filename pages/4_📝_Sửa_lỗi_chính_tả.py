@@ -76,6 +76,9 @@ with col1:
         file_bytes = io.BytesIO(uploaded_file.read())
         st.success(f"✔️ Đã nhận file: {uploaded_file.name}")
         
+        # LƯU TÊN FILE VÀO SESSION STATE ĐỂ DÙNG CHUNG AN TOÀN
+        st.session_state["current_file_name"] = uploaded_file.name
+        
         if st.button("🚀 Bắt đầu quét lỗi văn bản", type="primary", use_container_width=True):
             with st.spinner("AI đang rà soát từng câu chữ..."):
                 doc = Document(file_bytes)
@@ -83,16 +86,25 @@ with col1:
                 
                 # Gọi AI xử lý
                 corrector = AICorrector(api_key)
-                # Chia nhỏ text phòng hờ file dài
                 text_blocks = [full_text[i:i+4000] for i in range(0, len(full_text), 4000)]
                 all_errors = []
                 for block in text_blocks:
                     all_errors.extend(corrector.analyze_text(block))
                 
-                # Lưu trạng thái vào bộ nhớ Streamlit
+                # Lưu trạng thái kết quả vào bộ nhớ Streamlit
                 st.session_state["word_doc"] = doc
                 st.session_state["word_errors"] = all_errors
                 st.success(f"Quét xong! Tìm thấy {len(all_errors)} điểm cần tối ưu.")
+    else:
+        # KHI XÓA FILE: Tự động dọn dẹp các dữ liệu cũ trong bộ nhớ để tránh xung đột giao diện
+        if "word_errors" in st.session_state:
+            del st.session_state["word_errors"]
+        if "word_doc" in st.session_state:
+            del st.session_state["word_doc"]
+        if "fixed_file" in st.session_state:
+            del st.session_state["fixed_file"]
+        if "current_file_name" in st.session_state:
+            del st.session_state["current_file_name"]
 
 with col2:
     st.subheader("📊 2. Kết quả phân tích & Sửa đổi")
@@ -100,18 +112,20 @@ with col2:
         errors = st.session_state["word_errors"]
         doc = st.session_state["word_doc"]
         
-        # Hiển thị bảng lưới lỗi trực quan bằng Dataframe của Streamlit
+        # Lấy tên file an toàn từ session_state (mặc định là 'Tai_Lieu.docx' nếu trống)
+        safe_file_name = st.session_state.get("current_file_name", "Tai_Lieu.docx")
+        
+        # Hiển thị bảng lưới lỗi trực quan
         df_show = pd.DataFrame(errors)
         df_show.columns = ["Từ bị sai / Kém hiệu quả", "Đề xuất sửa đúng", "Phân loại lỗi", "Lý do chi tiết"]
         st.dataframe(df_show, use_container_width=True)
         
         st.markdown("---")
-        if st.button("🔄 Áp dụng sửa tất cả lỗi & Giữ nguyên định dạng gốc", type="secondary", use_container_width=True):
+        if st.button("🪄 Áp dụng sửa tất cả lỗi & Giữ nguyên định dạng gốc", type="secondary", use_container_width=True):
             with st.spinner("Hệ thống đang thay thế thông minh các khối văn bản..."):
                 for err in errors:
                     doc = WordProcessor.replace_text_keep_format(doc, err["sai"], err["dung"])
                 
-                # Lưu file vào bộ nhớ đệm để chuẩn bị tải xuống
                 output_stream = io.BytesIO()
                 doc.save(output_stream)
                 st.session_state["fixed_file"] = output_stream.getvalue()
@@ -122,7 +136,7 @@ with col2:
             st.download_button(
                 label="💾 TẢI FILE WORD ĐÃ SỬA SẠCH LỖI (.DOCX)",
                 data=st.session_state["fixed_file"],
-                file_name=f"Sua_Loi_Chinh_Ta_{uploaded_file.name}",
+                file_name=f"Sua_Loi_Chinh_Ta_{safe_file_name}", # <-- ĐÃ THAY BẰNG BIẾN AN TOÀN
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 use_container_width=True
             )
