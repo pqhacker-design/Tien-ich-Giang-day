@@ -14,7 +14,7 @@ from modules.word_export import export_lesson_to_word
 
 # Cấu hình cài đặt trang giao diện Streamlit tiên tiến
 st.set_page_config(
-    page_title="AI Giáo Án Thông Minh 4.0",
+    page_title="AI KHBD Thông Minh 4.0",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -59,7 +59,7 @@ st.sidebar.info(f"Hệ thống tự động kích hoạt Khung năng lực số 
 
 # --- Thân Giao Diện Chính Ứng Dụng ---
 st.title("🚀 Hệ thống Tối ưu & Thiết kế KHBD tự động 5512")
-st.write("Tải giáo án cũ (.docx, .pdf) hoặc nhập văn bản thô để AI tự động chuyển đổi số hóa hành chính học tập.")
+st.write("Tải KHBD cũ (.docx, .pdf) hoặc nhập văn bản thô để AI tự động chuyển đổi số hóa hành chính học tập.")
 
 # Thiết kế Tab phân vùng các tính năng xử lý đầu vào dữ liệu khác nhau
 tab_upload, tab_direct, tab_history = st.tabs(["📂 Tải lên File giáo án gốc", "📝 Nhập văn bản trực tiếp", "📜 Lịch sử soạn thảo số"])
@@ -67,7 +67,7 @@ tab_upload, tab_direct, tab_history = st.tabs(["📂 Tải lên File giáo án g
 raw_input_text = ""
 
 with tab_upload:
-    uploaded_file = st.file_uploader("Kéo và thả file Word (.docx) hoặc tài liệu PDF của giáo án cũ vào đây:", type=["docx", "pdf"])
+    uploaded_file = st.file_uploader("Kéo và thả file Word (.docx) hoặc tài liệu PDF của KHBD cũ vào đây:", type=["docx", "pdf"])
     if uploaded_file is not None:
         file_bytes = uploaded_file.read()
         if uploaded_file.name.endswith(".docx"):
@@ -86,21 +86,21 @@ with tab_direct:
         raw_input_text = direct_text
 
 with tab_history:
-    st.subheader("Nhật ký các giáo án đã tạo trên hệ thống máy tính giáo viên")
+    st.subheader("Nhật ký các KHBD đã tạo trên hệ thống máy tính giáo viên")
     history_data = c.execute("SELECT id, time, topic, subject, grade FROM history ORDER BY id DESC").fetchall()
     if history_data:
         for item in history_data:
             if st.button(f"🔄 Khôi phục: {item[2]} ({item[3]} - {item[4]}) | Tạo lúc: {item[1]}", key=f"hist_{item[0]}"):
                 stored_content = c.execute("SELECT content FROM history WHERE id=?", (item[0],)).fetchone()[0]
                 st.session_state["processed_json"] = json.loads(stored_content)
-                st.success("Đã khôi phục dữ liệu giáo án thành công từ SQLite nội bộ! Hãy chuyển qua xem kết quả biên soạn.")
+                st.success("Đã khôi phục dữ liệu KHBD thành công từ SQLite nội bộ! Hãy chuyển qua xem kết quả biên soạn.")
     else:
-        st.write("Chưa có lịch sử giáo án nào được lưu trữ cục bộ.")
+        st.write("Chưa có lịch sử KHBD nào được lưu trữ cục bộ.")
 
 # Nút lệnh cốt lõi kích hoạt AI điều phối hoạt động chuyển dịch cấu trúc giáo án số
-if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN GIÁO ÁN 4.0", type="primary", use_container_width=True):
+if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN KHBD 4.0", type="primary", use_container_width=True):
     if not raw_input_text.strip():
-        st.warning("Cảnh báo nghiệp vụ: Chưa có dữ liệu đầu vào. Vui lòng tải file giáo án cũ hoặc nhập nội dung ý tưởng bài học.")
+        st.warning("Cảnh báo nghiệp vụ: Chưa có dữ liệu đầu vào. Vui lòng tải file KHBD cũ hoặc nhập nội dung ý tưởng bài học.")
     else:
         with st.spinner("Trợ lý AI đang phân tích chuỗi sư phạm, đồng bộ hóa Công văn 5512 và tích hợp Khung năng lực số..."):
             my_bar = st.progress(10)
@@ -143,7 +143,7 @@ if "processed_json" in st.session_state:
     lesson_data = st.session_state["processed_json"]
     
     st.markdown("---")
-    st.header("🎯 KẾT QUẢ GIÁO ÁN CHUẨN HÓA SỐ")
+    st.header("🎯 KẾT QUẢ KHBD CHUẨN HÓA SỐ")
     
     # Chia tab kết quả đầu ra: Giáo án, Bảng Ma trận năng lực, Phiếu bài tập số hóa cá nhân hóa học sinh
     tab_res_plan, tab_res_matrix, tab_res_sheet = st.tabs(["📋 Kế hoạch bài dạy (CV 5512)", "📊 Ma trận mục tiêu & Đánh giá", "📝 Phiếu học tập số"])
