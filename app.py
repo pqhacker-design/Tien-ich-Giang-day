@@ -53,7 +53,7 @@ with col1:
 with col2:
     with st.container(border=True):
         st.markdown("### 📚 2. Trợ lý AI - Soạn KHBD")
-        st.write("Trợ lý ảo thông minh giúp giáo viên soạn kế hoạch bài dạy tất cả các môn học.")
+        st.write("Trợ lý AI thông minh giúp giáo viên Tạo mới hoặc Chỉnh sửa Kế hoạch bài dạy theo CV 5512, tích hợp KNS và xuất ra Word.")
         if st.button("🚀 Mở ứng dụng Soạn KHBD", key="btn_soan_khbd", use_container_width=True):
             st.switch_page("pages/2_📚_Trợ_lý_Soạn_KHBD.py")
 
