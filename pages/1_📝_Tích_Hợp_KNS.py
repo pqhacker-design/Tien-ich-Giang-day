@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🤖 Ứng dụng tích hợp Năng lực số tự động vào Giáo án (KHBD)")
+st.title("🤖 Ứng dụng tích hợp Năng lực số tự động vào KHBD")
 st.write("Giải pháp hỗ trợ giáo viên chuyển đổi số giáo án theo Chương trình GDPT 2018 nhanh chóng và chuẩn xác.")
 
 # --- THANH BÊN (SIDEBAR) ---
@@ -34,7 +34,7 @@ st.sidebar.markdown("---")
 st.sidebar.info(
     "💡 **Hướng dẫn:**\n"
     "1. Nhập API Key ở Trang chủ.\n"
-    "2. Tải lên file giáo án `.docx` hiện có ở cột bên trái.\n"
+    "2. Tải lên file KHBD `.docx` hiện có ở cột bên trái.\n"
     "3. Nhấn nút xử lý để AI tự động phân tích và chèn cấu trúc năng lực số thích hợp."
 )
 
@@ -42,9 +42,9 @@ st.sidebar.info(
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    st.subheader("📂 1. Tải lên giáo án gốc")
+    st.subheader("📂 1. Tải lên KHBD gốc")
     uploaded_file = st.file_uploader(
-        "Chọn file giáo án Word (.docx)", 
+        "Chọn file KHBD Word (.docx)", 
         type=["docx"],
         help="Hệ thống chỉ hỗ trợ định dạng .docx tiêu chuẩn."
     )
@@ -110,7 +110,7 @@ with col2:
         
         # Nút Download File Word đã hoàn thiện
         st.download_button(
-            label="💾 TẢI XUỐNG GIÁO ÁN TÍCH HỢP (.DOCX)",
+            label="💾 TẢI XUỐNG KHBD TÍCH HỢP (.DOCX)",
             data=st.session_state['processed_file'],
             file_name="KHBD_TichHopNangLucSo.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
