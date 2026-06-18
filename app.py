@@ -73,9 +73,9 @@ with col3:
 with col4:
     with st.container(border=True):
         st.markdown("### 📈 4. Máy tính Lãi suất kép")
-        st.write("Ứng dụng tính toán tài chính tích hợp trực quan sinh động, bám sát nội dung thực hành toán học Lớp 8 Bộ sách Kết nối tri thức.")
+        st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
         if st.button("🚀 Mở ứng dụng Máy tính Lãi suất", key="btn_lai_suat", use_container_width=True):
-            st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
+            st.switch_page("vietnamese-word-corrector/4_📝_Sửa_lỗi_chính_tả.py")
 
 st.markdown("---")
 
