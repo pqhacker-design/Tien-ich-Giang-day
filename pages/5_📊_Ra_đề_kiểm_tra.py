@@ -57,27 +57,51 @@ SUBJECTS_CONFIG = {
 # BỘ CHUYỂN ĐỔI LATEX SANG WORD EQUATION (OMML)
 # ==========================================
 def convert_latex_to_omml_xml(latex_str):
+    """
+    Bộ chuyển đổi mở rộng: Xử lý thêm các ký hiệu so sánh, hình học Toán 8
+    """
     latex_str = str(latex_str)
-    # Phân số \frac{a}{b}
+    # Tự động dọn dẹp nếu AI sinh thừa chữ 'text ' bên trong công thức
+    latex_str = latex_str.replace('text ', '').strip()
+    
+    # 1. Ký hiệu khác (\neq hoặc \ne) -> ≠
+    if '\\neq' in latex_str or '\\ne' in latex_str:
+        val = latex_str.replace('\\neq', '').replace('\\ne', '').strip()
+        return f'<m:r {nsdecls("m")}><m:t>x ≠ {val}</m:t></m:r>'
+        
+    # 2. Tam giác (\triangle OAB) -> △OAB
+    if '\\triangle' in latex_str:
+        val = latex_str.replace('\\triangle', '').strip()
+        return f'<m:r {nsdecls("m")}><m:t>Δ{val}</m:t></m:r>'
+        
+    # 3. Đồng dạng (\sim) -> ∽
+    if '\\sim' in latex_str:
+        return f'<m:r {nsdecls("m")}><m:t> ∽ </m:t></m:r>'
+
+    # 4. Phân số \frac{a}{b}
     frac_match = re.findall(r'\\frac\{([^}]+)\}\{([^}]+)\}', latex_str)
     if frac_match:
         num, den = frac_match[0]
         return f'<m:f {nsdecls("m")}><m:num><m:r><m:t>{num}</m:t></m:r></m:num><m:den><m:r><m:t>{den}</m:t></m:r></m:den></m:f>'
-    # Căn thức \sqrt{x}
+        
+    # 5. Căn thức \sqrt{x}
     sqrt_match = re.findall(r'\\sqrt\{([^}]+)\}', latex_str)
     if sqrt_match:
         inner = sqrt_match[0]
         return f'<m:rad {nsdecls("m")}><m:radPr><m:degHide m:val="1"/></m:radPr><m:deg/><m:e><m:r><m:t>{inner}</m:t></m:r></m:e></m:rad>'
-    # Số mũ x^2 hoặc x^{2}
-    pow_match = re.findall(r'([a-zA-Z0-9]+)\^\{?([a-zA-Z0-9+-]+)\}?', latex_str)
-    if pow_match:
-        base, exp = pow_match[0]
-        return f'<m:sSup {nsdecls("m")}><m:e><m:r><m:t>{base}</m:t></m:r></m:e><m:sup><m:r><m:t>{exp}</m:t></m:r></m:sup></m:sSup>'
-        
+
+    # Mặc định
     clean_text = latex_str.replace('\\', '').replace('{', '').replace('}', '')
     return f'<m:r {nsdecls("m")}><m:t>{clean_text}</m:t></m:r>'
 
 def add_math_run_to_paragraph(paragraph, text):
+    """
+    Quét và tách chuỗi văn bản, đồng thời dọn dẹp các chữ 'text' đứng độc lập ở ngoài dấu $
+    """
+    if not text: return
+    # Xóa bỏ chữ 'text ' đứng lỗi trước đơn vị km, h, phút bên ngoài công thức
+    text = re.sub(r'\btext\s+(km/h|km|phút|giờ)\b', r'\1', text)
+    
     parts = re.split(r'(\$.*?\$)', text)
     for part in parts:
         if part.startswith('$') and part.endswith('$'):
@@ -87,7 +111,7 @@ def add_math_run_to_paragraph(paragraph, text):
                 oMath_elm = parse_xml(f'<m:oMath {nsdecls("m")}>{omml_xml_str}</m:oMath>')
                 paragraph._p.append(oMath_elm)
             except Exception:
-                paragraph.add_run(latex_content)
+                paragraph.add_run(latex_content.replace('\\', ''))
         else:
             if part: paragraph.add_run(part)
 
@@ -171,46 +195,42 @@ def init_gemini_client(api_key):
 
 def generate_exam_data(model, config, topics, subject_rule):
     prompt = f"""
-    Bạn là chuyên gia ra đề thi cấp quốc gia cho tất cả các môn học thuộc Chương trình GDPT Việt Nam.
-    Hãy tạo lập một cấu trúc đề kiểm tra toàn diện môn {config['subject']} - Khối Lớp {config['grade']}.
+    Bạn là chuyên gia khảo thí và đo lường giáo dục. Hãy tạo đề kiểm tra môn {config['subject']} - Khối {config['grade']}.
+    Tổng điểm: 10.0 điểm. Số câu TN: {config['num_tn']}, Số câu TL: {config['num_tl']}.
     
-    THÔNG SỐ KỸ THUẬT:
-    - Tổng điểm bắt buộc: Đúng 10.0 điểm.
-    - Số lượng: Sinh chính xác ĐÚNG {config['num_tn']} câu trắc nghiệm (TN) và ĐÚNG {config['num_tl']} câu tự luận (TL).
-    - Cân đối ma trận điểm: Mỗi câu trắc nghiệm đồng điểm trị giá {10 * 0.7 / max(1, config['num_tn']):.2f} điểm. Tổng điểm tự luận là {10 * 0.3:.1f} điểm, chia đều cho {config['num_tl']} câu tự luận.
-    - Phân bổ nhận thức: Nhận biết ({config['nb_ratio']}%), Thông hiểu ({config['th_ratio']}%), Vận dụng ({config['vd_ratio']}%), Vận dụng cao ({config['vdc_ratio']}%).
+    QUY ĐỊNH KÝ HIỆU TOÁN HỌC KHÔNG LỖI:
+    - Ký hiệu khác: Viết là $x \\neq 3$, không được ghi chữ 'text'.
+    - Ký hiệu tam giác và đồng dạng: Viết là $\\triangle OAB$ và $\\sim$. Bắt buộc bọc trong dấu $.
+    - Phân số: $\\frac{{2}}{{5}}$. Đơn vị đo như km/h, phút, giờ viết thường bình thường ngoài dấu $, TUYỆT ĐỐI không chèn chữ 'text' phía trước.
 
-    QUY ĐỊNH KÝ HIỆU CHUYÊN BIỆT CHO MÔN HỌC NÀY:
-    {subject_rule}
-
-    BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON NGUYÊN BẢN (KHÔNG KHỐI CODE ```json VÀ ``` TRÙNG LẶP), CẤU TRÚC CHÍNH XÁC:
+    BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN CÓ CHỨA CẢ MA TRẬN VÀ BẢN ĐẶC TẢ CHI TIẾT:
     {{
       "ma_tran": [
-        {{"chu_de": "Tên nội dung kiến thức", "nb_tn": 1, "nb_tl": 0, "th_tn": 1, "th_tl": 0, "vd_tn": 0, "vd_tl": 1, "vdc_tn": 0, "vdc_tl": 0}}
+        {{"chu_de": "Phân thức đại số", "nb_tn": 1, "nb_tl": 0, "th_tn": 0, "th_tl": 0, "vd_tn": 0, "vd_tl": 0, "vdc_tn": 0, "vdc_tl": 0}}
+      ],
+      "bang_dac_ta": [
+        {{
+          "chu_de": "Phân thức đại số",
+          "noi_dung": "Phân thức đại số và điều kiện xác định",
+          "muc_do": "Nhận biết",
+          "yeu_cau_can_dat": "Nhận biết được điều kiện xác định của một phân thức đại số.",
+          "so_cau": "1 câu (Câu 1 TN)",
+          "diem": 0.25
+        }}
       ],
       "de_kiem_tra": {{
         "trac_nghiem": [
-          {{
-            "id": "Câu 1",
-            "muc_do": "Nhận biết",
-            "chu_de": "...",
-            "cau_hoi": "Nội dung câu hỏi tuân thủ quy định ký hiệu bộ môn?",
-            "options": {{"A": "Phương án A", "B": "Phương án B", "C": "Phương án C", "D": "Phương án D"}},
-            "dap_an": "A"
-          }}
+          {{"id": "Câu 1", "muc_do": "Nhận biết", "chu_de": "Phân thức đại số", "cau_hoi": "Điều kiện xác định của phân thức $\\frac{{x+1}}{{x-3}}$ là:", "options": {{"A": "$x \\neq 3$", "B": "$x \\neq 0$", "C": "$x \\neq -1$", "D": "$x \\neq 1$"}}, "dap_an": "A"}}
         ],
-        "tu_luan": [
-          {{"id": "Câu 1 (TL)", "muc_do": "Vận dụng", "chu_de": "...", "cau_hoi": "Nội dung câu hỏi tự luận?", "diem": 1.5}}
-        ]
+        "tu_luan": []
       }},
       "dap_an_chi_tiet": {{
         "trac_nghiem": {{"Câu 1": "A"}},
-        "tu_luan": [
-          {{"id": "Câu 1 (TL)", "huong_dan": "Các bước chấm giải chi tiết...", "thang_diem": {{"Ý chính 1...": 0.5, "Ý chính 2...": 1.0}}}}
-        ]
+        "tu_luan": []
       }}
     }}
     """
+    # (Giữ nguyên đoạn code gọi model và json.loads ở phía dưới...)
     response = model.generate_content(prompt)
     raw = response.text.strip()
     raw = re.sub(r'^```json\s*', '', raw, flags=re.IGNORECASE)
@@ -255,9 +275,28 @@ def build_single_docx(config, data, code_label, include_matrix=True):
             row[3].text = f"TN:{item.get('vd_tn',0)}|TL:{item.get('vd_tl',0)}"
             row[4].text = f"TN:{item.get('vdc_tn',0)}|TL:{item.get('vdc_tl',0)}"
         doc.add_paragraph()
-
+# --- BẢN ĐẶC TẢ ĐỀ KIỂM TRA ---
+    if include_matrix and 'bang_dac_ta' in data:
+        doc.add_heading("II. BẢNG ĐẶC TẢ KỸ THUẬT ĐỀ KIỂM TRA", level=2)
+        dt_table = doc.add_table(rows=1, cols=6)
+        dt_table.style = 'Table Grid'
+        
+        hdrs = ['Chủ đề', 'Nội dung kiến thức', 'Mức độ', 'Yêu cầu cần đạt', 'Số câu', 'Điểm']
+        for idx, h in enumerate(hdrs): 
+            dt_table.rows[0].cells[idx].text = h
+            
+        for item in data['bang_dac_ta']:
+            row = dt_table.add_row().cells
+            row[0].text = str(item.get('chu_de', ''))
+            row[1].text = str(item.get('noi_dung', ''))
+            row[2].text = str(item.get('muc_do', ''))
+            row[3].text = str(item.get('yeu_cau_can_dat', ''))
+            row[4].text = str(item.get('so_cau', ''))
+            row[5].text = f"{item.get('diem', 0)} đ"
+        doc.add_paragraph()
+        
     # Đề thi
-    doc.add_heading("II. NỘI DUNG CÂU HỎI", level=2)
+    doc.add_heading("III. NỘI DUNG CÂU HỎI", level=2)
     de = data.get('de_kiem_tra', {})
     
     if de.get('trac_nghiem'):
