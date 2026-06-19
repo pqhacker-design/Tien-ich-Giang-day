@@ -78,7 +78,7 @@ def init_gemini_client(api_key):
     try:
         genai.configure(api_key=api_key)
         # Sử dụng mô hình gemini-2.5-pro để xử lý tư duy ma trận chính xác nhất
-        return genai.GenerativeModel('gemini-2.5-pro')
+        return genai.GenerativeModel('gemini-2.5-flash')
     except Exception as e:
         st.error(f"Lỗi cấu hình Gemini Client: {e}")
         return None
