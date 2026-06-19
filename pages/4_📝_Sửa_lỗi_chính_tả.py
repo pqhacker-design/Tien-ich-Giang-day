@@ -1,144 +1,160 @@
 import streamlit as st
-import io
 import os
 import pandas as pd
-from docx import Document
+import altair as alt
 
-# --- MODULE 1: XỬ LÝ WORD GIỮ NGUYÊN ĐỊNH DẠNG (Bê từ bản Desktop qua) ---
-class WordProcessor:
-    @staticmethod
-    def extract_full_text(doc):
-        full_text = []
-        for para in doc.paragraphs:
-            if para.text.strip():
-                full_text.append(para.text)
-        return "\n".join(full_text)
+# Import các module nội bộ
+from utils import load_criteria, save_criteria, get_docx_info
+from formatter import normalize_to_nd30
+from spelling_checker import check_vietnamese_spelling
+from grammar_checker import check_vietnamese_grammar
+from ai_checker import analyze_document_with_ai, get_ai_response
+from track_changes import render_track_changes_view
+from report_generator import generate_excel_report
 
-    @staticmethod
-    def replace_text_keep_format(doc, search_text, replace_text):
-        # Sửa đổi cấp Paragraph và Run cho văn bản thường
-        for paragraph in doc.paragraphs:
-            if search_text in paragraph.text:
-                for run in paragraph.runs:
-                    if search_text in run.text:
-                        run.text = run.text.replace(search_text, replace_text)
-        # Sửa đổi bên trong các bảng biểu
-        for table in doc.tables:
-            for row in table.rows:
-                for cell in row.cells:
-                    for paragraph in cell.paragraphs:
-                        if search_text in paragraph.text:
-                            for run in paragraph.runs:
-                                if search_text in run.text:
-                                    run.text = run.text.replace(search_text, replace_text)
-        return doc
+st.set_page_config(page_title="AI Document & School Record Processor", layout="wide")
 
-# --- MODULE 2: KẾT NỐI GEMINI AI XỬ LÝ NGỮ CẢNH ---
-class AICorrector:
-    def __init__(self, api_key):
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-2.5-flash', generation_config={"response_mime_type": "application/json"})
-
-    def analyze_text(self, text):
-        import json
-        if not text.strip(): return []
-        prompt = f"""
-        Bạn là chuyên gia ngôn ngữ Tiếng Việt hành chính và giáo dục. Hãy rà soát đoạn văn bản sau để tìm lỗi chính tả, ngữ pháp, từ ngữ rườm rà:
-        \"\"\"{text}\"\"\"
-        Trả về kết quả duy nhất ở cấu trúc JSON:
-        {{ "errors": [ {{ "sai": "từ lỗi", "dung": "sửa đúng", "loai": "Chính tả" hoặc "Ngữ pháp" hoặc "Diễn đạt", "ly_do": "giải thích" }} ] }}
-        """
-        try:
-            response = self.model.generate_content(prompt)
-            return json.loads(response.text).get("errors", [])
-        except:
-            return []
-
-# --- GIAO DIỆN STREAMLIT HIỆN ĐẠI ---
-st.title("📝 Trợ lý Sửa lỗi Chính tả & Diễn đạt Hành chính")
-st.write("Quét lỗi ngữ cảnh sâu bằng AI và tự động sửa đổi trực tiếp trên các khối định dạng Word gốc.")
-
-# Lấy API Key tập trung từ Trang chủ giống các ứng dụng khác
+# --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
-    api_key = st.session_state["gemini_api_key"]
+    api_key_input = st.session_state["gemini_api_key"]
 else:
-    st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng.")
-    st.stop()
+    # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
+    st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
+    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
+    st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
 
-col1, col2 = st.columns([1, 1])
+st.sidebar.subheader("🎯 Tiêu chí kiểm tra Sổ Sách")
+current_criteria = load_criteria()
 
-with col1:
-    st.subheader("📂 1. Tải tài liệu cần quét")
-    uploaded_file = st.file_uploader("Kéo thả file Word .docx vào đây:", type=["docx"])
+# Cho phép thêm tiêu chí động qua UI
+profile_type = st.sidebar.selectbox("Loại hồ sơ cấu hình:", list(current_criteria.keys()))
+new_criterion = st.sidebar.text_input("Thêm mục kiểm tra bắt buộc:")
+if st.sidebar.button("Cập nhật tiêu chí"):
+    if new_criterion:
+        current_criteria[profile_type].append(new_criterion)
+        save_criteria(current_criteria)
+        st.sidebar.success("Đã cập nhật tiêu chí động!")
+
+# Giao diện chính chính thức
+st.title("📑 AI CHUẨN HÓA VĂN BẢN HÀNH CHÍNH VÀ HỒ SƠ GIÁO DỤC")
+st.caption("Giải pháp tự động hóa rà soát Nghị định 30/2020/NĐ-CP và Chương trình GDPT 2018")
+
+uploaded_file = st.file_uploader("Kéo thả file văn bản hành chính hoặc Hồ sơ trường học của bạn (.DOCX)", type=["docx"])
+
+if uploaded_file is not None:
+    # Lưu file tạm để xử lý bằng thư viện docx
+    temp_path = f"temp_{uploaded_file.name}"
+    with open(temp_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+        
+    doc_info = get_docx_info(temp_path)
     
-    if uploaded_file is not None:
-        file_bytes = io.BytesIO(uploaded_file.read())
-        st.success(f"✔️ Đã nhận file: {uploaded_file.name}")
-        
-        # LƯU TÊN FILE VÀO SESSION STATE ĐỂ DÙNG CHUNG AN TOÀN
-        st.session_state["current_file_name"] = uploaded_file.name
-        
-        if st.button("🚀 Bắt đầu quét lỗi văn bản", type="primary", use_container_width=True):
-            with st.spinner("AI đang rà soát từng câu chữ..."):
-                doc = Document(file_bytes)
-                full_text = WordProcessor.extract_full_text(doc)
-                
-                # Gọi AI xử lý
-                corrector = AICorrector(api_key)
-                text_blocks = [full_text[i:i+4000] for i in range(0, len(full_text), 4000)]
-                all_errors = []
-                for block in text_blocks:
-                    all_errors.extend(corrector.analyze_text(block))
-                
-                # Lưu trạng thái kết quả vào bộ nhớ Streamlit
-                st.session_state["word_doc"] = doc
-                st.session_state["word_errors"] = all_errors
-                st.success(f"Quét xong! Tìm thấy {len(all_errors)} điểm cần tối ưu.")
-    else:
-        # KHI XÓA FILE: Tự động dọn dẹp các dữ liệu cũ trong bộ nhớ để tránh xung đột giao diện
-        if "word_errors" in st.session_state:
-            del st.session_state["word_errors"]
-        if "word_doc" in st.session_state:
-            del st.session_state["word_doc"]
-        if "fixed_file" in st.session_state:
-            del st.session_state["fixed_file"]
-        if "current_file_name" in st.session_state:
-            del st.session_state["current_file_name"]
+    # Hiển thị Metadata văn bản sơ bộ
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Tên văn bản", doc_info["filename"])
+    col2.metric("Số lượng từ", doc_info["word_count"])
+    col3.metric("Số trang dự tính", doc_info["page_count"])
+    col4.metric("Dung lượng", f"{uploaded_file.size / 1024:.2f} KB")
 
-with col2:
-    st.subheader("📊 2. Kết quả phân tích & Sửa đổi")
-    if "word_errors" in st.session_state and st.session_state["word_errors"]:
-        errors = st.session_state["word_errors"]
-        doc = st.session_state["word_doc"]
-        
-        # Lấy tên file an toàn từ session_state (mặc định là 'Tai_Lieu.docx' nếu trống)
-        safe_file_name = st.session_state.get("current_file_name", "Tai_Lieu.docx")
-        
-        # Hiển thị bảng lưới lỗi trực quan
-        df_show = pd.DataFrame(errors)
-        df_show.columns = ["Từ bị sai / Kém hiệu quả", "Đề xuất sửa đúng", "Phân loại lỗi", "Lý do chi tiết"]
-        st.dataframe(df_show, use_container_width=True)
-        
-        st.markdown("---")
-        if st.button("🔄 Áp dụng sửa tất cả lỗi & Giữ nguyên định dạng gốc", type="secondary", use_container_width=True):
-            with st.spinner("Hệ thống đang thay thế thông minh các khối văn bản..."):
-                for err in errors:
-                    doc = WordProcessor.replace_text_keep_format(doc, err["sai"], err["dung"])
-                
-                output_stream = io.BytesIO()
-                doc.save(output_stream)
-                st.session_state["fixed_file"] = output_stream.getvalue()
-                st.toast("🎉 Đã sửa xong toàn bộ văn bản trên hệ thống!")
+    # Bảng điều khiển chế độ phân tích
+    st.write("---")
+    st.subheader("🛠️ Chế độ phân tích & Chuẩn hóa")
+    c_thethuc = st.checkbox("Kiểm tra thể thức (NĐ 30/2020/NĐ-CP)", value=True)
+    c_chinhta = st.checkbox("Kiểm tra chính tả nâng cao", value=True)
+    c_nguphap = st.checkbox("Kiểm tra ngữ pháp & Hành văn", value=True)
+    c_hoso = st.checkbox("Phân tích chiều sâu Hồ sơ Giáo dục (GDPT 2018)", value=True)
 
-        if "fixed_file" in st.session_state:
-            st.write("")
-            st.download_button(
-                label="💾 TẢI FILE WORD ĐÃ SỬA SẠCH LỖI (.DOCX)",
-                data=st.session_state["fixed_file"],
-                file_name=f"Sua_Loi_Chinh_Ta_{safe_file_name}", # <-- ĐÃ THAY BẰNG BIẾN AN TOÀN
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                use_container_width=True
-            )
-    else:
-        st.info("Chưa có dữ liệu. Vui lòng hoàn thành bước nạp và quét file ở cột bên trái.")
+    if st.button("🚀 BẮT ĐẦU PHÂN TÍCH VÀ SỬA LỖI TỰ ĐỘNG", type="primary"):
+        with st.spinner("Hệ thống AI đang đọc hiểu và quét sâu cấu trúc văn bản..."):
+            
+            # Khởi tạo danh sách lỗi tổng hợp
+            all_errors = []
+            
+            if c_chinhta:
+                all_errors.extend(check_vietnamese_spelling(doc_info["full_text"]))
+            if c_nguphap:
+                all_errors.extend(check_vietnamese_grammar(doc_info["full_text"]))
+                
+            # Gọi Core AI xử lý sâu
+            ai_result = None
+            if c_hoso or c_thethuc:
+                ai_result = analyze_document_with_ai(doc_info["full_text"], doc_info["filename"])
+                if ai_result and "loi_the_thuc" in ai_result:
+                    all_errors.extend(ai_result["loi_the_thuc"])
+
+            # Lưu vào session state phục vụ tương tác trực tiếp
+            st.session_state["all_errors"] = all_errors
+            st.session_state["ai_result"] = ai_result
+            
+            # Tiến hành chuẩn hóa định dạng vật lý theo NĐ30 luôn
+            out_standard_path = f"standardized_{doc_info['filename']}"
+            normalize_to_nd30(temp_path, out_standard_path)
+            st.session_state["out_standard_path"] = out_standard_path
+
+    # Hiển thị kết quả xử lý nếu có trong Session State
+    if "ai_result" in st.session_state and st.session_state["ai_result"]:
+        res = st.session_state["ai_result"]
+        
+        st.write("---")
+        st.header("📊 KẾT QUẢ ĐÁNH GIÁ TỪ CHUYÊN GIA AI")
+        
+        col_res1, col_res2 = st.columns([1, 1])
+        with col_res1:
+            st.info(f"📋 **Loại hồ sơ nhận diện:** {res.get('loai_ho_so', 'Không xác định')} ({res.get('do_tin_cay', 0)}% độ tin cậy)")
+            st.metric(value=f"{res['diem'].get('tong', 0)} / 100", label="TỔNG ĐIỂM CHẤT LƯỢNG HỒ SƠ")
+            st.subheader(f"Xếp loại chung: {res.get('xep_loai', 'Chưa xếp loại')}")
+            
+        with col_res2:
+            st.write("**Biểu đồ phân rã điểm số năng lực văn bản:**")
+            chart_data = pd.DataFrame({
+                'Tiêu chí': ['Thể thức', 'Nội dung', 'GDPT 2018', 'Năng lực số', 'Khoa học'],
+                'Điểm': [res['diem'].get('the_thuc',0), res['diem'].get('noi_dung',0), res['diem'].get('gdpt_2018',0), res['diem'].get('nang_luc_so',0), res['diem'].get('khoa_hoc',0)]
+            })
+            chart = alt.Chart(chart_data).mark_bar(color='#4CAF50').encode(x='Tiêu chí', y='Điểm')
+            st.altair_chart(chart, use_container_width=True)
+
+        # Kiểm tra chi tiết cấu trúc hồ sơ học đường
+        st.write("---")
+        tab1, tab2, tab3 = st.tabs(["⚠️ Cảnh báo Cấu trúc & GDPT 2018", "📝 Phê duyệt Track Changes", "🤖 Trợ lý AI Hỏi Đáp"])
+        
+        with tab1:
+            st.subheader("Kiểm tra sự tích hợp Chương trình GDPT 2018")
+            st.json(res.get("gdpt_2018_check", {}))
+            
+            st.subheader("Cảnh báo thiếu sót danh mục bắt buộc:")
+            for thieu in res.get("thieu_sot_cau_truc", []):
+                st.warning(thieu)
+                
+            st.subheader("Đề xuất cải tiến từ Hội đồng chuyên môn AI:")
+            for dexuat in res.get("de_xuat_cai_tien", []):
+                st.success(f"💡 {dexuat}")
+
+        with tab2:
+            # Module 5 & Module 6 hiển thị tại đây
+            remaining_errors = render_track_changes_view(st.session_state["all_errors"])
+            
+            # Xuất file báo cáo tổng hợp
+            st.write("---")
+            st.subheader("💾 Xuất dữ liệu & Báo cáo hoàn chỉnh")
+            
+            # Đọc file Word đã định dạng sẵn lề lối từ formatter để người dùng tải
+            if "out_standard_path" in st.session_state:
+                with open(st.session_state["out_standard_path"], "rb") as f_word:
+                    st.download_button("📥 Tải về Văn bản đã chuẩn hóa lề lối (.DOCX)", data=f_word.read(), file_name=f"ChuanHoa_{doc_info['filename']}")
+            
+            # Tạo file excel báo cáo lỗi động dựa trên dữ liệu hiện tại
+            excel_data = generate_excel_report(remaining_errors, res['diem'])
+            st.download_button("📥 Xuất Báo cáo Thống kê lỗi chi tiết (.XLSX)", data=excel_data, file_name=f"BaoCaoLoi_{doc_info['filename']}.xlsx")
+
+        with tab3:
+            st.subheader("💬 Hỏi đáp tương tác sâu về các quy định pháp lý pháp lý")
+            user_q = st.text_input("Ví dụ: Tại sao lỗi thể thức quốc hiệu của tôi lại bị chấm điểm thấp?")
+            if user_q:
+                with st.spinner("AI đang tra cứu Nghị định 30/2020/NĐ-CP..."):
+                    context_prompt = f"Dựa trên văn bản có chất lượng điểm số tổng {res['diem'].get('tong', 0)}, người dùng hỏi: {user_q}. Hãy giải thích rõ căn cứ theo điều khoản pháp lý quy định hành chính hoặc hướng dẫn của Bộ GD&ĐT."
+                    answer = get_api_response(context_prompt)
+                    st.write(answer)
+                    
+    # Dọn dẹp tệp tạm thời sau phiên làm việc
+    if os.path.exists(temp_path):
+        os.remove(temp_path)
