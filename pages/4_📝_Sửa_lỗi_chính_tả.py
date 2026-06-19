@@ -85,15 +85,28 @@ if uploaded_file is not None:
 
     # ĐƯA TOÀN BỘ KHỐI HIỂN THỊ RA NGOÀI LỆNH IF BUTTON
     # Chỉ cần kiểm tra xem trong Session State đã có dữ liệu phân tích của file hiện tại chưa
+    # Đảm bảo dữ liệu tồn tại, đúng file và phải là kiểu dict (từ điển)
     if "ai_result" in st.session_state and st.session_state.get("analyzed_file_name") == uploaded_file.name:
         res = st.session_state["ai_result"]
         
+        # NẾU AI TRẢ VỀ STRING (LỖI HOẶC TEXT THUỒN), HIỂN THỊ DẠNG TEXT RỒI DỪNG
+        if isinstance(res, str):
+            st.error("⚠️ Phản hồi từ AI không đúng cấu trúc cấu hình dự kiến:")
+            st.code(res)
+            st.stop()
+            
+        if res is None:
+            st.error("❌ Không thể phân tích văn bản này. Vui lòng thử lại!")
+            st.stop()
+
+        # --- Phía dưới này giữ nguyên cấu trúc hiển thị cũ khi đã chắc chắn res là dict ---
         st.write("---")
         st.header("📊 KẾT QUẢ ĐÁNH GIÁ TỪ CHUYÊN GIA AI")
         
         col_res1, col_res2 = st.columns([1, 1])
         with col_res1:
             st.info(f"📋 **Loại hồ sơ nhận diện:** {res.get('loai_ho_so', 'Không xác định')} ({res.get('do_tin_cay', 0)}% độ tin cậy)")
+            # ... Các dòng code metric và subheader giữ nguyên ...
             st.metric(value=f"{res['diem'].get('tong', 0)} / 100", label="TỔNG ĐIỂM CHẤT LƯỢNG HỒ SƠ")
             st.subheader(f"Xếp loại chung: {res.get('xep_loai', 'Chưa xếp loại')}")
             
