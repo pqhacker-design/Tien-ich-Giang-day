@@ -407,37 +407,55 @@ with tab1:
         code_prefix = st.text_input("Ký hiệu mã đề bắt đầu:", value="101")
 
 with tab2:
-    st.markdown('<div class="section-header">Quy trình sinh đề 2 bước (Chống nghẽn cấu trúc)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Ma trận nhận thức & Quy trình 2 bước chống nghẽn</div>', unsafe_allow_html=True)
     
-    # 1. Khởi tạo các trạng thái lưu trữ trung gian nếu chưa có (Thụt lề 1 Tab / 4 dấu cách)
+    # 1. KHAI BÁO CÁC SLIDER NHẬP LIỆU TRƯỚC ĐỂ ĐỊNH NGHĨA BIẾN (Quan trọng)
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: nb_ratio = st.slider("Nhận biết (%)", 0, 100, 40)
+    with c2: th_ratio = st.slider("Thông hiểu (%)", 0, 100, 30)
+    with c3: vd_ratio = st.slider("Vận dụng (%)", 0, 100, 20)
+    with c4: vdc_ratio = st.slider("Vận dụng cao (%)", 0, 100, 10)
+    
+    total_ratio = nb_ratio + th_ratio + vd_ratio + vdc_ratio
+    if total_ratio != 100:
+        st.warning(f"⚠️ Tổng tỷ lệ hiện tại đạt {total_ratio}%. Thầy cô vui lòng căn chỉnh về chính xác 100%.")
+        
+    topics_list = st.text_area("Nhập các chủ đề/nội dung kiến thức cần quét (Mỗi nội dung một dòng):", 
+                               value="Nội dung 1: Kiến thức trọng tâm chương học cũ\nNội dung 2: Kiến thức nâng cao bổ trợ")
+
+    st.markdown("---")
+
+    # 2. KHỞI TẠO BIẾN TRẠNG THÁI SESSION STATE
     if 'step1_data' not in st.session_state: 
         st.session_state.step1_data = None
 
-    # Phân chia 2 cột cho 2 nút bấm
+    # 3. THIẾT LẬP LUỒNG XỬ LÝ 2 NÚT BẤM
     col_btn1, col_btn2 = st.columns(2)
     
     with col_btn1:
-        # Nút bấm Bước 1 (Thụt lề trong with col_btn1)
         if st.button("📊 BƯỚC 1: KHỞI TẠO MA TRẬN & ĐẶC TẢ"):
-            config_pkg = {
-                "subject": subject, "grade": grade, "num_tn": num_tn, "num_tl": num_tl,
-                "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio
-            }
-            with st.spinner("AI đang tính toán phân bổ ma trận và đặc tả..."):
-                try:
-                    t_list = [t.strip() for t in topics_list.split('\n') if t.strip()]
-                    st.session_state.step1_data = generate_step1_matrix(model, config_pkg, t_list)
-                    st.success("✅ Đã thiết lập xong Khung đặc tả bộ môn!")
-                except Exception as e:
-                    st.error(f"Lỗi khởi tạo khung: {e}")
+            if total_ratio != 100:
+                st.error("Tổng tỷ lệ phần trăm phân bổ điểm phải bằng 100% trước khi khởi tạo.")
+            else:
+                # Lúc này các biến nb_ratio, th_ratio... đã được định nghĩa ở trên nên sẽ chạy mượt mà
+                config_pkg = {
+                    "subject": subject, "grade": grade, "num_tn": num_tn, "num_tl": num_tl,
+                    "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio
+                }
+                with st.spinner("AI đang tính toán phân bổ ma trận và đặc tả..."):
+                    try:
+                        t_list = [t.strip() for t in topics_list.split('\n') if t.strip()]
+                        st.session_state.step1_data = generate_step1_matrix(model, config_pkg, t_list)
+                        st.success("✅ Đã thiết lập xong Khung đặc tả bộ môn!")
+                    except Exception as e:
+                        st.error(f"Lỗi khởi tạo khung: {e}")
 
-    # Kiểm tra nếu đã có dữ liệu Bước 1 thì mới xử lý tiếp Bước 2
+    # Hiển thị cấu trúc sau khi xong Bước 1
     if st.session_state.step1_data:
         with st.expander("🔍 Xem trước Bản đặc tả kỹ thuật vừa sinh"):
             st.json(st.session_state.step1_data)
             
         with col_btn2:
-            # Nút bấm Bước 2 (Chỉ khả dụng khi đã xong Bước 1)
             if st.button("🔥 BƯỚC 2: SINH CÂU HỎI & ĐẢO MÃ ĐỀ"):
                 config_pkg = {
                     "subject": subject, "grade": grade, "num_tn": num_tn, "num_tl": num_tl,
