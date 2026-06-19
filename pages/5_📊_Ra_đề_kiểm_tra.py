@@ -472,7 +472,7 @@ with tab2:
                         st.session_state.step1_data = generate_step1_matrix(model, config_pkg, t_list)
                         st.success("✅ Đã thiết lập xong Khung đặc tả bộ môn!")
                     except Exception as e:
-                        st.error(f"Lỗi khởi tạo khung: {e}")
+                        st.error(f"Bạn đã hết thời hạn miễn phí, xin quay lại vào ngày mai")
 
     # Hiển thị cấu trúc sau khi xong Bước 1
     if st.session_state.step1_data:
@@ -508,7 +508,7 @@ with tab2:
                         
                         st.success(f"🎉 Hoàn tất trọn vẹn! Đã tạo xong đề gốc và {num_codes} mã đề đảo.")
                     except Exception as e:
-                        st.error(f"Lỗi tạo nội dung câu hỏi: {e}")
+                        st.error(f"Bạn đã hết thời hạn miễn phí, xin quay lại vào ngày mai")
                         
 with tab3:
     if st.session_state.generated_data is None:
