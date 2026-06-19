@@ -347,7 +347,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
 # ==========================================
 # GIAO DIỆN ĐIỀU KHIỂN STREAMLIT
 # ==========================================
-st.markdown('<div class="main-title">Trợ Lý Thiết Kế Đề Thi Đa Môn Chuẩn Ký Hiệu Khoa Học v3.0</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">Trợ Lý Thiết Kế Đề Thi</div>', unsafe_allow_html=True)
 
 # Kiểm tra khóa API tập trung
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
