@@ -58,50 +58,71 @@ SUBJECTS_CONFIG = {
 # ==========================================
 def convert_latex_to_omml_xml(latex_str):
     """
-    Bộ chuyển đổi mở rộng: Xử lý thêm các ký hiệu so sánh, hình học Toán 8
+    Bộ dịch ngược mở rộng: Xử lý triệt để số mũ đơn, ký hiệu hình học lớp 8 
+    và các lỗi dính chữ 'text' từ AI.
     """
-    latex_str = str(latex_str)
-    # Tự động dọn dẹp nếu AI sinh thừa chữ 'text ' bên trong công thức
-    latex_str = latex_str.replace('text ', '').strip()
+    # 1. Làm sạch chuỗi công thức ban đầu
+    latex_str = str(latex_str).replace('text ', '').replace('\\\\', '\\').strip()
     
-    # 1. Ký hiệu khác (\neq hoặc \ne) -> ≠
-    if '\\neq' in latex_str or '\\ne' in latex_str:
-        val = latex_str.replace('\\neq', '').replace('\\ne', '').strip()
-        return f'<m:r {nsdecls("m")}><m:t>x ≠ {val}</m:t></m:r>'
+    # 2. Xử lý ký hiệu đồng dạng (chấp nhận cả \sim, sim, hoặc \ sim)
+    if 'sim' in latex_str:
+        return f'<m:r {nsdecls("m")}><m:t> ∽ </m:t></m:r>'
         
-    # 2. Tam giác (\triangle OAB) -> △OAB
-    if '\\triangle' in latex_str:
-        val = latex_str.replace('\\triangle', '').strip()
+    # 3. Xử lý ký hiệu tam giác (chấp nhận \triangle, triangle, hoặc Δ)
+    if 'triangle' in latex_str or 'Δ' in latex_str:
+        val = latex_str.replace('\\triangle', '').replace('triangle', '').replace('Δ', '').strip()
         return f'<m:r {nsdecls("m")}><m:t>Δ{val}</m:t></m:r>'
         
-    # 3. Đồng dạng (\sim) -> ∽
-    if '\\sim' in latex_str:
-        return f'<m:r {nsdecls("m")}><m:t> ∽ </m:t></m:r>'
+    # 4. Xử lý ký hiệu khác (\neq, \ne hoặc neq)
+    if 'ne' in latex_str or 'neq' in latex_str or '≠' in latex_str:
+        val = re.sub(r'\\?neq|\\?ne|≠', '', latex_str).strip()
+        return f'<m:r {nsdecls("m")}><m:t>≠ {val}</m:t></m:r>'
 
-    # 4. Phân số \frac{a}{b}
-    frac_match = re.findall(r'\\frac\{([^}]+)\}\{([^}]+)\}', latex_str)
+    # 5. Xử lý số mũ đa dạng: x^2, x^2y, x^{2+4}, cm^2
+    # Trích xuất dạng mũ phức tạp x^{2+4} trước
+    bracket_pow = re.findall(r'([a-zA-Z0-9]+)\^\{([^}]+)\}', latex_str)
+    if bracket_pow:
+        base, exp = bracket_pow[0]
+        return f'<m:sSup {nsdecls("m")}><m:e><m:r><m:t>{base}</m:t></m:r></m:e><m:sup><m:r><m:t>{exp}</m:t></m:r></m:sup></m:sSup>'
+    
+    # Trích xuất dạng mũ đơn x^2 hoặc x^2y
+    simple_pow = re.findall(r'([a-zA-Z0-9]+)\^([a-zA-Z0-9+-]+)', latex_str)
+    if simple_pow:
+        base, exp = simple_pow[0]
+        # Nếu sau số mũ còn ký tự khác (ví dụ: 5x^2y -> base=5x, exp=2, phần còn lại là y)
+        # Để đơn giản và chính xác trong Word, ta tách phần mũ ra trước
+        return f'<m:sSup {nsdecls("m")}><m:e><m:r><m:t>{base}</m:t></m:r></m:e><m:sup><m:r><m:t>{exp}</m:t></m:r></m:sup></m:sSup>'
+
+    # 6. Phân số \frac{a}{b} hoặc frac{a}{b}
+    frac_match = re.findall(r'\\?frac\{([^}]+)\}\{([^}]+)\}', latex_str)
     if frac_match:
         num, den = frac_match[0]
         return f'<m:f {nsdecls("m")}><m:num><m:r><m:t>{num}</m:t></m:r></m:num><m:den><m:r><m:t>{den}</m:t></m:r></m:den></m:f>'
-        
-    # 5. Căn thức \sqrt{x}
-    sqrt_match = re.findall(r'\\sqrt\{([^}]+)\}', latex_str)
-    if sqrt_match:
-        inner = sqrt_match[0]
-        return f'<m:rad {nsdecls("m")}><m:radPr><m:degHide m:val="1"/></m:radPr><m:deg/><m:e><m:r><m:t>{inner}</m:t></m:r></m:e></m:rad>'
 
-    # Mặc định
+    # Nếu không khớp bộ lọc nào, trả về văn bản trơn sạch sẽ
     clean_text = latex_str.replace('\\', '').replace('{', '').replace('}', '')
     return f'<m:r {nsdecls("m")}><m:t>{clean_text}</m:t></m:r>'
 
+
 def add_math_run_to_paragraph(paragraph, text):
     """
-    Quét và tách chuỗi văn bản, đồng thời dọn dẹp các chữ 'text' đứng độc lập ở ngoài dấu $
+    Quét văn bản, tự động bọc dấu $ cho các biểu thức số mũ hoặc ký hiệu hình học 
+    nếu AI quên không bọc dấu $, tránh việc hiển thị text thô lỗi.
     """
     if not text: return
-    # Xóa bỏ chữ 'text ' đứng lỗi trước đơn vị km, h, phút bên ngoài công thức
-    text = re.sub(r'\btext\s+(km/h|km|phút|giờ)\b', r'\1', text)
     
+    # Dọn dẹp lỗi chữ 'text ' đứng độc lập ngoài văn bản
+    text = re.sub(r'\btext\s+(km/h|km|phút|giờ|cm\^2|cm)\b', r'\1', text)
+    
+    # TỰ ĐỘNG SỬA LỖI: Nếu phát hiện các ký hiệu toán học đứng trơn ngoài dấu $, tự bọc lại
+    # Tìm các cụm như x^2, y^2, cm^2, \triangle ABC, \sim để bọc dấu $ nếu chưa có
+    if '$' not in text:
+        text = re.sub(r'([a-zA-Z0-9]+\^[a-zA-Z0-9]+)', r'$\1$', text)
+        text = re.sub(r'(\\triangle\s*[A-Z\']+)', r'$\1$', text)
+        text = re.sub(r'(\\sim)', r'$\1$', text)
+        text = re.sub(r'(\\neq\s*[0-9\-]+)', r'$\1$', text)
+
+    # Tiến hành cắt chuỗi và chèn cấu trúc vào file Word
     parts = re.split(r'(\$.*?\$)', text)
     for part in parts:
         if part.startswith('$') and part.endswith('$'):
@@ -113,8 +134,8 @@ def add_math_run_to_paragraph(paragraph, text):
             except Exception:
                 paragraph.add_run(latex_content.replace('\\', ''))
         else:
-            if part: paragraph.add_run(part)
-
+            if part: 
+                paragraph.add_run(part)
 # ==========================================
 # KHỞI TẠO SESSION STATE
 # ==========================================
@@ -234,8 +255,11 @@ def generate_step2_questions(model, config, matrix_data, subject_rule):
     Thông số đề thi: Môn {config['subject']}, Khối {config['grade']}. Tổng điểm: 10.0. 
     Mỗi câu trắc nghiệm trị giá {10 * 0.7 / max(1, config['num_tn']):.2f} điểm. Tổng điểm tự luận là {10 * 0.3:.1f} điểm.
 
-    QUY ĐỊNH KÝ HIỆU CHUYÊN BIỆT:
-    {subject_rule}
+    QUY ĐỊNH KÝ HIỆU CHUYÊN BIỆT (BẮT BUỘC):
+    - Tuyệt đối KHÔNG sử dụng chữ 'text' trong công thức và đơn vị. Đơn vị diện tích viết là $cm^2$, không viết trơn.
+    - Ký hiệu đồng dạng viết là $\\sim$ (Phải có 2 dấu gạch chéo ngược để chống nuốt ký tự trong JSON).
+    - Ký hiệu tam giác viết là $\\triangle ABC$.
+    - Mọi đa thức, số mũ, phân số bắt buộc phải nằm gọn trong cặp dấu $...$. Ví dụ: $P = 5x^2y - 3xy^2$.
 
     BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN CÓ CẤU TRÚC (Tuyệt đối không lặp lại phần ma_tran):
     {{
