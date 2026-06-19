@@ -85,76 +85,81 @@ if uploaded_file is not None:
 
     # ĐƯA TOÀN BỘ KHỐI HIỂN THỊ RA NGOÀI LỆNH IF BUTTON
     # Chỉ cần kiểm tra xem trong Session State đã có dữ liệu phân tích của file hiện tại chưa
-    # Đảm bảo dữ liệu tồn tại, đúng file và phải là kiểu dict (từ điển)
-    if "ai_result" in st.session_state and st.session_state.get("analyzed_file_name") == uploaded_file.name:
-        res = st.session_state["ai_result"]
+    # ĐƯA TOÀN BỘ KHỐI HIỂN THỊ RA NGOÀI LỆNH IF BUTTON
+    if "all_errors" in st.session_state and st.session_state.get("analyzed_file_name") == uploaded_file.name:
+        res = st.session_state.get("ai_result")
+        errors = st.session_state["all_errors"]
         
-        # NẾU AI TRẢ VỀ STRING (LỖI HOẶC TEXT THUỒN), HIỂN THỊ DẠNG TEXT RỒI DỪNG
-        if isinstance(res, str):
-            st.error("⚠️ Phản hồi từ AI không đúng cấu trúc cấu hình dự kiến:")
-            st.code(res)
-            st.stop()
-            
-        if res is None:
-            st.error("❌ Không thể phân tích văn bản này. Vui lòng thử lại!")
-            st.stop()
-
-        # --- Phía dưới này giữ nguyên cấu trúc hiển thị cũ khi đã chắc chắn res là dict ---
         st.write("---")
-        st.header("📊 KẾT QUẢ ĐÁNH GIÁ TỪ CHUYÊN GIA AI")
         
-        col_res1, col_res2 = st.columns([1, 1])
-        with col_res1:
-            st.info(f"📋 **Loại hồ sơ nhận diện:** {res.get('loai_ho_so', 'Không xác định')} ({res.get('do_tin_cay', 0)}% độ tin cậy)")
-            # ... Các dòng code metric và subheader giữ nguyên ...
-            st.metric(value=f"{res['diem'].get('tong', 0)} / 100", label="TỔNG ĐIỂM CHẤT LƯỢNG HỒ SƠ")
-            st.subheader(f"Xếp loại chung: {res.get('xep_loai', 'Chưa xếp loại')}")
+        # TRƯỜNG HỢP 1: CÓ SỬ DỤNG AI VÀ AI TRẢ VỀ KẾT QUẢ ĐÚNG DICT
+        if (c_hoso or c_thethuc) and isinstance(res, dict):
+            st.header("📊 KẾT QUẢ ĐÁNH GIÁ TỪ CHUYÊN GIA AI")
             
-        with col_res2:
-            st.write("**Biểu đồ phân rã điểm số năng lực văn bản:**")
-            chart_data = pd.DataFrame({
-                'Tiêu chí': ['Thể thức', 'Nội dung', 'GDPT 2018', 'Năng lực số', 'Khoa học'],
-                'Điểm': [res['diem'].get('the_thuc',0), res['diem'].get('noi_dung',0), res['diem'].get('gdpt_2018',0), res['diem'].get('nang_luc_so',0), res['diem'].get('khoa_hoc',0)]
-            })
-            chart = alt.Chart(chart_data).mark_bar(color='#4CAF50').encode(x='Tiêu chí', y='Điểm')
-            st.altair_chart(chart, use_container_width=True)
-
-        st.write("---")
-        tab1, tab2, tab3 = st.tabs(["⚠️ Cảnh báo Cấu trúc & GDPT 2018", "📝 Phê duyệt Track Changes", "🤖 Trợ lý AI Hỏi Đáp"])
-        
-        with tab1:
-            st.subheader("Kiểm tra sự tích hợp Chương trình GDPT 2018")
-            st.json(res.get("gdpt_2018_check", {}))
-            
-            st.subheader("Cảnh báo thiếu sót danh mục bắt buộc:")
-            for thieu in res.get("thieu_sot_cau_truc", []):
-                st.warning(thieu)
+            col_res1, col_res2 = st.columns([1, 1])
+            with col_res1:
+                st.info(f"📋 **Loại hồ sơ nhận diện:** {res.get('loai_ho_so', 'Không xác định')} ({res.get('do_tin_cay', 0)}% độ tin cậy)")
+                st.metric(value=f"{res['diem'].get('tong', 0)} / 100", label="TỔNG ĐIỂM CHẤT LƯỢNG HỒ SƠ")
+                st.subheader(f"Xếp loại chung: {res.get('xep_loai', 'Chưa xếp loại')}")
                 
-            st.subheader("Đề xuất cải tiến từ Hội đồng chuyên môn AI:")
-            for dexuat in res.get("de_xuat_cai_tien", []):
-                st.success(f"💡 {dexuat}")
+            with col_res2:
+                st.write("**Biểu đồ phân rã điểm số năng lực văn bản:**")
+                chart_data = pd.DataFrame({
+                    'Tiêu chí': ['Thể thức', 'Nội dung', 'GDPT 2018', 'Năng lực số', 'Khoa học'],
+                    'Điểm': [res['diem'].get('the_thuc',0), res['diem'].get('noi_dung',0), res['diem'].get('gdpt_2018',0), res['diem'].get('nang_luc_so',0), res['diem'].get('khoa_hoc',0)]
+                })
+                chart = alt.Chart(chart_data).mark_bar(color='#4CAF50').encode(x='Tiêu chí', y='Điểm')
+                st.altair_chart(chart, use_container_width=True)
 
-        with tab2:
-            # Nhờ đưa ra ngoài khối if của button, hàm track changes tương tác radio sẽ hoạt động mượt mà
-            remaining_errors = render_track_changes_view(st.session_state["all_errors"])
             st.write("---")
-            st.subheader("💾 Xuất dữ liệu & Báo cáo hoàn chỉnh")
+            tab1, tab2, tab3 = st.tabs(["⚠️ Cảnh báo Cấu trúc & GDPT 2018", "📝 Phê duyệt Track Changes", "🤖 Trợ lý AI Hỏi Đáp"])
             
+            with tab1:
+                st.subheader("Kiểm tra sự tích hợp Chương trình GDPT 2018")
+                st.json(res.get("gdpt_2018_check", {}))
+                
+                st.subheader("Cảnh báo thiếu sót danh mục bắt buộc:")
+                for thieu in res.get("thieu_sot_cau_truc", []):
+                    st.warning(thieu)
+                    
+                st.subheader("Đề xuất cải tiến từ Hội đồng chuyên môn AI:")
+                for dexuat in res.get("de_xuat_cai_tien", []):
+                    st.success(f"💡 {dexuat}")
+                    
+            with tab2:
+                remaining_errors = render_track_changes_view(errors)
+                st.write("---")
+                st.subheader("💾 Xuất dữ liệu & Báo cáo hoàn chỉnh")
+                if "out_standard_path" in st.session_state and os.path.exists(st.session_state["out_standard_path"]):
+                    with open(st.session_state["out_standard_path"], "rb") as f_word:
+                        st.download_button("📥 Tải về Văn bản đã chuẩn hóa lề lối (.DOCX)", data=f_word.read(), file_name=f"ChuanHoa_{doc_info['filename']}")
+                excel_data = generate_excel_report(remaining_errors, res['diem'])
+                st.download_button("📥 Xuất Báo cáo Thống kê lỗi chi tiết (.XLSX)", data=excel_data, file_name=f"BaoCaoLoi_{doc_info['filename']}.xlsx")
+
+            with tab3:
+                st.subheader("💬 Hỏi đáp tương tác sâu về các quy định pháp lý")
+                user_q = st.text_input("Ví dụ: Tại sao lỗi thể thức quốc hiệu của tôi lại bị chấm điểm thấp?")
+                if user_q:
+                    with st.spinner("AI đang tra cứu..."):
+                        context_prompt = f"Dựa trên văn bản có chất lượng điểm số tổng {res['diem'].get('tong', 0)}, người dùng hỏi: {user_q}."
+                        answer = get_ai_response(context_prompt)
+                        st.write(answer)
+
+        # TRƯỜNG HỢP 2: CHỈ BẬT CHÍNH TẢ / NGỮ PHÁP (KHÔNG DÙNG AI)
+        else:
+            st.header("📝 KẾT QUẢ KIỂM TRA CHÍNH TẢ & NGỮ PHÁP")
+            remaining_errors = render_track_changes_view(errors)
+            
+            st.write("---")
+            st.subheader("💾 Xuất dữ liệu")
             if "out_standard_path" in st.session_state and os.path.exists(st.session_state["out_standard_path"]):
                 with open(st.session_state["out_standard_path"], "rb") as f_word:
                     st.download_button("📥 Tải về Văn bản đã chuẩn hóa lề lối (.DOCX)", data=f_word.read(), file_name=f"ChuanHoa_{doc_info['filename']}")
             
-            excel_data = generate_excel_report(remaining_errors, res['diem'])
-            st.download_button("📥 Xuất Báo cáo Thống kê lỗi chi tiết (.XLSX)", data=excel_data, file_name=f"BaoCaoLoi_{doc_info['filename']}.xlsx")
-
-        with tab3:
-            st.subheader("💬 Hỏi đáp tương tác sâu về các quy định pháp lý")
-            user_q = st.text_input("Ví dụ: Tại sao lỗi thể thức quốc hiệu của tôi lại bị chấm điểm thấp?")
-            if user_q:
-                with st.spinner("AI đang tra cứu Nghị định 30/2020/NĐ-CP..."):
-                    context_prompt = f"Dựa trên văn bản có chất lượng điểm số tổng {res['diem'].get('tong', 0)}, người dùng hỏi: {user_q}. Hãy giải thích rõ căn cứ theo điều khoản pháp lý quy định hành chính hoặc hướng dẫn của Bộ GD&ĐT."
-                    answer = get_ai_response(context_prompt)
-                    st.write(answer)
+            # Tạo điểm giả lập rỗng để xuất Excel khi không bật AI
+            empty_scores = {"the_thuc": 0, "noi_dung": 0, "gdpt_2018": 0, "nang_luc_so": 0, "khoa_hoc": 0, "tong": 0}
+            excel_data = generate_excel_report(remaining_errors, empty_scores)
+            st.download_button("📥 Xuất Danh sách lỗi chi tiết (.XLSX)", data=excel_data, file_name=f"DanhSachLoi_{doc_info['filename']}.xlsx")
                     
     # Dọn dẹp tệp tạm thời sau phiên làm việc
     if os.path.exists(temp_path):
