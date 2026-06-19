@@ -1,11 +1,12 @@
 import google.generativeai as genai
 import json
 import streamlit as st
+import re
 
 def get_ai_response(prompt):
-    api_key = st.session_state.get("api_key", "")
+    api_key = st.session_state.get("gemini_api_key", "") # Sửa lại key đồng bộ với trang chủ
     if not api_key:
-        return None
+        return "Chưa cấu hình API Key tại trang chủ."
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.5-flash')
@@ -15,7 +16,6 @@ def get_ai_response(prompt):
         return f"Lỗi kết nối AI: {str(e)}"
 
 def analyze_document_with_ai(text, file_name):
-    # Prompt phân tích tổng hợp & chấm điểm hồ sơ học đường + NĐ30
     prompt = f"""
     Bạn là Chuyên gia kiểm định văn bản hành chính và hồ sơ giáo dục theo chương trình GDPT 2018.
     Hãy phân tích văn bản sau (Tên file: {file_name}):
@@ -35,24 +35,31 @@ def analyze_document_with_ai(text, file_name):
           "tong": 83
        }},
        "xep_loai": "Khá",
-       "thieu_sot_cau_truc": ["Thiếu mục Vận dụng", "Thiếu tiêu chí đánh giá số"],
+       "thieu_sot_cau_truc": ["Thiếu mục Vận dụng"],
        "gdpt_2018_check": {{
           "pham_chat": "Đã thể hiện đạt yêu cầu",
-          "nang_luc_chung": "Cần làm rõ năng lực giải quyết vấn đề",
+          "nang_luc_chung": "Cần làm rõ",
           "nang_luc_dac_thu": "Tốt"
        }},
-       "de_xuat_cai_tien": ["Bổ sung hoạt động vận dụng thực tiễn", "Tăng cường công cụ đánh giá số"],
+       "de_xuat_cai_tien": ["Bổ sung hoạt động vận dụng thực tiễn"],
        "loi_the_thuc": [
-          {{"stt": 1, "loai": "Thể thức", "goc": "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM (thiếu in đậm)", "de_xuat": "In đậm, căn giữa", "muc_do": "Cao"}}
+          {{"stt": 1, "loai": "Thể thức", "goc": "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", "de_xuat": "In đậm, căn giữa", "muc_do": "Cao"}}
        ]
     }}
     """
     res = get_ai_response(prompt)
     if res:
         try:
-            # Làm sạch chuỗi JSON nếu dính markdown ```json
+            # Sử dụng Regex bóc tách nội dung nằm giữa cặp ngoặc nhọn {} nếu có text thừa xung quanh
+            json_match = re.search(r'\{.*\}', res, re.DOTALL)
+            if json_match:
+                cleaned = json_match.group(0)
+                return json.loads(cleaned)
+            
+            # Dự phòng phương pháp cũ nếu regex không khớp
             cleaned = res.replace("```json", "").replace("```", "").strip()
             return json.loads(cleaned)
-        except:
-            return None
+        except Exception as e:
+            # Nếu phân rã thất bại, trả về chuỗi thông báo lỗi để giao diện bắt được
+            return f"Lỗi phân rã cấu trúc JSON từ AI: {str(e)}. Phản hồi thô: {res}"
     return None
