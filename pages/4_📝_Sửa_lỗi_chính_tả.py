@@ -153,7 +153,7 @@ if uploaded_file is not None:
             if user_q:
                 with st.spinner("AI đang tra cứu Nghị định 30/2020/NĐ-CP..."):
                     context_prompt = f"Dựa trên văn bản có chất lượng điểm số tổng {res['diem'].get('tong', 0)}, người dùng hỏi: {user_q}. Hãy giải thích rõ căn cứ theo điều khoản pháp lý quy định hành chính hoặc hướng dẫn của Bộ GD&ĐT."
-                    answer = get_api_response(context_prompt)
+                    answer = get_ai_response(context_prompt)
                     st.write(answer)
                     
     # Dọn dẹp tệp tạm thời sau phiên làm việc
