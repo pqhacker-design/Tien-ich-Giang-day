@@ -103,31 +103,32 @@ def convert_latex_to_omml_xml(latex_str):
 
 def add_math_run_to_paragraph(paragraph, text):
     """
-    Xử lý tiền lọc cấu trúc: Sửa lỗi dính dòng, dập tắt ký tự hệ thống rác (\na, \nb)
-    và ép bọc dấu $ cho các ký hiệu trơn.
+    Xử lý tiền lọc cấu trúc: Sửa lỗi dính dòng bằng cách tạo paragraph kế tiếp chuẩn python-docx
+    và bọc dấu $ cho các ký hiệu khoa học.
     """
     if not text: return
     
-    # --- BỘ LỌC TIỀN XỬ LÝ SỬA LỖI XUỐNG DÒNG ---
-    # Thay thế các ký tự viết lỗi \na), \nb), \nc) thành xuống dòng thực tế trong Microsoft Word
+    # 1. Tiền xử lý sửa lỗi ký tự hệ thống rác (\na, \nb, \n) từ AI
     text = re.sub(r'\\n\s*([a-z]\))', r'\n\1', text)
     text = re.sub(r'\\n', r'\n', text)
     
-    # Làm sạch các cụm text thừa ngoài dấu công thức
+    # 2. Làm sạch chữ 'text' đứng thừa ngoài công thức
     text = re.sub(r'\btext\s+(km/h|km|phút|giờ|cm\^2|cm|s|kg|m|giờ)\b', r'\1', text)
     
-    # Tự động đồng bộ hóa bọc dấu $ cho các ký hiệu Vật lý/Toán học bị AI quên
+    # 3. Tự động bọc dấu $ cho các ký hiệu Vật lý/Toán học bị AI quên
     if '$' not in text:
         text = re.sub(r'([a-zA-Z0-9]+_[1-2])', r'$\1$', text)  # Bọc G_1, G_2
         text = re.sub(r'([0-9]+\s*\\circ)', r'$\1$', text)     # Bọc số độ
         text = re.sub(r'([a-zA-Z0-9]+\^[2-3])', r'$\1$', text)  # Bọc s^2, cm^2
 
-    # Tách dòng thực tế: Nếu chuỗi chứa dấu xuống dòng \n, xử lý ngắt đoạn để tránh dính chữ
+    # 4. Tách dòng thực tế dựa trên dấu \n
     lines = text.split('\n')
+    current_paragraph = paragraph
+    
     for index, line in enumerate(lines):
         if index > 0:
-            # Tạo một paragraph mới hoặc xuống dòng thủ công trong Word
-            paragraph = paragraph._p.getparent().add_paragraph()
+            # SỬA LỖI TẠI ĐÂY: Sử dụng phương thức gốc của lớp Paragraph để tạo dòng tiếp theo an toàn
+            current_paragraph = current_paragraph.insert_paragraph_after()
             
         parts = re.split(r'(\$.*?\$)', line)
         for part in parts:
@@ -136,12 +137,12 @@ def add_math_run_to_paragraph(paragraph, text):
                 try:
                     omml_xml_str = convert_latex_to_omml_xml(latex_content)
                     oMath_elm = parse_xml(f'<m:oMath {nsdecls("m")}>{omml_xml_str}</m:oMath>')
-                    paragraph._p.append(oMath_elm)
+                    current_paragraph._p.append(oMath_elm)
                 except Exception:
-                    paragraph.add_run(latex_content.replace('\\', ''))
+                    current_paragraph.add_run(latex_content.replace('\\', ''))
             else:
                 if part: 
-                    paragraph.add_run(part)
+                    current_paragraph.add_run(part)
 # ==========================================
 # KHỞI TẠO SESSION STATE
 # ==========================================
