@@ -58,84 +58,90 @@ SUBJECTS_CONFIG = {
 # ==========================================
 def convert_latex_to_omml_xml(latex_str):
     """
-    Bộ dịch ngược mở rộng: Xử lý triệt để số mũ đơn, ký hiệu hình học lớp 8 
-    và các lỗi dính chữ 'text' từ AI.
+    Bộ dịch ngược chuyên sâu v4.0: Xử lý cả Toán học nâng cao và Vật lý (KHTN)
     """
-    # 1. Làm sạch chuỗi công thức ban đầu
-    latex_str = str(latex_str).replace('text ', '').replace('\\\\', '\\').strip()
+    latex_str = str(latex_str).replace('text ', '').strip()
     
-    # 2. Xử lý ký hiệu đồng dạng (chấp nhận cả \sim, sim, hoặc \ sim)
+    # 1. Xử lý ký hiệu độ (\circ)
+    if 'circ' in latex_str:
+        val = latex_str.replace('\\circ', '').replace('circ', '').strip()
+        return f'<m:r {nsdecls("m")}><m:t>{val}°</m:t></m:r>'
+        
+    # 2. Xử lý chỉ số dưới Vật lý/Toán học (G_1, G_2, G_{1}, s^2)
+    sub_match = re.findall(r'([a-zA-Z0-9]+)_\{?([a-zA-Z0-9]+)\}?', latex_str)
+    if sub_match and '^' not in latex_str:
+        base, sub = sub_match[0]
+        return f'<m:sSub {nsdecls("m")}><m:e><m:r><m:t>{base}</m:t></m:r></m:e><m:sub><m:r><m:t>{sub}</m:t></m:r></m:sub></m:sSub>'
+
+    # 3. Ký hiệu đồng dạng và tam giác (Toán lớp 8)
     if 'sim' in latex_str:
         return f'<m:r {nsdecls("m")}><m:t> ∽ </m:t></m:r>'
-        
-    # 3. Xử lý ký hiệu tam giác (chấp nhận \triangle, triangle, hoặc Δ)
     if 'triangle' in latex_str or 'Δ' in latex_str:
         val = latex_str.replace('\\triangle', '').replace('triangle', '').replace('Δ', '').strip()
         return f'<m:r {nsdecls("m")}><m:t>Δ{val}</m:t></m:r>'
         
-    # 4. Xử lý ký hiệu khác (\neq, \ne hoặc neq)
-    if 'ne' in latex_str or 'neq' in latex_str or '≠' in latex_str:
-        val = re.sub(r'\\?neq|\\?ne|≠', '', latex_str).strip()
-        return f'<m:r {nsdecls("m")}><m:t>≠ {val}</m:t></m:r>'
-
-    # 5. Xử lý số mũ đa dạng: x^2, x^2y, x^{2+4}, cm^2
-    # Trích xuất dạng mũ phức tạp x^{2+4} trước
+    # 4. Số mũ phức tạp và đơn giản (x^2, cm^2)
     bracket_pow = re.findall(r'([a-zA-Z0-9]+)\^\{([^}]+)\}', latex_str)
     if bracket_pow:
         base, exp = bracket_pow[0]
         return f'<m:sSup {nsdecls("m")}><m:e><m:r><m:t>{base}</m:t></m:r></m:e><m:sup><m:r><m:t>{exp}</m:t></m:r></m:sup></m:sSup>'
     
-    # Trích xuất dạng mũ đơn x^2 hoặc x^2y
     simple_pow = re.findall(r'([a-zA-Z0-9]+)\^([a-zA-Z0-9+-]+)', latex_str)
     if simple_pow:
         base, exp = simple_pow[0]
-        # Nếu sau số mũ còn ký tự khác (ví dụ: 5x^2y -> base=5x, exp=2, phần còn lại là y)
-        # Để đơn giản và chính xác trong Word, ta tách phần mũ ra trước
         return f'<m:sSup {nsdecls("m")}><m:e><m:r><m:t>{base}</m:t></m:r></m:e><m:sup><m:r><m:t>{exp}</m:t></m:r></m:sup></m:sSup>'
 
-    # 6. Phân số \frac{a}{b} hoặc frac{a}{b}
+    # 5. Phân số
     frac_match = re.findall(r'\\?frac\{([^}]+)\}\{([^}]+)\}', latex_str)
     if frac_match:
         num, den = frac_match[0]
         return f'<m:f {nsdecls("m")}><m:num><m:r><m:t>{num}</m:t></m:r></m:num><m:den><m:r><m:t>{den}</m:t></m:r></m:den></m:f>'
 
-    # Nếu không khớp bộ lọc nào, trả về văn bản trơn sạch sẽ
     clean_text = latex_str.replace('\\', '').replace('{', '').replace('}', '')
     return f'<m:r {nsdecls("m")}><m:t>{clean_text}</m:t></m:r>'
 
 
 def add_math_run_to_paragraph(paragraph, text):
     """
-    Quét văn bản, tự động bọc dấu $ cho các biểu thức số mũ hoặc ký hiệu hình học 
-    nếu AI quên không bọc dấu $, tránh việc hiển thị text thô lỗi.
+    Xử lý tiền lọc cấu trúc: Sửa lỗi dính dòng, dập tắt ký tự hệ thống rác (\na, \nb)
+    và ép bọc dấu $ cho các ký hiệu trơn.
     """
     if not text: return
     
-    # Dọn dẹp lỗi chữ 'text ' đứng độc lập ngoài văn bản
-    text = re.sub(r'\btext\s+(km/h|km|phút|giờ|cm\^2|cm)\b', r'\1', text)
+    # --- BỘ LỌC TIỀN XỬ LÝ SỬA LỖI XUỐNG DÒNG ---
+    # Thay thế các ký tự viết lỗi \na), \nb), \nc) thành xuống dòng thực tế trong Microsoft Word
+    text = re.sub(r'\\n\s*([a-z]\))', r'\n\1', text)
+    text = re.sub(r'\\n', r'\n', text)
     
-    # TỰ ĐỘNG SỬA LỖI: Nếu phát hiện các ký hiệu toán học đứng trơn ngoài dấu $, tự bọc lại
-    # Tìm các cụm như x^2, y^2, cm^2, \triangle ABC, \sim để bọc dấu $ nếu chưa có
+    # Làm sạch các cụm text thừa ngoài dấu công thức
+    text = re.sub(r'\btext\s+(km/h|km|phút|giờ|cm\^2|cm|s|kg|m|giờ)\b', r'\1', text)
+    
+    # Tự động đồng bộ hóa bọc dấu $ cho các ký hiệu Vật lý/Toán học bị AI quên
     if '$' not in text:
-        text = re.sub(r'([a-zA-Z0-9]+\^[a-zA-Z0-9]+)', r'$\1$', text)
-        text = re.sub(r'(\\triangle\s*[A-Z\']+)', r'$\1$', text)
-        text = re.sub(r'(\\sim)', r'$\1$', text)
-        text = re.sub(r'(\\neq\s*[0-9\-]+)', r'$\1$', text)
+        text = re.sub(r'([a-zA-Z0-9]+_[1-2])', r'$\1$', text)  # Bọc G_1, G_2
+        text = re.sub(r'([0-9]+\s*\\circ)', r'$\1$', text)     # Bọc số độ
+        text = re.sub(r'([a-zA-Z0-9]+\^[2-3])', r'$\1$', text)  # Bọc s^2, cm^2
 
-    # Tiến hành cắt chuỗi và chèn cấu trúc vào file Word
-    parts = re.split(r'(\$.*?\$)', text)
-    for part in parts:
-        if part.startswith('$') and part.endswith('$'):
-            latex_content = part[1:-1]
-            try:
-                omml_xml_str = convert_latex_to_omml_xml(latex_content)
-                oMath_elm = parse_xml(f'<m:oMath {nsdecls("m")}>{omml_xml_str}</m:oMath>')
-                paragraph._p.append(oMath_elm)
-            except Exception:
-                paragraph.add_run(latex_content.replace('\\', ''))
-        else:
-            if part: 
-                paragraph.add_run(part)
+    # Tách dòng thực tế: Nếu chuỗi chứa dấu xuống dòng \n, xử lý ngắt đoạn để tránh dính chữ
+    lines = text.split('\n')
+    for index, line in enumerate(lines):
+        if index > 0:
+            # Tạo một paragraph mới hoặc xuống dòng thủ công trong Word
+            paragraph = paragraph._p.getparent().add_paragraph()
+            
+        parts = re.split(r'(\$.*?\$)', line)
+        for part in parts:
+            if part.startswith('$') and part.endswith('$'):
+                latex_content = part[1:-1]
+                try:
+                    omml_xml_str = convert_latex_to_omml_xml(latex_content)
+                    oMath_elm = parse_xml(f'<m:oMath {nsdecls("m")}>{omml_xml_str}</m:oMath>')
+                    paragraph._p.append(oMath_elm)
+                except Exception:
+                    paragraph.add_run(latex_content.replace('\\', ''))
+            else:
+                if part: 
+                    paragraph.add_run(part)
 # ==========================================
 # KHỞI TẠO SESSION STATE
 # ==========================================
@@ -260,7 +266,7 @@ def generate_step2_questions(model, config, matrix_data, subject_rule):
     - Ký hiệu đồng dạng viết là $\\sim$ (Phải có 2 dấu gạch chéo ngược để chống nuốt ký tự trong JSON).
     - Ký hiệu tam giác viết là $\\triangle ABC$.
     - Mọi đa thức, số mũ, phân số bắt buộc phải nằm gọn trong cặp dấu $...$. Ví dụ: $P = 5x^2y - 3xy^2$.
-
+    "Vật lý": "Mọi góc số độ PHẢI viết dạng $30 \\circ$, tên gương hoặc ký hiệu nguồn có chỉ số dưới PHẢI viết dạng $G_1$, $G_2$. Đơn vị đo lường thông thường (km/h, kg, m, s) viết thường, TUYỆT ĐỐI không chèn chữ 'text' phía trước. Để xuống dòng các câu ý a, b, c, hãy sử dụng dấu xuống dòng thực tế, không dùng ký tự thoát chuỗi lỗi.",
     BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN CÓ CẤU TRÚC (Tuyệt đối không lặp lại phần ma_tran):
     {{
       "de_kiem_tra": {{
