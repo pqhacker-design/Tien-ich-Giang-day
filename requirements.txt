@@ -12,3 +12,4 @@ lxml
 underthesea
 altair
 PyPDF2
+latex2mathml
