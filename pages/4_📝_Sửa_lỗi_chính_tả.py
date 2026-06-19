@@ -4,13 +4,13 @@ import pandas as pd
 import altair as alt
 
 # Import các module nội bộ
-from vietnamese-word-corrector.utils import load_criteria, save_criteria, get_docx_info
-from vietnamese-word-corrector.formatter import normalize_to_nd30
-from vietnamese-word-corrector.spelling_checker import check_vietnamese_spelling
-from vietnamese-word-corrector.grammar_checker import check_vietnamese_grammar
-from vietnamese-word-corrector.ai_checker import analyze_document_with_ai, get_ai_response
-from vietnamese-word-corrector.track_changes import render_track_changes_view
-from vietnamese-word-corrector.report_generator import generate_excel_report
+from vietnamese_word_corrector.utils import load_criteria, save_criteria, get_docx_info
+from vietnamese_word_corrector.formatter import normalize_to_nd30
+from vietnamese_word_corrector.spelling_checker import check_vietnamese_spelling
+from vietnamese_word_corrector.grammar_checker import check_vietnamese_grammar
+from vietnamese_word_corrector.ai_checker import analyze_document_with_ai, get_ai_response
+from vietnamese_word_corrector.track_changes import render_track_changes_view
+from vietnamese_word_corrector.report_generator import generate_excel_report
 
 st.set_page_config(page_title="AI Document & School Record Processor", layout="wide")
 
