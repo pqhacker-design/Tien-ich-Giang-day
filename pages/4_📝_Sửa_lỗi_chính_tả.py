@@ -3,6 +3,10 @@ import os
 import pandas as pd
 import altair as alt
 
+# Lấy đường dẫn của thư mục gốc (thư mục cha của thư mục pages)
+root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if root_path not in sys.path:
+    sys.path.insert(0, root_path)
 # Import các module nội bộ
 from utils import load_criteria, save_criteria, get_docx_info
 from formatter import normalize_to_nd30
