@@ -8,3 +8,6 @@ mammoth
 pandas
 openpyxl
 pypdf
+lxml
+underthesea
+altair
