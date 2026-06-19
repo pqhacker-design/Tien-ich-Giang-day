@@ -3,18 +3,14 @@ import os
 import pandas as pd
 import altair as alt
 
-# Lấy đường dẫn của thư mục gốc (thư mục cha của thư mục pages)
-root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if root_path not in sys.path:
-    sys.path.insert(0, root_path)
 # Import các module nội bộ
-from utils import load_criteria, save_criteria, get_docx_info
-from formatter import normalize_to_nd30
-from spelling_checker import check_vietnamese_spelling
-from grammar_checker import check_vietnamese_grammar
-from ai_checker import analyze_document_with_ai, get_ai_response
-from track_changes import render_track_changes_view
-from report_generator import generate_excel_report
+from vietnamese-word-corrector.utils import load_criteria, save_criteria, get_docx_info
+from vietnamese-word-corrector.formatter import normalize_to_nd30
+from vietnamese-word-corrector.spelling_checker import check_vietnamese_spelling
+from vietnamese-word-corrector.grammar_checker import check_vietnamese_grammar
+from vietnamese-word-corrector.ai_checker import analyze_document_with_ai, get_ai_response
+from vietnamese-word-corrector.track_changes import render_track_changes_view
+from vietnamese-word-corrector.report_generator import generate_excel_report
 
 st.set_page_config(page_title="AI Document & School Record Processor", layout="wide")
 
