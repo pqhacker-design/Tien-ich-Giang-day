@@ -119,6 +119,7 @@ def add_math_run_to_paragraph(paragraph, text):
 # KHỞI TẠO SESSION STATE
 # ==========================================
 if 'generated_data' not in st.session_state: st.session_state.generated_data = None
+if 'step1_data' not in st.session_state: st.session_state.step1_data = None
 if 'multi_codes_data' not in st.session_state: st.session_state.multi_codes_data = {}
 if 'alignment_table' not in st.session_state: st.session_state.alignment_table = None
 
@@ -192,52 +193,73 @@ def init_gemini_client(api_key):
     except Exception as e:
         st.error(f"Lỗi API Key: {e}")
         return None
-
-def generate_exam_data(model, config, topics, subject_rule):
+def generate_step1_matrix(model, config, topics):
+    """
+    LƯỢT 1: Chỉ sinh Ma trận và Bản đặc tả kỹ thuật
+    """
     prompt = f"""
-    Bạn là chuyên gia khảo thí và đo lường giáo dục. Hãy tạo đề kiểm tra môn {config['subject']} - Khối {config['grade']}.
-    Tổng điểm: 10.0 điểm. Số câu TN: {config['num_tn']}, Số câu TL: {config['num_tl']}.
+    Bạn là chuyên gia khảo thí. Hãy lập Ma trận và Bản đặc tả đề kiểm tra môn {config['subject']} - Khối Lớp {config['grade']}.
+    Số câu TN: {config['num_tn']}, Số câu TL: {config['num_tl']}. 
+    Tỷ lệ nhận thức: Nhận biết {config['nb_ratio']}%, Thông hiểu {config['th_ratio']}%, Vận dụng {config['vd_ratio']}%, Vận dụng cao {config['vdc_ratio']}%.
     
-    QUY ĐỊNH KÝ HIỆU TOÁN HỌC KHÔNG LỖI:
-    - Ký hiệu khác: Viết là $x \\neq 3$, không được ghi chữ 'text'.
-    - Ký hiệu tam giác và đồng dạng: Viết là $\\triangle OAB$ và $\\sim$. Bắt buộc bọc trong dấu $.
-    - Phân số: $\\frac{{2}}{{5}}$. Đơn vị đo như km/h, phút, giờ viết thường bình thường ngoài dấu $, TUYỆT ĐỐI không chèn chữ 'text' phía trước.
+    Chủ đề cần quét: {", ".join(topics)}
 
-    BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN CÓ CHỨA CẢ MA TRẬN VÀ BẢN ĐẶC TẢ CHI TIẾT:
+    BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN CÓ CẤU TRÚC:
     {{
       "ma_tran": [
-        {{"chu_de": "Phân thức đại số", "nb_tn": 1, "nb_tl": 0, "th_tn": 0, "th_tl": 0, "vd_tn": 0, "vd_tl": 0, "vdc_tn": 0, "vdc_tl": 0}}
+        {{"chu_de": "Tên chủ đề", "nb_tn": 1, "nb_tl": 0, "th_tn": 1, "th_tl": 0, "vd_tn": 0, "vd_tl": 1, "vdc_tn": 0, "vdc_tl": 0}}
       ],
       "bang_dac_ta": [
-        {{
-          "chu_de": "Phân thức đại số",
-          "noi_dung": "Phân thức đại số và điều kiện xác định",
-          "muc_do": "Nhận biết",
-          "yeu_cau_can_dat": "Nhận biết được điều kiện xác định của một phân thức đại số.",
-          "so_cau": "1 câu (Câu 1 TN)",
-          "diem": 0.25
-        }}
-      ],
+        {{"id_dac_ta": "DT_01", "chu_de": "Tên chủ đề", "noi_dung": "Kiến thức", "muc_do": "Nhận biết", "yeu_cau_can_dat": "Mô tả...", "so_cau": "1 câu TN", "diem": 0.25}}
+      ]
+    }}
+    """
+    response = model.generate_content(prompt)
+    raw = response.text.strip().replace('\n', ' ').replace('\t', ' ')
+    raw = re.sub(r'^```json\s*|```$', '', raw, flags=re.IGNORECASE).strip()
+    return json.loads(raw, strict=False)
+
+
+def generate_step2_questions(model, config, matrix_data, subject_rule):
+    """
+    LƯỢT 2: Nạp Bản đặc tả từ Lượt 1 để sinh Đề thi và Đáp án chi tiết
+    """
+    # Chuyển bảng đặc tả thành chuỗi văn bản để làm tiền đề cho AI viết câu hỏi
+    dac_ta_str = json.dumps(matrix_data.get('bang_dac_ta', []), ensure_ascii=False)
+    
+    prompt = f"""
+    Bạn là chuyên gia soạn đề thi. Dựa trên Bản đặc tả kỹ thuật sau đây, hãy viết nội dung câu hỏi chi tiết và đáp án tương ứng.
+    Bản đặc tả: {dac_ta_str}
+    
+    Thông số đề thi: Môn {config['subject']}, Khối {config['grade']}. Tổng điểm: 10.0. 
+    Mỗi câu trắc nghiệm trị giá {10 * 0.7 / max(1, config['num_tn']):.2f} điểm. Tổng điểm tự luận là {10 * 0.3:.1f} điểm.
+
+    QUY ĐỊNH KÝ HIỆU CHUYÊN BIỆT:
+    {subject_rule}
+
+    BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN CÓ CẤU TRÚC (Tuyệt đối không lặp lại phần ma_tran):
+    {{
       "de_kiem_tra": {{
         "trac_nghiem": [
-          {{"id": "Câu 1", "muc_do": "Nhận biết", "chu_de": "Phân thức đại số", "cau_hoi": "Điều kiện xác định của phân thức $\\frac{{x+1}}{{x-3}}$ là:", "options": {{"A": "$x \\neq 3$", "B": "$x \\neq 0$", "C": "$x \\neq -1$", "D": "$x \\neq 1$"}}, "dap_an": "A"}}
+          {{"id": "Câu 1", "muc_do": "...", "chu_de": "...", "cau_hoi": "Nội dung câu hỏi chứa ký hiệu khoa học chuẩn...", "options": {{"A": "...", "B": "...", "C": "...", "D": "..."}}, "dap_an": "A"}}
         ],
-        "tu_luan": []
+        "tu_luan": [
+          {{"id": "Câu 1 (TL)", "muc_do": "...", "chu_de": "...", "cau_hoi": "Nội dung bài tự luận...", "diem": 1.5}}
+        ]
       }},
       "dap_an_chi_tiet": {{
         "trac_nghiem": {{"Câu 1": "A"}},
-        "tu_luan": []
+        "tu_luan": [
+          {{"id": "Câu 1 (TL)", "huong_dan": "Các bước giải...", "thang_diem": {{"Ý 1...": 0.5}}}}
+        ]
       }}
     }}
     """
-    # (Giữ nguyên đoạn code gọi model và json.loads ở phía dưới...)
     response = model.generate_content(prompt)
-    raw = response.text.strip()
-    raw = re.sub(r'^```json\s*', '', raw, flags=re.IGNORECASE)
-    raw = re.sub(r'```$', '', raw).strip()
-    raw = raw.replace('\n', ' ').replace('\t', ' ')
+    raw = response.text.strip().replace('\n', ' ').replace('\t', ' ')
+    raw = re.sub(r'^```json\s*|```$', '', raw, flags=re.IGNORECASE).strip()
     return json.loads(raw, strict=False)
-
+    
 def build_single_docx(config, data, code_label, include_matrix=True):
     doc = Document()
     for section in doc.sections:
@@ -400,33 +422,66 @@ with tab2:
                                value="Nội dung 1: Kiến thức trọng tâm chương học cũ\nNội dung 2: Kiến thức nâng cao bổ trợ")
 
     st.markdown("---")
-    if st.button("🚀 BẮT ĐẦU GENERATE ĐỀ THI ĐA MÔN ĐÚNG KÝ HIỆU CHUẨN"):
-        if total_ratio != 100:
-            st.error("Tổng tỷ lệ phần trăm phân bổ điểm phải bằng 100%.")
-        else:
-            config_pkg = {
-                "subject": subject, "grade": grade, "exam_type": exam_type, "duration": duration, "school_year": school_year,
-                "num_tn": num_tn, "num_tl": num_tl, "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio
-            }
-            with st.spinner(f"Hệ thống đang nạp quy tắc đặc thù môn {subject} để tạo cấu trúc đề thi gốc..."):
-                try:
-                    # Gọi AI sinh dữ liệu dựa theo luật của môn học được chọn
-                    rule = SUBJECTS_CONFIG[subject]
-                    res_json = generate_exam_data(model, config_pkg, [t.strip() for t in topics_list.split('\n') if t.strip()], rule)
-                    st.session_state.generated_data = res_json
-                    
-                    try: s_code = int(code_prefix)
-                    except ValueError: s_code = 101
-                    
-                    # Tiến hành đảo đề tự động
-                    bundle, alignment_df = generate_shuffled_bundle(res_json, s_code, num_codes)
-                    st.session_state.multi_codes_data = bundle
-                    st.session_state.alignment_table = alignment_df
-                    
-                    st.success(f"🎉 Xuất bản thành công đề thi môn {subject} gốc kèm {num_codes} mã đề đảo!")
-                except Exception as e:
-                    st.error(f"Lỗi phân tách cấu trúc khoa học bộ môn: {e}")
+    with tab2:
+    st.markdown('<div class="section-header">Quy trình sinh đề 2 bước (Chống nghẽn cấu trúc)</div>', unsafe_allow_html=True)
+    
+    # Khởi tạo các trạng thái lưu trữ trung gian nếu chưa có
+    if 'step1_data' not in st.session_state: st.session_state.step1_data = None
 
+    # --- CÔNG ĐOẠN 1: SINH KHUNG ---
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("📊 BƯỚC 1: KHỞI TẠO MA TRẬN & ĐẶC TẢ"):
+            config_pkg = {
+                "subject": subject, "grade": grade, "num_tn": num_tn, "num_tl": num_tl,
+                "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio
+            }
+            with st.spinner("AI đang tính toán phân bổ ma trận và đặc tả..."):
+                try:
+                    t_list = [t.strip() for t in topics_list.split('\n') if t.strip()]
+                    st.session_state.step1_data = generate_step1_matrix(model, config_pkg, t_list)
+                    st.success("✅ Đã thiết lập xong Khung đặc tả bộ môn!")
+                except Exception as e:
+                    st.error(f"Lỗi khởi tạo khung: {e}")
+
+    # Hiển thị bản xem trước của Bước 1 để giáo viên an tâm
+    if st.session_state.step1_data:
+        with st.expander("🔍 Xem trước Bản đặc tả kỹ thuật vừa sinh"):
+            st.json(st.session_state.step1_data)
+            
+        # --- CÔNG ĐOẠN 2: SINH RUỘT (Chỉ xuất hiện khi Bước 1 đã chạy xong) ---
+        with col_btn2:
+            if st.button("🔥 BƯỚC 2: SINH CÂU HỎI & ĐẢO MÃ ĐỀ"):
+                config_pkg = {
+                    "subject": subject, "grade": grade, "num_tn": num_tn, "num_tl": num_tl,
+                    "exam_type": exam_type, "duration": duration, "school_year": school_year
+                }
+                with st.spinner("AI đang lấy Khung đặc tả để soạn nội dung câu hỏi chi tiết..."):
+                    try:
+                        rule = SUBJECTS_CONFIG[subject]
+                        # Gọi AI lượt 2 để lấy ruột câu hỏi
+                        step2_data = generate_step2_questions(model, config_pkg, st.session_state.step1_data, rule)
+                        
+                        # Hợp nhất dữ liệu Bước 1 và Bước 2 thành cấu trúc hoàn chỉnh như cũ
+                        full_data = {
+                            "ma_tran": st.session_state.step1_data["ma_tran"],
+                            "bang_dac_ta": st.session_state.step1_data["bang_dac_ta"],
+                            "de_kiem_tra": step2_data["de_kiem_tra"],
+                            "dap_an_chi_tiet": step2_data["dap_an_chi_tiet"]
+                        }
+                        st.session_state.generated_data = full_data
+                        
+                        # Chạy thuật toán hoán vị đảo mã đề nội bộ (Giữ nguyên logic cũ)
+                        try: s_code = int(code_prefix)
+                        except ValueError: s_code = 101
+                        bundle, alignment_df = generate_shuffled_bundle(full_data, s_code, num_codes)
+                        st.session_state.multi_codes_data = bundle
+                        st.session_state.alignment_table = alignment_df
+                        
+                        st.success(f"🎉 Hoàn tất trọn vẹn! Đã tạo xong đề gốc và {num_codes} mã đề đảo.")
+                    except Exception as e:
+                        st.error(f"Lỗi tạo nội dung câu hỏi: {e}")
+                        
 with tab3:
     if st.session_state.generated_data is None:
         st.info("Hệ thống đang ở trạng thái chờ nạp dữ liệu từ Tab 2.")
