@@ -100,15 +100,14 @@ def convert_latex_to_omml_xml(latex_str):
     clean_text = latex_str.replace('\\', '').replace('{', '').replace('}', '')
     return f'<m:r {nsdecls("m")}><m:t>{clean_text}</m:t></m:r>'
 
-
 def add_math_run_to_paragraph(paragraph, text):
     """
-    Xử lý tiền lọc cấu trúc: Sửa lỗi dính dòng bằng cách tạo paragraph kế tiếp chuẩn python-docx
-    và bọc dấu $ cho các ký hiệu khoa học.
+    Xử lý tiền lọc cấu trúc: Sửa lỗi dính dòng bằng run.add_break() 
+    và xử lý chính xác ký hiệu khoa học Toán/KHTN.
     """
     if not text: return
     
-    # 1. Tiền xử lý sửa lỗi ký tự hệ thống rác (\na, \nb, \n) từ AI
+    # 1. Tiền xử lý sửa lỗi ký tự hệ thống rác (\na, \nb) từ AI thành dấu xuống dòng tiêu chuẩn
     text = re.sub(r'\\n\s*([a-z]\))', r'\n\1', text)
     text = re.sub(r'\\n', r'\n', text)
     
@@ -123,12 +122,12 @@ def add_math_run_to_paragraph(paragraph, text):
 
     # 4. Tách dòng thực tế dựa trên dấu \n
     lines = text.split('\n')
-    current_paragraph = paragraph
     
     for index, line in enumerate(lines):
         if index > 0:
-            # SỬA LỖI TẠI ĐÂY: Sử dụng phương thức gốc của lớp Paragraph để tạo dòng tiếp theo an toàn
-            current_paragraph = current_paragraph.insert_paragraph_after()
+            # SỬA LỖI TẠI ĐÂY: Thêm dấu ngắt dòng xuống hàng (Shift + Enter) trong Word cực kỳ an toàn
+            new_run = paragraph.add_run()
+            new_run.add_break()
             
         parts = re.split(r'(\$.*?\$)', line)
         for part in parts:
@@ -137,12 +136,12 @@ def add_math_run_to_paragraph(paragraph, text):
                 try:
                     omml_xml_str = convert_latex_to_omml_xml(latex_content)
                     oMath_elm = parse_xml(f'<m:oMath {nsdecls("m")}>{omml_xml_str}</m:oMath>')
-                    current_paragraph._p.append(oMath_elm)
+                    paragraph._p.append(oMath_elm)
                 except Exception:
-                    current_paragraph.add_run(latex_content.replace('\\', ''))
+                    paragraph.add_run(latex_content.replace('\\', ''))
             else:
                 if part: 
-                    current_paragraph.add_run(part)
+                    paragraph.add_run(part)
 # ==========================================
 # KHỞI TẠO SESSION STATE
 # ==========================================
