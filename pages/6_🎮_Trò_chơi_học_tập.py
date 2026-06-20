@@ -36,7 +36,7 @@ else:
 openai_key = st.session_state.get("openai_api_key", "").strip()
 
 with st.sidebar:
-    st.image("[https://img.icons8.com/fluent/96/000000/brainstorm-skill.png](https://img.icons8.com/fluent/96/000000/brainstorm-skill.png)", width=80)
+    st.image("https://img.icons8.com/fluent/96/000000/brainstorm-skill.png", width=80), width=80)
     st.title("⚙️ CẤU HÌNH HOẠT ĐỘNG")
     st.markdown("---")
     
