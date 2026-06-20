@@ -14,7 +14,7 @@ class AIService:
             try:
                 genai.configure(api_key=self.gemini_key)
                 model = genai.GenerativeModel(
-                    model_name="gemini-1.5-flash",
+                    model_name="gemini-2.5-flash",
                     generation_config={"response_mime_type": "application/json"} if "json" in prompt.lower() else None,
                     system_instruction=system_instruction
                 )
