@@ -1,4 +1,6 @@
 import streamlit as st
+import streamlit.components.v1 as components  # 👈 THÊM CHÍNH XÁC DÒNG NÀY VÀO ĐÂY
+import json
 from ai_classroom_game.database.db_manager import DatabaseManager
 from ai_classroom_game.services.ai_service import AIService
 from ai_classroom_game.modules.interactives import render_lucky_wheel
