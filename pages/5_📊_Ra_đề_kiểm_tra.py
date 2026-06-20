@@ -443,7 +443,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
 # ==========================================
 # GIAO DIỆN ĐIỀU KHIỂN STREAMLIT
 # ==========================================
-st.markdown('<div class="main-title">Trợ Lý Thiết Kế Đề Thi</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">Trợ Lý Thiết Kế Đề Kiểm Tra</div>', unsafe_allow_html=True)
 
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
@@ -466,7 +466,7 @@ with tab1:
         school_year = st.text_input("Năm học:", value="2026-2027")
 
     with col2:
-        st.markdown('<div class="section-header">Cấu hình số lượng câu hỏi theo cấu trúc mới</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Cấu hình số lượng câu hỏi</div>', unsafe_allow_html=True)
         num_tn_4_lua_chon = st.number_input("Trắc nghiệm nhiều lựa chọn (Phần I):", min_value=0, max_value=40, value=12)
         num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", min_value=0, max_value=10, value=4)
         num_tn_tra_loi_ngan = st.number_input("Trắc nghiệm Trả lời ngắn (Phần III):", min_value=0, max_value=15, value=6)
@@ -478,7 +478,7 @@ with tab1:
         code_prefix = st.text_input("Ký hiệu mã đề bắt đầu:", value="101")
 
 with tab2:
-    st.markdown('<div class="section-header">Ma trận nhận thức & Quy trình 2 bước chống nghẽn</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Tạo Ma trận & Câu hỏi tự động </div>', unsafe_allow_html=True)
     
     c1, c2, c3, c4 = st.columns(4)
     with c1: nb_ratio = st.slider("Nhận biết (%)", 0, 100, 40)
@@ -513,7 +513,7 @@ with tab2:
                         st.session_state.step1_data = generate_step1_matrix(model, config_pkg, t_list)
                         st.success("✅ Đã thiết lập xong Khung đặc tả bộ môn!")
                     except Exception as e:
-                        st.error(f"Lỗi hệ thống: {e}")
+                        st.error(f"Hệ thống đang quá tải, xin thử lại sau!")
 
     if st.session_state.step1_data:
         with st.expander("🔍 Xem trước Bản đặc tả kỹ thuật vừa sinh"):
@@ -547,7 +547,7 @@ with tab2:
                         
                         st.success(f"🎉 Hoàn tất trọn vẹn! Đã tạo xong đề gốc và {num_codes} mã đề đảo theo phom mới.")
                     except Exception as e:
-                        st.error(f"Lỗi sinh đề chi tiết: {e}")
+                        st.error(f"Hệ thống đang quá tải, xin thử lại sau!")
                         
 with tab3:
     if st.session_state.generated_data is None:
