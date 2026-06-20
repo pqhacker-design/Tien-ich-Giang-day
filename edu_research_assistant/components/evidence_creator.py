@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def show_evidence_creator_module():
-    st.header("XI. Module Cao Cấp: Tự Động Tạo Minh Chứng & Phụ Lục")
+    st.header("Tự Động Tạo Minh Chứng & Phụ Lục")
     st.info("Hỗ trợ tự động thiết lập toàn bộ hồ sơ nghiệm thu, biên bản họp và bộ công cụ đo lường sư phạm.")
 
     with st.form("evidence_form"):
