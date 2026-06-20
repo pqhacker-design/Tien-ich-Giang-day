@@ -13,12 +13,15 @@ except ModuleNotFoundError:
     from edu_research_assistant.ai_engine import call_ai_stream
 
 def export_to_docx_admin_format(topic, content_text):
-    """Xuất nội dung văn bản sang file Word chuẩn định dạng hành chính Nghị định 30/2020/NĐ-CP"""
+    """
+    Xuất nội dung văn bản sang file Word chuẩn định dạng hành chính Nghị định 30/2020/NĐ-CP
+    Đã tích hợp bộ lọc bóc tách ký tự Markdown (** , ### , * ) tránh lỗi hiển thị chữ thô.
+    """
+    import re
     doc = Document()
     
-    # 1. Cấu hình khổ giấy A4 & Căn lề trang chuẩn (Top 20mm, Bottom 20mm, Left 30mm, Right 15mm)
-    sections = doc.sections
-    for section in sections:
+    # 1. Cấu hình lề trang chuẩn (Top 20mm, Bottom 20mm, Left 30mm, Right 15mm)
+    for section in doc.sections:
         section.top_margin = Inches(20 / 25.4)
         section.bottom_margin = Inches(20 / 25.4)
         section.left_margin = Inches(30 / 25.4)
@@ -26,20 +29,20 @@ def export_to_docx_admin_format(topic, content_text):
         section.page_width = Inches(210 / 25.4)
         section.page_height = Inches(297 / 25.4)
 
-    # 2. Cấu hình Style chữ mặc định toàn văn bản (Times New Roman, Cỡ 14)
+    # Cấu hình Style mặc định (Times New Roman, 14pt)
     style = doc.styles['Normal']
     font = style.font
     font.name = 'Times New Roman'
     font.size = Pt(14)
     
-    # 3. CHÈN QUỐC HIỆU - TIÊU NGỮ (Dùng bảng ẩn 2 cột song song chuẩn 100% văn bản gốc)
+    # --- PHẦN TIÊU NGỮ & QUỐC HIỆU (Bảng ẩn 2 cột) ---
     table = doc.add_table(rows=1, cols=2)
     table.alignment = WD_ALIGN_PARAGRAPH.CENTER
     table.autofit = False
     table.columns[0].width = Inches(2.8)
     table.columns[1].width = Inches(4.2)
     
-    # Cột bên trái: Cơ quan chủ quản / Đơn vị công tác
+    # Cột 1: Đơn vị
     cell_left = table.cell(0, 0)
     p_left1 = cell_left.paragraphs[0]
     p_left1.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -51,76 +54,101 @@ def export_to_docx_admin_format(topic, content_text):
     p_left2 = cell_left.add_paragraph()
     p_left2.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_left2.paragraph_format.space_before = Pt(4)
-    run_l2 = p_left2.add_run("-------")
-    run_l2.font.name = 'Times New Roman'
-    run_l2.font.size = Pt(12)
+    p_left2.add_run("-------").font.size = Pt(12)
     
-    # Cột bên phải: Quốc hiệu & Tiêu ngữ
+    # Cột 2: Quốc hiệu Tiêu ngữ
     cell_right = table.cell(0, 1)
     p_right1 = cell_right.paragraphs[0]
     p_right1.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run_r1 = p_right1.add_run("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\n")
-    run_r1.font.name = 'Times New Roman'
-    run_r1.font.size = Pt(12)
     run_r1.bold = True
+    run_r1.font.size = Pt(12)
     
     run_r2 = p_right1.add_run("Độc lập - Tự do - Hạnh phúc")
-    run_r2.font.name = 'Times New Roman'
-    run_r2.font.size = Pt(13)
     run_r2.bold = True
+    run_r2.font.size = Pt(13)
     
     p_right2 = cell_right.add_paragraph()
     p_right2.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_right2.paragraph_format.space_before = Pt(2)
-    run_r3 = p_right2.add_run("_______________")
-    run_r3.font.name = 'Times New Roman'
-    run_r3.font.size = Pt(13)
-    run_r3.bold = True
+    p_right2.add_run("_______________").bold = True
 
-    # Tạo khoảng trống giữa Tiêu ngữ và Tên sáng kiến
-    p_space = doc.add_paragraph()
-    p_space.paragraph_format.space_before = Pt(24)
+    # Khoảng cách xuống tên đề tài
+    doc.add_paragraph().paragraph_format.space_before = Pt(24)
 
-    # 4. CHÈN TÊN VĂN BẢN ĐỀ TÀI SÁNG KIẾN KINH NGHIỆM
+    # --- TÊN ĐỀ TÀI SÁNG KIẾN ---
     p_title = doc.add_paragraph()
     p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_title.paragraph_format.space_after = Pt(18)
-    run_title_lbl = p_title.add_run("BÁO CÁO SÁNG KIẾN KINH NGHIỆM\n")
-    run_title_lbl.font.name = 'Times New Roman'
-    run_title_lbl.font.size = Pt(14)
-    run_title_lbl.bold = True
+    r_title_lbl = p_title.add_run("BÁO CÁO SÁNG KIẾN KINH NGHIỆM\n")
+    r_title_lbl.bold = True
+    r_title_lbl.font.size = Pt(14)
     
-    run_title_val = p_title.add_run(f"“{topic.upper()}”")
-    run_title_val.font.name = 'Times New Roman'
-    run_title_val.font.size = Pt(15)
-    run_title_val.bold = True
+    # Làm sạch tên đề tài nếu dính dấu ngoặc kép hoặc dấu sao của AI
+    clean_topic = topic.replace('"', '').replace('“', '').replace('”', '').replace('*', '').strip()
+    r_title_val = p_title.add_run(f"“{clean_topic.upper()}”")
+    r_title_val.bold = True
+    r_title_val.font.size = Pt(15)
 
-    # 5. XỬ LÝ ĐOẠN VĂN BẢN (Quét định dạng các đề mục in đậm và nội dung)
+    # --- BỘ LỌC VÀ BIÊN DỊCH VĂN BẢN CHUẨN ---
     lines = content_text.split('\n')
     for line in lines:
         cleaned_line = line.strip()
-        if not cleaned_line:
+        if not cleaned_line or cleaned_line == "---":
             continue
             
-        p = doc.add_paragraph()
-        p.paragraph_format.line_spacing = 1.3  # Giãn dòng (Line spacing) chuẩn 1.3 lines
-        p.paragraph_format.space_after = Pt(6)  # Giãn dòng đoạn dưới (Space after) 6pt
-        p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY # Căn đều 2 bên (Justify)
-        
-        # Nhận diện các tiêu đề lớn, mục lục để in đậm tự động
-        if cleaned_line.startswith(("ĐẶT VẤN ĐỀ", "GIẢI PHÁP", "NỘI DUNG", "KẾT LUẬN", "1.", "2.", "3.", "4.", "I.", "II.", "III.")):
-            run = p.add_run(cleaned_line)
-            run.bold = True
-            p.paragraph_format.space_before = Pt(12) # Tự động giãn dòng cách đoạn trên khi gặp tiêu đề lớn
+        # 1. Khử toàn bộ các ký tự Tiêu đề Markdown (###, ##, #)
+        if cleaned_line.startswith('#'):
+            cleaned_line = re.sub(r'^#+\s*', '', cleaned_line)
+            is_heading = True
         else:
-            # Đối với đoạn văn thường: Tự động thụt lề dòng đầu tiên (First line indent) từ 1cm đến 1.25cm
-            p.paragraph_format.first_line_indent = Inches(0.5) 
-            run = p.add_run(cleaned_line)
+            is_heading = False
             
-        run.font.name = 'Times New Roman'
-        run.font.size = Pt(14)
+        p = doc.add_paragraph()
+        p.paragraph_format.line_spacing = 1.3  # Giãn dòng 1.3 lines chuẩn
+        p.paragraph_format.space_after = Pt(6)   # Cách đoạn dưới 6pt
+        p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY # Căn đều hai bên
         
-    # Biên dịch tài liệu thành dữ liệu nhị phân (Bytes) để chuyển tiếp lên Streamlit Cloud
+        # 2. Xử lý định dạng mục Đầu dòng / Danh sách (Bullet points hoặc dấu *)
+        is_bullet = False
+        if cleaned_line.startswith(('* ', '- ', '• ')):
+            cleaned_line = re.sub(r'^[\*\-\•]\s*', '', cleaned_line)
+            is_bullet = True
+            p.paragraph_format.left_indent = Inches(0.4) # Thụt lề đoạn danh sách
+        
+        # Định nghĩa quy tắc in đậm cho tiêu đề lớn chuẩn hành chính
+        is_admin_heading = cleaned_line.upper().startswith(("ĐẶT VẤN ĐỀ", "GIẢI PHÁP", "NỘI DUNG", "KẾT LUẬN", "KẾT QUẢ")) or re.match(r'^(\d+|\d+\.\d+|[I|V|X]+)\.\s*', cleaned_line)
+        
+        if is_heading or is_admin_heading:
+            p.paragraph_format.space_before = Pt(12)
+            # Tự động thụt lề 1.25cm nếu là tiêu đề tiểu mục nhỏ (ví dụ: 2.1. Lý do chọn đề tài)
+            if re.match(r'^\d+\.\d+', cleaned_line):
+                p.paragraph_format.first_line_indent = Inches(0.5)
+        elif not is_bullet:
+            # Thụt lề dòng đầu tiên 1.25cm đối với đoạn văn thường
+            p.paragraph_format.first_line_indent = Inches(0.5)
+
+        # 3. Sử dụng Regex bóc tách chuỗi **in đậm** ở giữa câu do AI sinh ra
+        # Tách chuỗi theo cặp dấu **
+        parts = re.split(r'(\*\*.*?\*\*)', cleaned_line)
+        
+        for part in parts:
+            if part.startswith('**') and part.endswith('**'):
+                # Phần chữ nằm trong cặp dấu ** -> Bỏ dấu sao và đặt thuộc tính in đậm
+                text_run = part.replace('**', '')
+                run = p.add_run(text_run)
+                run.bold = True
+            else:
+                # Phần chữ thường
+                if part:
+                    run = p.add_run(part)
+                    if is_heading or is_admin_heading:
+                        run.bold = True
+            
+            run.font.name = 'Times New Roman'
+            run.font.size = Pt(14)
+            
+    # Ghi dữ liệu ra bộ nhớ đệm bytes
     bio = io.BytesIO()
     doc.save(bio)
     bio.seek(0)
