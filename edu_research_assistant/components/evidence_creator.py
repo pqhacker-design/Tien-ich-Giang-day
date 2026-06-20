@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import io
 
 def show_evidence_creator_module():
     st.header("XI. Module Cao Cấp: Tự Động Tạo Minh Chứng & Phụ Lục")
@@ -27,14 +26,18 @@ def show_evidence_creator_module():
         # 1. Khảo sát dữ liệu thực nghiệm mẫu sinh tự động khoa học
         st.subheader("📊 Kết quả xử lý dữ liệu Thống kê Sư phạm")
         
-        # Giả lập số liệu phân phối chuẩn cho lớp Thực nghiệm và Đối chứng
+        # SỬA LỖI TẠI ĐÂY: Tách biệt việc sinh mảng và làm tròn số để tránh lỗi AttributeError
         np.random.seed(42)
-        pre_test = np.random.clip(np.random.normal(5.8, 1.2, students_count).round(1), 0, 10)
-        post_test = np.random.clip(np.random.normal(7.6, 1.0, students_count).round(1), 0, 10)
+        raw_pre = np.random.normal(5.8, 1.2, int(students_count))
+        raw_post = np.random.normal(7.6, 1.0, int(students_count))
+        
+        # Giới hạn điểm số từ 0 đến 10 và làm tròn đến 1 chữ số thập phân
+        pre_test = np.clip(raw_pre, 0, 10).round(1)
+        post_test = np.clip(raw_post, 0, 10).round(1)
         
         df = pd.DataFrame({
-            'STT': range(1, students_count + 1),
-            'Họ và tên học sinh': [f"Học sinh {i}" for i in range(1, students_count + 1)],
+            'STT': range(1, int(students_count) + 1),
+            'Họ và tên học sinh': [f"Học sinh {i}" for i in range(1, int(students_count) + 1)],
             'Điểm Khảo sát Trước tác động': pre_test,
             'Điểm Khảo sát Sau tác động': post_test
         })
@@ -63,6 +66,7 @@ def show_evidence_creator_module():
         ax.legend(loc='upper left')
         ax.grid(axis='y', linestyle='--', alpha=0.7)
         st.pyplot(fig)
+        plt.close(fig) # Đóng fig để tối ưu bộ nhớ cho Streamlit Cloud
 
         # 3. Khu vực phân phối các văn bản biểu mẫu hành chính (Nghị định 30/2020/NĐ-CP)
         st.subheader("📄 Hệ thống Văn bản, Biên bản & Biểu mẫu Phụ lục đi kèm")
