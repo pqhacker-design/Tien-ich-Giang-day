@@ -12,10 +12,10 @@ def show_generator_module(api_key=None):
     with st.container():
         col1, col2 = st.columns(2)
         with col1:
-            subject = st.text_input("Môn học (Generator)", value="Toán học")
-            grade = st.text_input("Khối lớp (Generator)", value="Khối 8")
+            subject = st.text_input("Môn học:", value="Toán học")
+            grade = st.text_input("Khối lớp:", value="Khối 8")
         with col2:
-            target = st.text_input("Đối tượng học sinh (Generator)", value="Học sinh đại trà")
+            target = st.text_input("Đối tượng học sinh:", value="Học sinh đại trà")
             keywords = st.text_input("Từ khóa", value="AI, Chuyển đổi số, STEM")
             
         problem = st.text_area("Thực trạng / Vấn đề gặp phải tại trường học:", 
