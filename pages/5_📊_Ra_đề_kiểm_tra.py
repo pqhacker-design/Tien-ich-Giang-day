@@ -520,7 +520,6 @@ with tab1:
         exam_type = st.selectbox("Hình thức kiểm tra:", ["15 phút", "45 phút", "Giữa học kỳ I", "Cuối học kỳ I", "Giữa học kỳ II", "Cuối học kỳ II"])
         duration = st.number_input("Thời lượng làm bài (phút):", min_value=15, max_value=150, value=60, step=5)
         school_year = st.text_input("Năm học:", value="2026-2027")
-        school_year = st.text_input("Năm học:", value="2026-2027")
         
         # --- BỔ SUNG: CHỌN ĐỘ KHÓ CỦA ĐỀ THI ---
         difficulty_levels = {
