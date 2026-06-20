@@ -25,13 +25,23 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 2. THANH THÔNG TIN BỔ TRỢ (SIDEBAR) - CẤU HÌNH TIÊU CHUẨN SƯ PHẠM
+# --- TRÍCH XUẤT VÀ KIỂM TRA API KEY TỪ SESSION STATE CHUNG ---
+if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
+    gemini_key = st.session_state["gemini_api_key"].strip()
+else:
+    st.warning("⚠️ Vui lòng cấu hình Google Gemini API Key tại **Trang chủ** trước khi vận hành.")
+    st.stop()
+
+# (Tùy chọn) Nếu bạn vẫn muốn hỗ trợ OpenAI làm phương án dự phòng từ session_state:
+openai_key = st.session_state.get("openai_api_key", "").strip()
+
+# --- THANH THÔNG TIN BỔ TRỢ (SIDEBAR) ---
 with st.sidebar:
-    # Thay vì viết dạng link markdown, bạn chỉ để lại URL sạch như thế này:
     st.image("https://img.icons8.com/fluent/96/000000/brainstorm-skill.png", width=80)
     st.title("⚙️ CẤU HÌNH HOẠT ĐỘNG")
     st.markdown("---")
     
-    # Form các tham số sư phạm đầu vào
+    # Giữ nguyên các thông số sư phạm cũ của thầy/cô
     subject = st.selectbox("Môn học", ["Toán học", "Ngữ văn", "Tiếng Anh", "Khoa học tự nhiên", "Lịch sử & Địa lý", "Tin học", "STEM"])
     grade = st.selectbox("Khối lớp", [f"Lớp {i}" for i in range(1, 13)])
     duration = st.slider("Thời lượng hoạt động (Phút)", 5, 45, 15, step=5)
@@ -39,10 +49,7 @@ with st.sidebar:
     organization = st.radio("Hình thức tổ chức", ["Cá nhân", "Cặp đôi", "Hoạt động nhóm", "Toàn lớp"])
     
     st.markdown("---")
-    st.subheader("🔑 Cổng Kết Nối AI Cloud")
-    gemini_key = st.text_input("Gemini API Key", type="password", help="Dùng để sinh dữ liệu bài tập và thiết lập kịch bản.")
-    openai_key = st.text_input("OpenAI API Key (Fallback)", type="password", help="Tự động kích hoạt khi cổng kết nối Gemini gặp sự cố.")
-
+    st.success("✔ Đã đồng bộ API Key thành công từ Trang chủ.")
 # Khởi tạo dịch vụ AI dựa trên Key đã nhập
 ai_engine = AIService(gemini_key=gemini_key, openai_key=openai_key)
 
