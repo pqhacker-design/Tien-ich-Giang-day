@@ -2,7 +2,7 @@ import streamlit as st
 from ai_classroom_game.database.db_manager import DatabaseManager
 from ai_classroom_game.services.ai_service import AIService
 from ai_classroom_game.modules.interactives import render_lucky_wheel
-from ai_classroom_game.services.exporters import DocumentExporter
+from ai_classroom_game.modules.exporters import DocumentExporter
 
 # 1. Cấu hình trang & Giao diện chuẩn Enterprise
 st.set_page_config(page_title="AI Thiết Kế Hoạt Động Lớp Học", layout="wide", initial_sidebar_state="expanded")
