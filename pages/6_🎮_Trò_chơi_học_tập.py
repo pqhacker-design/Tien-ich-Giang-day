@@ -36,7 +36,7 @@ else:
 openai_key = st.session_state.get("openai_api_key", "").strip()
 
 with st.sidebar:
-    st.image("https://img.icons8.com/fluent/96/000000/brainstorm-skill.png", width=80), width=80)
+    st.image("https://img.icons8.com/fluent/96/000000/brainstorm-skill.png", width=80)
     st.title("⚙️ CẤU HÌNH HOẠT ĐỘNG")
     st.markdown("---")
     
@@ -156,77 +156,78 @@ with tabs[2]:
         
         js_crossword = json.dumps(crossword_data, ensure_ascii=False)
         
-        crossword_html = f"""
+        crossword_html = """
         <!DOCTYPE html>
         <html>
         <head>
             <style>
-                body {{ background: #0e1117; color: white; font-family: sans-serif; text-align: center; }}
-                .row-container {{ margin: 12px 0; display: flex; justify-content: center; align-items: center; }}
-                .hint-btn {{ background: #262730; color: #fff; border: 1px solid #464855; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-right: 15px; width: 120px; text-align: center; }}
-                .hint-btn:hover {{ background: #ff4b4b; border-color: #ff4b4b; }}
-                .cell {{ width: 35px; height: 35px; border: 2px solid #464855; display: inline-block; text-align: center; line-height: 35px; font-weight: bold; font-size: 20px; text-transform: uppercase; margin: 2px; background: #1e222b; color: transparent; border-radius: 4px; cursor: pointer; user-select: none; transition: background 0.2s; }}
-                .cell.reveal {{ color: #00e676; background: #2e3d30; border-color: #00e676; }}
-                #hint-display {{ font-size: 20px; color: #ffeb3b; margin-top: 20px; min-height: 40px; font-style: italic; background: #1a1c24; padding: 10px; border-radius: 6px; display: inline-block; padding-left: 20px; padding-right: 20px; }}
+                body { background: #0e1117; color: white; font-family: sans-serif; text-align: center; }
+                .row-container { margin: 12px 0; display: flex; justify-content: center; align-items: center; }
+                .hint-btn { background: #262730; color: #fff; border: 1px solid #464855; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-right: 15px; width: 120px; text-align: center; }
+                .hint-btn:hover { background: #ff4b4b; border-color: #ff4b4b; }
+                .cell { width: 35px; height: 35px; border: 2px solid #464855; display: inline-block; text-align: center; line-height: 35px; font-weight: bold; font-size: 20px; text-transform: uppercase; margin: 2px; background: #1e222b; color: transparent; border-radius: 4px; cursor: pointer; user-select: none; transition: background 0.2s; }
+                .cell.reveal { color: #00e676; background: #2e3d30; border-color: #00e676; }
+                #hint-display { font-size: 20px; color: #ffeb3b; margin-top: 20px; min-height: 40px; font-style: italic; background: #1a1c24; padding: 10px; border-radius: 6px; display: inline-block; padding-left: 20px; padding-right: 20px; }
             </style>
         </head>
         <body>
             <div id="board"></div>
             <div id="hint-display">💡 Nhấn vào nút tiêu đề hàng bên trái để xem câu hỏi gợi ý!</div>
             <script>
-                const data = {js_crossword};
+                const data = DATA_PLACEHOLDER;
                 const board = document.getElementById('board');
                 const hintDisplay = document.getElementById('hint-display');
 
-                data.forEach((item) => {{
+                data.forEach((item) => {
                     const rowDiv = document.createElement('div');
                     rowDiv.className = 'row-container';
                     
                     const btn = document.createElement('button');
                     btn.className = 'hint-btn';
                     btn.innerText = "Hàng ngang " + item.hang;
-                    btn.onclick = () => {{
+                    btn.onclick = () => {
                         hintDisplay.innerText = "❓ Gợi ý dòng " + item.hang + ": " + item.goi_y;
-                    }};
+                    };
                     rowDiv.appendChild(btn);
                     
-                    for(let i=0; i < item.tu_khoa.length; i++) {{
+                    for(let i=0; i < item.tu_khoa.length; i++) {
                         const cell = document.createElement('div');
                         cell.className = 'cell';
                         cell.innerText = item.tu_khoa[i];
-                        cell.onclick = () => {{
+                        cell.onclick = () => {
                             cell.classList.toggle('reveal');
-                        }};
+                        };
                         rowDiv.appendChild(cell);
-                    }}
+                    }
                     board.appendChild(rowDiv);
-                }});
+                });
             </script>
         </body>
         </html>
-        """
+        """.replace("DATA_PLACEHOLDER", js_crossword) # Sử dụng hàm .replace an toàn tuyệt đối cho Python 3.14
+        
         components.html(crossword_html, height=480)
 
     elif game_select == "Ai Là Triệu Phú":
         st.subheader("💰 Đấu Trường: Ai Là Triệu Phú Giáo Khoa")
         js_quiz = json.dumps(quiz_source, ensure_ascii=False)
         
-        millionaire_html = f"""
+        millionaire_html = """
         <!DOCTYPE html>
         <html>
         <head>
-            <script src="[https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js](https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js)"></script>
+            <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
             <style>
-                body {{ background: #0c1020; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 10px; }}
-                .game-box {{ max-width: 700px; margin: auto; background: #121830; padding: 25px; border-radius: 12px; border: 2px solid #1e295d; box-shadow: 0 0 20px rgba(0,0,0,0.6); }}
-                .q-section {{ font-size: 22px; font-weight: bold; margin-bottom: 25px; background: #1a234a; padding: 15px; border-radius: 8px; border-left: 5px solid #00e676; }}
-                .options-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }}
-                .opt-btn {{ background: #1e295d; color: white; border: 1px solid #3b4da3; padding: 15px; font-size: 18px; border-radius: 30px; cursor: pointer; text-align: left; padding-left: 25px; transition: 0.2s; }}
-                .opt-btn:hover {{ background: #2a3b8f; border-color: #00e676; }}
-                .lifelines {{ margin-top: 25px; display: flex; justify-content: center; gap: 15px; }}
-                .life-btn {{ background: #ff9800; color: black; border: none; padding: 8px 18px; font-weight: bold; border-radius: 20px; cursor: pointer; }}
-                .life-btn.used {{ background: #555 !important; color: #888; cursor: not-allowed; text-decoration: line-through; }}
-                #score-board {{ font-size: 18px; color: #00e676; margin-bottom: 10px; font-weight: bold; }}
+                body { background: #0c1020; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 10px; }
+                .game-box { max-width: 700px; margin: auto; background: #121830; padding: 25px; border-radius: 12px; border: 2px solid #1e295d; box-shadow: 0 0 20px rgba(0,0,0,0.6); }
+                .q-section { font-size: 22px; font-weight: bold; margin-bottom: 25px; background: #1a234a; padding: 15px; border-radius: 8px; border-left: 5px solid #00e676; }
+                .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+                .opt-btn { background: #1e295d; color: white; border: 1px solid #3b4da3; padding: 15px; font-size: 18px; border-radius: 30px; cursor: pointer; text-align: left; padding-left: 25px; transition: 0.2s; }
+                .opt-btn:hover { background: #2a3b8f; border-color: #00e676; }
+                .lifelines { margin-top: 25px; display: flex; justify-content: center; gap: 15px; }
+                .life-btn { background: #ff9800; color: black; border: none; padding: 8px 18px; font-weight: bold; border-radius: 20px; cursor: pointer; }
+                .life-btn.used { background: #555 !important; color: #888; cursor: not-allowed; text-decoration: line-through; }
+                #score-board { font-size: 18px; color: #00e676; margin-bottom: 10px; font-weight: bold; }
             </style>
         </head>
         <body>
@@ -240,15 +241,15 @@ with tabs[2]:
                 </div>
             </div>
             <script>
-                const questions = {js_quiz};
+                const questions = QUIZ_PLACEHOLDER;
                 let currentIdx = 0;
 
-                function loadQuestion() {{
-                    if(currentIdx >= questions.length) {{
+                function loadQuestion() {
+                    if(currentIdx >= questions.length) {
                         document.getElementById('game-box').innerHTML = "<h2 style='color:#00e676;'>🎉 XUẤT SẮC VƯỢT QUA TẤT CẢ CÂU HỎI!</h2><p>Học sinh đã chiến thắng mốc phần thưởng cao nhất!</p>";
-                        confetti({{particleCount: 200, spread: 100}});
+                        confetti({particleCount: 200, spread: 100});
                         return;
-                    }}
+                    }
                     document.getElementById('score-board').innerText = "CÂU HỎI SỐ: " + (currentIdx + 1) + " / " + questions.length;
                     const qData = questions[currentIdx];
                     document.getElementById('question-text').innerText = qData.cau_hoi;
@@ -256,52 +257,53 @@ with tabs[2]:
                     const optionsBox = document.getElementById('options-box');
                     optionsBox.innerHTML = "";
                     
-                    qData.options.forEach((opt, i) => {{
+                    qData.options.forEach((opt, i) => {
                         const btn = document.createElement('button');
                         btn.className = 'opt-btn';
                         btn.innerHTML = "<b>" + String.fromCharCode(65 + i) + ":</b> " + opt;
                         btn.onclick = () => checkAnswer(opt, btn);
                         optionsBox.appendChild(btn);
-                    }});
-                }}
+                    });
+                }
 
-                function checkAnswer(selectedOpt, btn) {{
+                function checkAnswer(selectedOpt, btn) {
                     const correctAns = questions[currentIdx].dap_an;
-                    if(selectedOpt === correctAns) {{
+                    if(selectedOpt === correctAns) {
                         btn.style.background = "#00e676";
                         btn.style.color = "black";
-                        setTimeout(() => {{
+                        setTimeout(() => {
                             currentIdx++;
                             loadQuestion();
-                        }}, 1500);
-                    }} else {{
+                        }, 1500);
+                    } else {
                         btn.style.background = "#ff4b4b";
                         alert("❌ Câu trả lời chưa chính xác! Hãy khuyến khích học sinh khác cứu trợ.");
-                    }}
-                }}
+                    }
+                }
 
-                function use5050() {{
+                function use5050() {
                     document.getElementById('btn-50').classList.add('used');
                     const correctAns = questions[currentIdx].dap_an;
                     const buttons = document.getElementsByClassName('opt-btn');
                     let removed = 0;
-                    for(let btn of buttons) {{
-                        if(!btn.innerText.includes(correctAns) && removed < 2) {{
+                    for(let btn of buttons) {
+                        if(!btn.innerText.includes(correctAns) && removed < 2) {
                             btn.style.visibility = 'hidden';
                             removed++;
-                        }}
-                    }}
-                }}
+                        }
+                    }
+                }
 
-                function askClass() {{
+                function askClass() {
                     document.getElementById('btn-class').classList.add('used');
                     alert("📊 Thầy/Cô hãy lấy biểu quyết nhanh từ các tổ trong lớp học!");
-                }}
+                }
                 loadQuestion();
             </script>
         </body>
         </html>
-        """
+        """.replace("QUIZ_PLACEHOLDER", js_quiz)
+        
         components.html(millionaire_html, height=480)
 
 # --- TAB 4: KỊCH BẢN SƯ PHẠM ---
