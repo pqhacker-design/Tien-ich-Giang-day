@@ -44,20 +44,26 @@ class AIService:
         raise ValueError("Chưa thiết lập cấu hình API Key hợp lệ trong hệ thống.")
 
     def generate_quiz(self, topic, content, goals):
-        instruction = "Bạn là chuyên gia khảo thí ngôn ngữ và sư phạm. Hãy tạo bộ câu hỏi trắc nghiệm, đúng sai, điền khuyết cấu trúc chuẩn."
+        instruction = "Bạn là chuyên gia khảo thí ngôn ngữ và sư phạm. Hãy tạo bộ câu hỏi trắc nghiệm và ma trận ô chữ từ khóa dựa trên nội dung bài học."
         prompt = f"""
-        Hãy tạo bộ câu hỏi tương tác cho bài học: '{topic}' với nội dung: '{content}'. Mục tiêu: '{goals}'.
+        Hãy tạo bộ câu hỏi tương tác và ô chữ cho bài học: '{topic}' với nội dung: '{content}'. Mục tiêu: '{goals}'.
+        
+        YÊU CẦU RIÊNG CHO Ô CHỮ:
+        - Chọn ra từ 4 đến 6 từ khóa cốt lõi xuất hiện trong bài học.
+        - Viết hoa toàn bộ từ khóa, KHÔNG CHỨA DẤU TIẾNG VIỆT, KHÔNG CÓ KHOẢNG TRẮNG (Ví dụ: "PITAGO", "DIENTICH", "LUYENTAP").
+        - Tạo câu hỏi gợi ý ngắn gọn, rõ ràng cho từng từ khóa đó.
+
         Trả về định dạng JSON thuần túy theo cấu trúc mẫu sau (không chứa markdown ```json):
         {{
           "trac_nghiem": [
             {{"cau_hoi": "Nội dung câu hỏi?", "options": ["A", "B", "C", "D"], "dap_an": "A", "giai_thich": "Lý do"}}
           ],
-          "dung_sai": [
-            {{"cau_hoi": "Mệnh đề đúng hay sai?", "dap_an": true, "giai_thich": "Giải thích"}}
-          ],
-          "dien_khuyen": [
-            {{"cau_hoi": "Học sinh điền vào chỗ trống [...]", "tu_can_dien": "từ khóa"}}
+          "o_chu": [
+            {{"hang": 1, "tu_khoa": "TUKHOAONE", "goi_y": "Gợi ý cho từ khóa số 1"}},
+            {{"hang": 2, "tu_khoa": "TUKHOATWO", "goi_y": "Gợi ý cho từ khóa số 2"}}
           ]
         }}
+        """
+        return json.loads(self.generate_content(prompt, instruction))
         """
         return json.loads(self.generate_content(prompt, instruction))
