@@ -580,7 +580,7 @@ with tab2:
                         st.session_state.step1_data = generate_step1_matrix(model, config_pkg, t_list)
                         st.success("✅ Đã thiết lập xong Khung đặc tả bộ môn!")
                     except Exception as e:
-                        st.error(f"Hệ thống đang quá tải, xin thử lại sau!")
+                        st.error(f"Hệ thống đang quá tải, xin thử lại sau!{e}")
 
     if st.session_state.step1_data:
         with st.expander("🔍 Xem trước Bản đặc tả kỹ thuật vừa sinh"):
