@@ -62,7 +62,7 @@ def show_library_module(api_key=None):
                     mime="text/plain"
                 )
                 
-    st.markdown("<br><hr><br>", unsafe_allow_index=True)
+    st.markdown("<br><hr><br>", unsafe_allow_html=True)
 
     # --- ĐOẠN CODE DƯỚI ĐÂY LÀ THƯ VIỆN CÁC MẪU CỐ ĐỊNH CŨ (GIỮ NGUYÊN) ---
     st.markdown("### 📁 Danh mục các mẫu quy chuẩn có sẵn trong thư viện")
