@@ -95,10 +95,10 @@ if menu == "🏠 Tổng quan hệ thống":
         st.error(f"Không thể kết nối cơ sở dữ liệu: {e}")
 
 elif menu == "💡 I. Tạo Đề tài Thông minh":
-    show_generator_module()
+    show_generator_module(api_key=user_api_key)
 
 elif menu == "📝 II & III. Thiết kế Đề cương & Viết nội dung":
-    show_content_writer_module()
+    show_content_writer_module(api_key=user_api_key)
 
 elif menu == "📊 IV & XI. Xử lý Thống kê & Sinh Minh chứng":
     show_data_analysis_module()
@@ -114,10 +114,11 @@ elif menu == "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI":
     council_level = st.selectbox("Cấp hội đồng chấm duyệt", ["Cấp Trường / Cơ sở", "Cấp Quận / Huyện / Phòng GDĐT", "Cấp Tỉnh / Thành phố / Sở GDĐT"])
     
     if st.button("⚖️ Bắt đầu Thẩm định & Chấm điểm"):
-        if critique_content:
-            with st.spinner("Hội đồng đang thảo luận, phản biện kín và chấm điểm..."):
-                critique_res = get_council_critique(critique_title, critique_content, council_level)
-                st.markdown(critique_res)
+    if critique_content:
+        with st.spinner("Hội đồng đang thảo luận..."):
+            # CHÚ Ý: Phải có api_key=user_api_key ở cuối hàm
+            critique_res = get_council_critique(critique_title, critique_content, council_level, api_key=user_api_key)
+            st.markdown(critique_res)
         else:
             st.error("Vui lòng cung cấp nội dung văn bản đề tài để hội đồng phân tích.")
 
