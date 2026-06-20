@@ -102,7 +102,7 @@ elif menu == "📊 III. Xử lý Thống kê & Sinh Minh chứng":
     show_evidence_creator_module()
     
 elif menu == "📂 IV. Kiểm tra & Xuất bản Word":
-    show_docx_processor_module()
+    show_docx_processor_module(api_key=user_api_key) # Thêm user_api_key vào đây
 
 elif menu == "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI":
     st.header("🕵️‍♂️ Trợ Lý AI Phản Biện Đề Tài - Đóng vai Hội đồng chấm Sáng kiến")
