@@ -1,5 +1,5 @@
 import streamlit as st
-from ai_engine import call_ai_stream
+from edu_research_assistant.ai_engine import call_ai_stream
 
 def show_generator_module():
     st.subheader("💡 Tự Động Đề Xuất Đề Tài & Thiết Kế Đề Cương")
