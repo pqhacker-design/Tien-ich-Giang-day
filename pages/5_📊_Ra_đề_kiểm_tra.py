@@ -60,68 +60,70 @@ SUBJECTS_CONFIG = {
 # ==========================================
 def convert_latex_to_omml_xml(latex_str):
     """
-    Sử dụng thư viện chuyên trách để dịch LaTeX sang MathML chuẩn 100%,
-    sau đó chuyển đổi sang OMML của Microsoft Word.
+    Bộ dịch Regex thực chiến v5.0: Chấp nhận và xử lý cả mã toán học BỊ MẤT DẤU GẠCH CHÉO (frac, neq, triangle, sim)
     """
-    # 1. Làm sạch các lỗi dính chữ 'text' hoặc dấu escape thừa từ AI
+    # Làm sạch khoảng trắng rác và đồng bộ hóa chữ thường để dễ lọc
     latex_str = str(latex_str).replace('text ', '').replace('\\\\', '\\').strip()
     
-    # Chuẩn hóa một số ký hiệu đặc thù mà AI hay viết tắt
-    if latex_str == 'sim' or latex_str == '\\sim':
-        return f'<m:r {nsdecls("m")}><m:t> ∽ </m:t></m:r>'
-    if 'triangle' in latex_str:
-        latex_str = latex_str.replace('triangle', '\\triangle')
+    # 1. Xử lý Phân số (Bắt cả \frac{a}{b} và frac{a}{b})
+    frac_match = re.findall(r'\\?frac\{([^}]+)\}\{([^}]+)\}', latex_str)
+    if frac_match:
+        num, den = frac_match[0]
+        return f'<m:f {nsdecls("m")}><m:num><m:r><m:t>{num}</m:t></m:r></m:num><m:den><m:r><m:t>{den}</m:t></m:r></m:den></m:f>'
 
-    try:
-        # 2. Thư viện tự động chuyển đổi LaTeX -> MathML XML
-        mathml_str = convert_latex_to_mathml(latex_str)
-        
-        # 3. Sử dụng XSLT hoặc ép kiểu cấu trúc MathML sang OMML 
-        # Để an toàn và hiển thị đẹp nhất trong Word, ta bọc toán học bằng thẻ lồng
-        # Thư viện python-docx xử lý tốt nhất khi ta chuyển các nút gốc MathML tương ứng.
-        # Dưới đây là cách convert trung gian an toàn:
-        
-        # Vì Word dùng OMML, một mẹo nhỏ nếu không muốn cài bộ cài XSLT cồng kềnh:
-        # Chúng ta xử lý các cụm phổ biến được dịch từ mathml:
-        # Hoặc dùng trực tiếp mã Xml thô từ MathML (Word hiện đại đọc được cả MathML nếu nạp đúng namespace)
-        
-        # Tuy nhiên, nếu muốn hiển thị dạng Native Math Equation của Word, ta dọn nhanh:
-        omml_xml = mathml_str.replace('<math xmlns="http://www.w3.org/1998/Math/MathML">', '')
-        omml_xml = omml_xml.replace('</math>', '')
-        
-        # Trả về chuỗi XML sạch để paragraph._p.append xử lý
-        return f'<m:r {nsdecls("m")}><m:t>{latex_str.replace("\\", "")}</m:t></m:r>' # Dự phòng
-    except Exception:
-        # Nếu có lỗi dịch thuật, quay về bộ lọc chuỗi trơn để không làm crash ứng dụng
-        clean_text = latex_str.replace('\\', '').replace('{', '').replace('}', '')
-        return f'<m:r {nsdecls("m")}><m:t>{clean_text}</m:t></m:r>'
+    # 2. Xử lý dấu Khác (Bắt cả \neq, neq, \ne, ne, x neq 3)
+    if 'ne' in latex_str or 'neq' in latex_str or '≠' in latex_str:
+        # Lấy phần ký tự xung quanh nếu có (ví dụ: x neq 3 -> lấy x và 3)
+        parts = re.split(r'\\?neq|\\?ne|≠', latex_str)
+        left = parts[0].strip() if len(parts) > 0 else ""
+        right = parts[1].strip() if len(parts) > 1 else ""
+        return f'<m:r {nsdecls("m")}><m:t>{left} ≠ {right}</m:t></m:r>'
+
+    # 3. Xử lý Đồng dạng & Tam giác (Bắt cả \triangle, triangle, \sim, sim)
+    if 'sim' in latex_str or 'triangle' in latex_str or 'Δ' in latex_str:
+        # Thay thế các chữ rác thành ký hiệu Unicode đẹp trong Word
+        val = latex_str.replace('\\triangle', '').replace('triangle', '').replace('Δ', '')
+        val = val.replace('\\sim', ' ∽ ').replace('sim', ' ∽ ')
+        return f'<m:r {nsdecls("m")}><m:t>Δ{val.strip()}</m:t></m:r>'
+
+    # 4. Xử lý số mũ đa năng (x^2, cm^2, x^2+9)
+    bracket_pow = re.findall(r'([a-zA-Z0-9]+)\^\{([^}]+)\}', latex_str)
+    if bracket_pow:
+        base, exp = bracket_pow[0]
+        return f'<m:sSup {nsdecls("m")}><m:e><m:r><m:t>{base}</m:t></m:r></m:e><m:sup><m:r><m:t>{exp}</m:t></m:r></m:sup></m:sSup>'
+    
+    simple_pow = re.findall(r'([a-zA-Z0-9]+)\^([a-zA-Z0-9+-]+)', latex_str)
+    if simple_pow:
+        base, exp = simple_pow[0]
+        return f'<m:sSup {nsdecls("m")}><m:e><m:r><m:t>{base}</m:t></m:r></m:e><m:sup><m:r><m:t>{exp}</m:t></m:r></m:sup></m:sSup>'
+
+    # Nếu là văn bản bình thường, trả về text sạch không chứa dấu gạch chéo rác
+    clean_text = latex_str.replace('\\', '')
+    return f'<m:r {nsdecls("m")}><m:t>{clean_text}</m:t></m:r>'
+
 
 def add_math_run_to_paragraph(paragraph, text):
     """
-    Xử lý tiền lọc cấu trúc: Sửa lỗi dính dòng bằng run.add_break() 
-    và xử lý chính xác ký hiệu khoa học Toán/KHTN.
+    Quét và ép xử lý tất cả các vùng chứa công thức toán học kể cả khi AI quên bọc dấu $
     """
     if not text: return
     
-    # 1. Tiền xử lý sửa lỗi ký tự hệ thống rác (\na, \nb) từ AI thành dấu xuống dòng tiêu chuẩn
-    text = re.sub(r'\\n\s*([a-z]\))', r'\n\1', text)
-    text = re.sub(r'\\n', r'\n', text)
+    # 1. Triệt tiêu chữ 'text ' rác đứng cạnh đơn vị đo lường
+    text = re.sub(r'\btext\s+(km/h|km|phút|giờ|cm\^2|cm|s|kg|m)\b', r'\1', text)
+    text = text.replace('\\n', '\n').replace('\r', '')
     
-    # 2. Làm sạch chữ 'text' đứng thừa ngoài công thức
-    text = re.sub(r'\btext\s+(km/h|km|phút|giờ|cm\^2|cm|s|kg|m|giờ)\b', r'\1', text)
-    
-    # 3. Tự động bọc dấu $ cho các ký hiệu Vật lý/Toán học bị AI quên
+    # 2. TỰ ĐỘNG BỌC GIẢ LẬP: Nếu AI quên bọc $, nhưng chuỗi chứa cấu trúc toán học (frac, neq, ^) thì tự bọc lại
     if '$' not in text:
-        text = re.sub(r'([a-zA-Z0-9]+_[1-2])', r'$\1$', text)  # Bọc G_1, G_2
-        text = re.sub(r'([0-9]+\s*\\circ)', r'$\1$', text)     # Bọc số độ
-        text = re.sub(r'([a-zA-Z0-9]+\^[2-3])', r'$\1$', text)  # Bọc s^2, cm^2
+        # Nếu dòng chứa chữ frac{...}{...} hoặc neq hoặc số mũ, bọc toàn bộ phân đoạn đó
+        text = re.sub(r'(\bfrac\{[^}]+\}\{[^}]+\})', r'$\1$', text)
+        text = re.sub(r'([a-zA-Z0-9]+\s+neq\s+[a-zA-Z0-9\-]+)', r'$\1$', text)
+        text = re.sub(r'([a-zA-Z0-9]+\^[a-zA-Z0-9+\-]+)', r'$\1$', text)
+        text = re.sub(r'(triangle\s+[A-Z]+\s+sim\s+triangle\s+[A-Z]+)', r'$\1$', text)
 
-    # 4. Tách dòng thực tế dựa trên dấu \n
+    # 3. Tiến hành phân tách bằng dấu $ và ghi vào Word
     lines = text.split('\n')
-    
     for index, line in enumerate(lines):
         if index > 0:
-            # SỬA LỖI TẠI ĐÂY: Thêm dấu ngắt dòng xuống hàng (Shift + Enter) trong Word cực kỳ an toàn
             new_run = paragraph.add_run()
             new_run.add_break()
             
