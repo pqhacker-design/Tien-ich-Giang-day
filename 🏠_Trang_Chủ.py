@@ -82,7 +82,14 @@ with col6:
             st.switch_page("pages/6_🎮_Trò_chơi_học_tập.py")
 
 # Hàng 3: Gồm 3 cột cho App 7, App 8, App 9
+col7, col8, col9 = st.columns(3)
 
+with col7:
+    with st.container(border=True):
+        st.markdown("### 📝 4. Sửa lỗi chính tả")
+        st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
+        if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_sua_loi_chinh_ta", use_container_width=True):
+            st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
 st.markdown("---")
 
 # 5. Chân trang (Footer)
