@@ -543,7 +543,7 @@ with tab2:
     if total_ratio != 100:
         st.warning(f"⚠️ Tổng tỷ lệ hiện tại đạt {total_ratio}%. Thầy cô vui lòng căn chỉnh về chính xác 100%.")
         
-    topics_list = st.text_area("Nhập các chủ đề/nội dung kiến thức cần quét (Mỗi nội dung một dòng):", 
+    topics_list = st.text_area("Nhập các chủ đề/nội dung kiến thức cần Kiểm tra(Mỗi nội dung một dòng):", 
                                value="Nội dung 1: Kiến thức trọng tâm chương học cũ\nNội dung 2: Kiến thức nâng cao bổ trợ")
 
     st.markdown("---")
