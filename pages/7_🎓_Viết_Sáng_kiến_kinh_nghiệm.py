@@ -3,12 +3,12 @@ from edu_research_assistant.database import init_db, save_project, get_all_proje
 from edu_research_assistant.ai_engine import call_ai_stream, get_council_critique
 
 # Đầu file app.py, thầy import thêm các module mới vào:
-from components.generator import show_generator_module
-from components.content_writer import show_content_writer_module
-from components.data_analysis import show_data_analysis_module
-from components.docx_processor import show_docx_processor_module
-from components.library import show_library_module
-from components.evidence_creator import show_evidence_creator_module
+from edu_research_assistant.components.generator import show_generator_module
+from edu_research_assistant.components.content_writer import show_content_writer_module
+from edu_research_assistant.components.data_analysis import show_data_analysis_module
+from edu_research_assistant.components.docx_processor import show_docx_processor_module
+from edu_research_assistant.components.library import show_library_module
+from edu_research_assistant.components.evidence_creator import show_evidence_creator_module
 
 # Cấu hình Page cấu trúc hiện đại
 st.set_page_config(
