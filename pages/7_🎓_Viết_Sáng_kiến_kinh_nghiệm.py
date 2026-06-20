@@ -101,7 +101,7 @@ elif menu == "📊 III. Xử lý Thống kê & Sinh Minh chứng":
     st.markdown("---")
     show_evidence_creator_module()
     
-elif menu == "📂 V. Kiểm tra & Xuất bản Word":
+elif menu == "📂 IV. Kiểm tra & Xuất bản Word":
     show_docx_processor_module()
 
 elif menu == "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI":
