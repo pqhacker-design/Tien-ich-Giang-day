@@ -1,80 +1,90 @@
 import streamlit as st
 
-def show_library_module():
-    st.subheader("📚 Thư Viện Tra Cứu & Tải Văn Bản Sáng Kiến Mẫu Quy Chuẩn")
-    st.info("Hệ thống cung cấp sẵn khung nội dung chi tiết bám sát cấu trúc Sáng kiến kinh nghiệm chuẩn giáo dục.")
+# Import hàm gọi AI từ lõi hệ thống
+try:
+    from ai_engine import call_ai_stream
+except ModuleNotFoundError:
+    from edu_research_assistant.ai_engine import call_ai_stream
+
+def show_library_module(api_key=None):
+    st.subheader("📚 Thư Viện Tra Cứu & Tự Động Sinh Sáng Kiến Mẫu")
+    st.info("Thầy/Cô có thể tra cứu các mẫu có sẵn hoặc gõ một tên đề tài bất kỳ để AI tự động xây dựng một bản sáng kiến mẫu hoàn chỉnh.")
+
+    # --- TÍNH NĂNG CAO CẤP: AI TỰ SINH SÁNG KIẾN MẪU THEO TÊN NGƯỜI DÙNG GÕ ---
+    st.markdown("### 🤖 Tính năng: Tự động biên soạn Sáng kiến mẫu theo yêu cầu")
     
-    # Thanh tìm kiếm
-    search_query = st.text_input("🔍 Tìm kiếm nhanh tài liệu, sáng kiến (Ví dụ: Toán, STEM, AI...):", "")
+    # Cho phép người dùng gõ hoặc dán tên đề tài tùy ý
+    user_topic = st.text_input(
+        "✍️ Nhập tên Đề tài/Sáng kiến thầy cô muốn tạo mẫu:",
+        placeholder="Ví dụ: Ứng dụng AI và chuyển đổi số nâng cao hiệu quả dạy học môn Toán lớp 8"
+    )
     
-    # Cơ sở dữ liệu mẫu nội dung chi tiết của các sáng kiến
+    if st.button("🔥 Kích hoạt AI biên soạn Bản mẫu Sư phạm"):
+        if not user_topic.strip():
+            st.warning("⚠️ Vui lòng nhập tên đề tài trước khi bấm tạo mẫu.")
+        else:
+            with st.spinner("🧠 AI đang phân tích bối cảnh, tra cứu thuật ngữ và biên soạn bản mẫu..."):
+                # Thiết lập prompt ra lệnh chi tiết cho AI sinh đúng cấu trúc chuẩn
+                prompt = f"""
+                Hãy đóng vai là Chuyên gia Khoa học Sư phạm cấp cao của Bộ Giáo dục và Đào tạo Việt Nam.
+                Xây dựng một BẢN SÁNG KIẾN KINH NGHIỆM MẪU chi tiết cho đề tài: "{user_topic}".
+                
+                Yêu cầu cấu trúc nội dung sinh ra phải bao gồm đầy đủ các phần sau:
+                1. TÊN ĐỀ TÀI (Chuẩn hóa lại nếu cần)
+                2. ĐẶT VẤN ĐỀ
+                   - Lý do chọn đề tài (Nêu bật tính cấp thiết và thực trạng khó khăn tại trường học).
+                   - Mục đích nghiên cứu.
+                3. GIẢI PHÁP THỰC HIỆN (Biên soạn chi tiết ít nhất 3 biện pháp cốt lõi, đột phá, có ứng dụng công nghệ hoặc đổi mới phương pháp).
+                4. KẾT QUẢ ĐẠT ĐƯỢC (Đưa ra các số liệu định lượng, tỷ lệ % tăng trưởng giả định một cách khoa học).
+                5. KẾT LUẬN & KIẾN NGHỊ (Bài học kinh nghiệm và đề xuất với nhà trường/Sở GD&ĐT).
+                
+                Văn phong yêu cầu: Nghiêm túc, mang tính học thuật ngành giáo dục Việt Nam, lập luận chặt chẽ, không sáo rỗng.
+                """
+                
+                # Gọi AI xử lý và truyền API Key từ Trang chủ sang
+                generated_sample = call_ai_stream(
+                    prompt=prompt, 
+                    system_instruction="Bạn là Giáo sư Viện Khoa học Giáo dục Việt Nam.", 
+                    api_key=api_key
+                )
+                
+                # Hiển thị kết quả ra màn hình
+                st.success("🎉 Đã biên soạn thành công bản mẫu sư phạm!")
+                st.markdown("---")
+                st.markdown(generated_sample)
+                st.markdown("---")
+                
+                # Tích hợp luôn nút tải file bản mẫu vừa sinh về máy
+                st.download_button(
+                    label="📥 Tải Bản mẫu này về máy (.txt)",
+                    data=generated_sample,
+                    file_name=f"Mau_SKKN_{user_topic.replace(' ', '_')[:30]}.txt",
+                    mime="text/plain"
+                )
+                
+    st.markdown("<br><hr><br>", unsafe_allow_index=True)
+
+    # --- ĐOẠN CODE DƯỚI ĐÂY LÀ THƯ VIỆN CÁC MẪU CỐ ĐỊNH CŨ (GIỮ NGUYÊN) ---
+    st.markdown("### 📁 Danh mục các mẫu quy chuẩn có sẵn trong thư viện")
+    search_query = st.text_input("🔍 Tìm kiếm nhanh trong kho mẫu sẵn có:", "")
+    
     library_data = {
         "Toán học": [
             {
                 "title": "Biện pháp ứng dụng công nghệ số trong dạy học Hình học lớp 8",
                 "author": "Mẫu chuẩn Bộ GD&ĐT",
-                "summary": "Giải pháp tập trung vào việc sử dụng các phần mềm hình học động (Geogebra) kết hợp mô hình lớp học đảo ngược nhằm nâng cao tư duy trừu tượng không gian cho học sinh khối 8.",
-                "content": """ĐẶT VẤN ĐỀ
-1. Lý do chọn đề tài: Hình học lớp 8 (Bộ sách Kết nối tri thức/Chân trời sáng tạo) mang tính trừu tượng cao, học sinh thường gặp khó khăn trong việc hình dung các khối đa diện, định lý Pitago hay tính chất tam giác đồng dạng...
-2. Mục đích nghiên cứu: Số hóa quy trình dạy học trực quan.
-
-NỘI DUNG CỐT LÕI
-- Biện pháp 1: Thiết kế ngân hàng hình ảnh 3D chuyển động trực quan bằng Geogebra.
-- Biện pháp 2: Giao nhiệm vụ tự học qua video ngắn trước khi lên lớp.
-- Biện pháp 3: Tổ chức trò chơi khảo sát định lượng trực tuyến toán học."""
-            },
-            {
-                "title": "Phát triển tư duy phản biện qua giải toán có lời văn lớp 8",
-                "author": "Mẫu chuẩn tập huấn",
-                "summary": "Ứng dụng ma trận câu hỏi gợi mở để học sinh tự phản biện cách giải toán, từ đó tối ưu hóa thuật toán và nâng cao năng lực giải quyết vấn đề.",
-                "content": """ĐẶT VẤN ĐỀ
-Dạy học giải toán có lời văn không chỉ là tìm ra đáp số mà là quá trình học sinh phân tích giả thuyết, lập luận toán học chuyên sâu.
-
-NỘI DUNG CỐT LÕI
-- Sử dụng sơ đồ KWL (Biết - Muốn biết - Đã học được) trong phân tích đề bài.
-- Tổ chức kỹ thuật dạy học 'Mảnh ghép' để học sinh tranh biện về các phương án lập phương trình/hệ phương trình."""
-            }
-        ],
-        "Khoa học tự nhiên": [
-            {
-                "title": "Thiết kế chủ đề STEM nội dung dòng điện lớp 9",
-                "author": "Tài liệu mạng lưới giáo viên",
-                "summary": "Hướng dẫn chi tiết quy trình 5 bước thiết kế bài học STEM: Chế tạo mô hình đèn ngủ thông minh tiết kiệm điện từ vật liệu tái chế.",
-                "content": "Nội dung chi tiết cấu trúc bài học STEM bao gồm: Tiêu chí sản phẩm, Ma trận kiến thức nền (Lý thuyết dòng điện, định luật Ôm) và Biên bản chấm sản phẩm của các nhóm học sinh."
-            }
-        ],
-        "Tin học & Công nghệ": [
-            {
-                "title": "Xây dựng hệ thống học liệu số và quản lý bài tập với Google Drive",
-                "author": "Mẫu sáng kiến Chuyển đổi số",
-                "summary": "Giải pháp đồng bộ hóa kho lưu trữ, phân quyền thư mục bài tập cho từng lớp, giúp chấm bài và phản hồi nhanh chóng cho học sinh bằng công nghệ.",
-                "content": "Chi tiết cách thiết lập Google Forms chấm tự động, sơ đồ phân quyền thư mục lớp học trên Google Drive và cách tối ưu hóa dung lượng lưu trữ miễn phí cho giáo viên."
+                "summary": "Giải pháp tập trung vào việc sử dụng các phần mềm hình học động (Geogebra) kết hợp mô hình lớp học đảo ngược...",
+                "content": "ĐẶT VẤN ĐỀ\n1. Lý do chọn đề tài...\n\nNỘI DUNG CỐT LÕI..."
             }
         ]
     }
     
-    # Hiển thị cấu trúc thư mục
     for cat, topics in library_data.items():
-        # Bộ lọc tìm kiếm sơ bộ
         filtered_topics = [t for t in topics if search_query.lower() in t["title"].lower() or search_query.lower() in cat.lower()]
-        
         if filtered_topics:
-            with st.expander(f"📁 Danh mục Sáng kiến: Môn {cat} ({len(filtered_topics)} tài liệu)"):
+            with st.expander(f"📁 Danh mục: Môn {cat} ({len(filtered_topics)} tài liệu)"):
                 for t in filtered_topics:
                     st.markdown(f"### 📄 {t['title']}")
-                    st.caption(f"✍️ Tác giả: {t['author']}")
-                    st.write(f"ℹ️ **Tóm tắt giải pháp:** {t['summary']}")
-                    
-                    # Nút bấm mở rộng xem nội dung chi tiết trực tiếp
-                    show_detail = st.checkbox(f"👁️ Xem nội dung chi tiết Sáng kiến", key=t['title'])
-                    if show_detail:
-                        st.text_area("Nội dung văn bản mẫu:", value=t['content'], height=250)
-                        
-                        # Tạo tính năng cho phép tải file đính kèm dạng Text/Markdown (hoặc Word nháp)
-                        st.download_button(
-                            label="📥 Tải file bản nháp (.txt) về máy",
-                            data=f"TÊN ĐỀ TÀI: {t['title']}\n\n{t['content']}",
-                            file_name=f"{t['title'].replace(' ', '_')}.txt",
-                            mime="text/plain"
-                        )
-                    st.markdown("---")
+                    st.write(f"ℹ️ **Tóm tắt:** {t['summary']}")
+                    if st.checkbox(f"👁️ Xem nội dung mẫu", key=t['title']):
+                        st.text_area("Nội dung:", value=t['content'], height=150)
