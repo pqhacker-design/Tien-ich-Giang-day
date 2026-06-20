@@ -30,7 +30,7 @@ except ModuleNotFoundError:
 
 # Cấu hình Page (Phải là lệnh Streamlit đầu tiên)
 st.set_page_config(
-    page_title="Hệ thống Trợ lý Hồ sơ Khoa học Giáo dục AI",
+    page_title="Hệ thống Trợ lý SKKN AI",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -50,8 +50,8 @@ init_db()
 
 # --- SIDEBAR ĐIỀU HƯỚNG ---
 with st.sidebar:
-    st.title("🎓 TRỢ LÝ SƯ PHẠM AI")
-    st.subheader("Hệ thống Phát triển Hồ sơ Chuyên môn")
+    st.title("🎓 TRỢ LÝ SKKN AI")
+    st.subheader("Hỗ trợ viết SKKN và Nghiên cứu khoa học")
     st.markdown("---")
     
     menu = st.radio(
@@ -70,7 +70,7 @@ with st.sidebar:
 
 # --- MÀN HÌNH CHÍNH ---
 if menu == "🏠 Tổng quan hệ thống":
-    st.title("Hệ thống Trợ lý AI Hỗ trợ Phát triển & Quản lý Hồ sơ Khoa học Sư phạm Toàn diện")
+    st.title("Hệ thống Trợ lý AI Hỗ trợ viết SKKN và nghiên cứu Khoa học Sư phạm")
     st.markdown("""
     Chào mừng thầy/cô đến với nền tảng số hóa tối ưu năng lực nghiên cứu sư phạm ứng dụng. Hệ thống hỗ trợ xử lý toàn diện chu trình vòng đời một sáng kiến, giải pháp giáo dục:
     * **Tối ưu hóa thời gian biên soạn văn bản hành chính sư phạm.**
