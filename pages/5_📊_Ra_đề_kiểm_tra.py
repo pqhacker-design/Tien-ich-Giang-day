@@ -260,7 +260,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     # --- PHẦN TIÊU ĐỀ ĐỀ THI ĐỘNG THEO HÌNH THỨC KIỂM TRA ---
     p_top = doc.add_paragraph()
     p_top.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_top.add_run("TRƯỜNG THCS & THPT Artificial Intelligence\n").bold = True
+    p_top.add_run("TRƯỜNG THCS & THPT Artificial Intelligence (AI)\n").bold = True
     
     # Ép tên tiêu đề động theo lựa chọn: ĐỀ KIỂM TRA KIỂM TRA GIỮA HỌC KỲ I - MÃ ĐỀ...
     exam_title = f"ĐỀ KIỂM TRA {config.get('exam_type', '').upper()} - MÃ ĐỀ: {code_label}\n"
@@ -598,7 +598,7 @@ with tab2:
                         st.session_state.multi_codes_data = bundle
                         st.session_state.alignment_table = alignment_df
                         
-                        st.success(f"🎉 Hoàn tất trọn vẹn! Đã tạo xong đề gốc và {num_codes} mã đề đảo theo phom mới.")
+                        st.success(f"🎉 Hoàn tất trọn vẹn! Đã tạo xong đề gốc và {num_codes} mã đề đảo.")
                     except Exception as e:
                         st.error(f"Hệ thống đang quá tải, xin thử lại sau!")
                         
