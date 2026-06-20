@@ -61,6 +61,7 @@ with st.sidebar:
             "💡 I. Tạo Đề tài Thông minh",
             "📝 II. Thiết kế Đề cương & Viết nội dung",
             "📊 III. Xử lý Thống kê & Sinh Minh chứng",
+            "📂 IV. Kiểm tra & Xuất bản Word",
             "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI",
             "📚 Thư viện Mẫu Sáng kiến"
         ]
@@ -99,6 +100,9 @@ elif menu == "📊 III. Xử lý Thống kê & Sinh Minh chứng":
     show_data_analysis_module()
     st.markdown("---")
     show_evidence_creator_module()
+    
+elif menu == "📂 V. Kiểm tra & Xuất bản Word":
+    show_docx_processor_module()
 
 elif menu == "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI":
     st.header("🕵️‍♂️ Trợ Lý AI Phản Biện Đề Tài - Đóng vai Hội đồng chấm Sáng kiến")
