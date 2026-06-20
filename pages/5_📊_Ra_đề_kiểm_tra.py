@@ -75,7 +75,17 @@ if 'generated_data' not in st.session_state: st.session_state.generated_data = N
 if 'step1_data' not in st.session_state: st.session_state.step1_data = None
 if 'multi_codes_data' not in st.session_state: st.session_state.multi_codes_data = {}
 if 'alignment_table' not in st.session_state: st.session_state.alignment_table = None
-
+# ==========================================
+# TRÍCH XUẤT VÀ KẾT NỐI GEMINI AI ĐA MÔN ĐỘNG
+# ==========================================
+def init_gemini_client(api_key):
+    try:
+        genai.configure(api_key=api_key)
+        # Sử dụng mô hình flash ổn định cho việc xử lý cấu trúc văn bản lớn
+        return genai.GenerativeModel('gemini-2.5-flash')
+    except Exception as e:
+        st.error(f"Lỗi API Key hoặc cấu hình kết nối: {e}")
+        return None
 # ==========================================
 # THUẬT TOÁN ĐẢO ĐỀ MULTI-CODE & ĐÓNG GÓI ĐỀ GỐC
 # ==========================================
