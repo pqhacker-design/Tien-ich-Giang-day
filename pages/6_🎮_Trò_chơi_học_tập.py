@@ -26,7 +26,8 @@ st.markdown("""
 
 # 2. THANH THÔNG TIN BỔ TRỢ (SIDEBAR) - CẤU HÌNH TIÊU CHUẨN SƯ PHẠM
 with st.sidebar:
-    st.image("[https://img.icons8.com/fluent/96/000000/brainstorm-skill.png](https://img.icons8.com/fluent/96/000000/brainstorm-skill.png)", width=80)
+    # Thay vì viết dạng link markdown, bạn chỉ để lại URL sạch như thế này:
+    st.image("https://img.icons8.com/fluent/96/000000/brainstorm-skill.png", width=80)
     st.title("⚙️ CẤU HÌNH HOẠT ĐỘNG")
     st.markdown("---")
     
