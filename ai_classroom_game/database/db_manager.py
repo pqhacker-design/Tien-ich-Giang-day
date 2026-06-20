@@ -1,13 +1,22 @@
 import sqlite3
 import json
+import os
 from datetime import datetime
 
 class DatabaseManager:
-    def __init__(self, db_path="database/classroom_ai.db"):
-        self.db_path = db_path
+    def __init__(self, db_name="classroom_ai.db"):
+        # Lấy đường dẫn tuyệt đối của thư mục chứa file db_manager.py hiện tại
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Đảm bảo file DB sẽ luôn nằm chung thư mục với file db_manager.py
+        self.db_path = os.path.join(current_dir, db_name)
+        
+        # Khởi tạo DB
         self.init_db()
 
     def get_connection(self):
+        # Đảm bảo thư mục chứa file DB thực sự tồn tại trước khi kết nối
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         return sqlite3.connect(self.db_path)
 
     def init_db(self):
