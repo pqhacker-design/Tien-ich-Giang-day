@@ -2,7 +2,7 @@ import streamlit as st
 from edu_research_assistant.database import init_db, save_project, get_all_projects
 from edu_research_assistant.ai_engine import call_ai_stream, get_council_critique
 
-# Đầu file app.py, thầy import thêm các module mới vào:
+# Đầu file app.py, thầy import thêm các module mới vào: 
 from edu_research_assistant.components.generator import show_generator_module
 from edu_research_assistant.components.content_writer import show_content_writer_module
 from edu_research_assistant.components.data_analysis import show_data_analysis_module
