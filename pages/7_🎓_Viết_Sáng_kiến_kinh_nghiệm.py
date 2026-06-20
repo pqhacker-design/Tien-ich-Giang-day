@@ -1,6 +1,6 @@
 import streamlit as st
-from database import init_db, save_project, get_all_projects
-from ai_engine import call_ai_stream, get_council_critique
+from edu_research_assistant.database import init_db, save_project, get_all_projects
+from edu_research_assistant.ai_engine import call_ai_stream, get_council_critique
 
 # Đầu file app.py, thầy import thêm các module mới vào:
 from components.generator import show_generator_module
