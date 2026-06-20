@@ -86,10 +86,10 @@ col7, col8, col9 = st.columns(3)
 
 with col7:
     with st.container(border=True):
-        st.markdown("### 📝 4. Sửa lỗi chính tả")
-        st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
-        if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_sua_loi_chinh_ta", use_container_width=True):
-            st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
+        st.markdown("### 🎓_Trợ lý viết Sáng kiến kinh nghiệm")
+        st.write("Hệ thống Trợ lý AI Hỗ trợ viết Sáng kiến kinh nghiệm và Nghiên cứu Khoa học Sư phạm Toàn diện")
+        if st.button("🚀 Mở ứng Viết SKKN", key="btn_sang_kien_kinh_nghiem", use_container_width=True):
+            st.switch_page("pages/7_🎓_Viết_Sáng_kiến_kinh_nghiệm.py")
 st.markdown("---")
 
 # 5. Chân trang (Footer)
