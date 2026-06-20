@@ -1,5 +1,5 @@
 import streamlit as st
-from ai_engine import call_ai_stream
+from edu_research_assistant.ai_engine import call_ai_stream
 
 def show_content_writer_module():
     st.subheader("📝 Trợ Lý AI Biên Soạn Nội Dung Chuyên Sâu")
