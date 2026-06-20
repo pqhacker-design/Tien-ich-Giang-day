@@ -1,8 +1,13 @@
 streamlit
+streamlit-option-menu
+streamlit-extras
 python-docx
 python-pptx
 google-genai
 google-generativeai
+openai
+reportlab
+numpy
 docxcompose
 mammoth
 pandas
