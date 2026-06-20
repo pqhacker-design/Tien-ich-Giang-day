@@ -204,7 +204,10 @@ def generate_step2_questions(model, config, matrix_data, subject_rule):
     - Phần II (Trắc nghiệm Đúng/Sai): {config['num_tn_dung_sai']} câu (mỗi câu gồm 4 ý lựa chọn a, b, c, d).
     - Phần III (Trắc nghiệm Trả lời ngắn): {config['num_tn_tra_loi_ngan']} câu.
     - Phần IV (Tự luận): {config['num_tl']} câu.
-
+    YÊU CẦU ĐỘ KHÓ VÀ TÍNH PHÂN HÓA (BẮT BUỘC):
+    - Đề thi này đang được thiết lập ở mức độ: "{config['difficulty']}".
+    - Hãy phân phối độ sâu tư duy, độ phức tạp của ngữ cảnh và các bước tính toán của câu hỏi bám sát theo mức độ khó này. 
+    - Đối với các câu Vận dụng và Vận dụng cao, nếu đề ở mức "Nâng cao/Phân hóa mạnh", hãy tăng cường các bài toán có tính liên hệ thực tế phức tạp hoặc tư duy logic nhiều bước. Nếu ở mức "Cơ bản", hãy giữ các câu hỏi ở dạng tường minh, dễ suy luận.
     QUY ĐỊNH ĐỊNH DẠNG TOÁN HỌC & KHTN (BẮT BUỘC KHÔNG DÙNG LATEX):
     - TUYỆT ĐỐI KHÔNG sử dụng ký tự $, \, frac, neq, sim, triangle, cdot, circ hoặc ^.
     - Sử dụng ký tự Unicode toán học trực tiếp trong văn bản trơn:
@@ -517,6 +520,17 @@ with tab1:
         exam_type = st.selectbox("Hình thức kiểm tra:", ["15 phút", "45 phút", "Giữa học kỳ I", "Cuối học kỳ I", "Giữa học kỳ II", "Cuối học kỳ II"])
         duration = st.number_input("Thời lượng làm bài (phút):", min_value=15, max_value=150, value=60, step=5)
         school_year = st.text_input("Năm học:", value="2026-2027")
+        school_year = st.text_input("Năm học:", value="2026-2027")
+        
+        # --- BỔ SUNG: CHỌN ĐỘ KHÓ CỦA ĐỀ THI ---
+        difficulty_levels = {
+            "Cơ bản (Phù hợp HS Yếu - Trung bình)": {"nb": 50, "th": 30, "vd": 16, "vdc": 4},
+            "Tiêu chuẩn (Bám sát SGK, đại trà)": {"nb": 40, "th": 30, "vd": 20, "vdc": 10},
+            "Nâng cao (Phù hợp lớp khá - lớp chọn)": {"nb": 30, "th": 30, "vd": 25, "vdc": 15},
+            "Phân hóa mạnh (Bồi dưỡng giỏi, thi học sinh giỏi)": {"nb": 20, "th": 30, "vd": 30, "vdc": 20}
+        }
+        level_choice = st.selectbox("Độ khó mục tiêu của đề thi:", list(difficulty_levels.keys()), index=1)
+        target_ratios = difficulty_levels[level_choice]
 
     with col2:
         st.markdown('<div class="section-header">Cấu hình số lượng câu hỏi</div>', unsafe_allow_html=True)
@@ -534,10 +548,10 @@ with tab2:
     st.markdown('<div class="section-header">Tạo Ma trận & Câu hỏi tự động </div>', unsafe_allow_html=True)
     
     c1, c2, c3, c4 = st.columns(4)
-    with c1: nb_ratio = st.slider("Nhận biết (%)", 0, 100, 40)
-    with c2: th_ratio = st.slider("Thông hiểu (%)", 0, 100, 30)
-    with c3: vd_ratio = st.slider("Vận dụng (%)", 0, 100, 20)
-    with c4: vdc_ratio = st.slider("Vận dụng cao (%)", 0, 100, 10)
+    with c1: nb_ratio = st.slider("Nhận biết (%)", 0, 100, target_ratios["nb"])
+    with c2: th_ratio = st.slider("Thông hiểu (%)", 0, 100, target_ratios["th"])
+    with c3: vd_ratio = st.slider("Vận dụng (%)", 0, 100, target_ratios["vd"])
+    with c4: vdc_ratio = st.slider("Vận dụng cao (%)", 0, 100, target_ratios["vdc"])
     
     total_ratio = nb_ratio + th_ratio + vd_ratio + vdc_ratio
     if total_ratio != 100:
@@ -558,7 +572,8 @@ with tab2:
                 config_pkg = {
                     "subject": subject, "grade": grade, "num_tn_4_lua_chon": num_tn_4_lua_chon, 
                     "num_tn_dung_sai": num_tn_dung_sai, "num_tn_tra_loi_ngan": num_tn_tra_loi_ngan, "num_tl": num_tl,
-                    "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio
+                    "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio,
+                    "difficulty": level_choice  # Truyền độ khó sang cho AI
                 }
                 with st.spinner("AI đang tính toán phân bổ ma trận và đặc tả..."):
                     try:
@@ -577,7 +592,8 @@ with tab2:
                 config_pkg = {
                     "subject": subject, "grade": grade, "num_tn_4_lua_chon": num_tn_4_lua_chon, 
                     "num_tn_dung_sai": num_tn_dung_sai, "num_tn_tra_loi_ngan": num_tn_tra_loi_ngan, "num_tl": num_tl,
-                    "exam_type": exam_type, "duration": duration, "school_year": school_year
+                    "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio,
+                    "difficulty": level_choice  # Truyền độ khó sang cho AI
                 }
                 with st.spinner("AI đang lấy Khung đặc tả để soạn nội dung câu hỏi chi tiết..."):
                     try:
