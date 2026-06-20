@@ -125,24 +125,212 @@ with tabs[1]:
 # --- TAB 3: TRÒ CHƠI TƯƠNG TÁC TRỰC TIẾP (BẢNG TRÌNH CHIẾU LỚP HỌC) ---
 with tabs[2]:
     st.header("🎬 Đấu Trường Tương Tác Thời Gian Thực")
-    st.info("Mẹo: Giáo viên nhấn F11 để toàn màn hình trình duyệt khi chiếu cho học sinh chơi trực tiếp tại lớp.")
+    st.info("💡 Mẹo: Nhấn F11 để toàn màn hình trình duyệt khi chiếu cho học sinh chơi trực tiếp tại lớp.")
     
     game_select = st.selectbox("Lựa chọn Game Engine vận hành", ["Vòng Quay May Mắn", "Ô Chữ Kỳ Diệu", "Ai Là Triệu Phú"])
     
+    # Lấy câu hỏi từ AI (nếu có ở Tab 2), ngược lại dùng bộ câu hỏi demo mặc định
+    if st.session_state.generated_quiz and "trac_nghiem" in st.session_state.generated_quiz:
+        quiz_source = st.session_state.generated_quiz["trac_nghiem"]
+    else:
+        # Bộ câu hỏi mặc định phục vụ chạy thử nghiệm
+        quiz_source = [
+            {"cau_hoi": "Đâu là hành tinh gần Mặt Trời nhất?", "options": ["Sao Thủy", "Sao Kim", "Trái Đất", "Sao Hỏa"], "dap_an": "Sao Thủy", "giai_thich": "Sao Thủy cách Mặt Trời 58 triệu km."},
+            {"cau_hoi": "Số nguyên tố nhỏ nhất là số nào?", "options": ["0", "1", "2", "3"], "dap_an": "2", "giai_thich": "Số 2 là số nguyên tố chẵn duy nhất và nhỏ nhất."},
+            {"cau_hoi": "Nước chiếm khoảng bao nhiêu phần trăm bề mặt Trái Đất?", "options": ["50%", "60%", "71%", "85%"], "dap_an": "71%", "giai_thich": "Đại dương và biển bao phủ khoảng 71% bề mặt hành tinh."}
+        ]
+
+    # ----------------------------------------------------
+    # ENGINE 1: VÒNG QUAY MAY MẮN
+    # ----------------------------------------------------
     if game_select == "Vòng Quay May Mắn":
         col_g1, col_g2 = st.columns([1, 3])
         with col_g1:
             st.markdown("### 📋 Thiết lập phòng đấu")
             students_raw = st.text_area("Danh sách học sinh (Mỗi người một hàng)", "Nguyễn Văn A\nTrần Thị B\nLê Hoàng C\nPhạm Minh D\nĐỗ Hồng E")
             students_list = [s.strip() for s in students_raw.split("\n") if s.strip()]
-            
-            # Đồng bộ câu hỏi từ Tab 2 sang nếu có
-            if st.session_state.generated_quiz and "trac_nghiem" in st.session_state.generated_quiz:
-                q_list = [q['cau_hoi'] for q in st.session_state.generated_quiz['trac_nghiem']]
-            else:
-                q_list = ["Chủ đề 1: Trả bài cũ", "Chủ đề 2: Giải toán nhanh", "Chủ đề 3: Câu hỏi may mắn"]
+            q_list = [q['cau_hoi'] for q in quiz_source]
         with col_g2:
             render_lucky_wheel(students_list, q_list)
+
+    # ----------------------------------------------------
+    # ENGINE 2: Ô CHỮ KỲ DIỆU (MỚI)
+    # ----------------------------------------------------
+    elif game_select == "Ô Chữ Kỳ Diệu":
+        st.subheader("🧩 Ô Chữ Kiến Thức (Trình chiếu lớp học)")
+        
+        # Thiết lập bộ ô chữ mẫu (Có thể tùy biến sinh tự động từ AI)
+        crossword_data = [
+            {"hang": 1, "tu_khoa": "TOANHOC", "goi_y": "Môn học nghiên cứu về các số, hình học và cấu trúc?"},
+            {"hang": 2, "tu_khoa": "PITAGO", "goi_y": "Định lý toán học nổi tiếng tính cạnh huyền tam giác vuông?"},
+            {"hang": 3, "tu_khoa": "GEMINI", "goi_y": "Tên mô hình AI tiên tiến của Google hiện nay?"},
+            {"hang": 4, "tu_khoa": "STREAMLIT", "goi_y": "Thư viện Python giúp xây dựng nhanh ứng dụng web này?"}
+        ]
+        
+        import json
+        js_crossword = json.dumps(crossword_data, ensure_ascii=False)
+        
+        crossword_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ background: #0e1117; color: white; font-family: sans-serif; text-align: center; }}
+                .row-container {{ margin: 12px 0; display: flex; justify-content: center; align-items: center; }}
+                .hint-btn {{ background: #262730; color: #fff; border: 1px solid #464855; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-right: 15px; width: 120px; }}
+                .hint-btn:hover {{ background: #ff4b4b; }}
+                .cell {{ width: 35px; height: 35px; border: 2px solid #464855; display: inline-block; text-align: center; line-height: 35px; font-weight: bold; font-size: 20px; text-transform: uppercase; margin: 2px; background: #1e222b; color: transparent; border-radius: 4px; }}
+                .cell.reveal {{ color: #00e676; background: #2e3d30; border-color: #00e676; }}
+                #hint-display {{ font-size: 20px; color: #ffeb3b; margin-top: 20px; min-height: 40px; font-style: italic; }}
+            </style>
+        </head>
+        <body>
+            <div id="board"></div>
+            <div id="hint-display">💡 Nhấn vào nút hàng bên trái để xem câu hỏi gợi ý!</div>
+
+            <script>
+                const data = {js_crossword};
+                const board = document.getElementById('board');
+                const hintDisplay = document.getElementById('hint-display');
+
+                data.forEach((item, index) => {{
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'row-container';
+                    
+                    // Tạo nút bấm xem gợi ý / mở hàng
+                    const btn = document.createElement('button');
+                    btn.className = 'hint-btn';
+                    btn.innerText = "Hàng dọc " + item.hang;
+                    btn.onclick = () => {{
+                        hintDisplay.innerText = "❓ Gợi ý hàng " + item.hang + ": " + item.goi_y;
+                    }};
+                    rowDiv.appendChild(btn);
+                    
+                    // Tạo các ô chữ
+                    for(let i=0; i < item.tu_khoa.length; i++) {{
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.innerText = item.tu_khoa[i];
+                        // Lượt click trực tiếp vào ô để lật chữ
+                        cell.onclick = () => {{
+                            cell.classList.toggle('reveal');
+                        }};
+                        rowDiv.appendChild(cell);
+                    }}
+                    board.appendChild(rowDiv);
+                }});
+            </script>
+        </body>
+        </html>
+        """
+        components.html(crossword_html, height=450)
+
+    # ----------------------------------------------------
+    # ENGINE 3: AI LÀ TRIỆU PHÚ (MỚI)
+    # ----------------------------------------------------
+    elif game_select == "Ai Là Triệu Phú":
+        st.subheader("💰 Đấu Trường: Ai Là Triệu Phú Giáo Khoa")
+        
+        import json
+        js_quiz = json.dumps(quiz_source, ensure_ascii=False)
+        
+        millionaire_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+            <style>
+                body {{ background: #0c1020; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 10px; }}
+                .game-box {{ max-width: 700px; margin: auto; background: #121830; padding: 25px; border-radius: 12px; border: 2px solid #1e295d; box-shadow: 0 0 20px rgba(0,0,0,0.6); }}
+                .q-section {{ font-size: 22px; font-weight: bold; margin-bottom: 25px; background: #1a234a; padding: 15px; border-radius: 8px; border-left: 5px solid #00e676; }}
+                .options-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }}
+                .opt-btn {{ background: #1e295d; color: white; border: 1px solid #3b4da3; padding: 15px; font-size: 18px; border-radius: 30px; cursor: pointer; text-align: left; padding-left: 25px; transition: 0.2s; }}
+                .opt-btn:hover {{ background: #2a3b8f; border-color: #00e676; }}
+                .lifelines {{ margin-top: 25px; display: flex; justify-content: center; gap: 15px; }}
+                .life-btn {{ background: #ff9800; color: black; border: none; padding: 8px 18px; font-weight: bold; border-radius: 20px; cursor: pointer; }}
+                .life-btn.used {{ background: #555 !important; color: #888; cursor: not-allowed; text-decoration: line-through; }}
+                #score-board {{ font-size: 18px; color: #00e676; margin-bottom: 10px; font-weight: bold; }}
+            </style>
+        </head>
+        <body>
+            <div class="game-box">
+                <div id="score-board">CÂU HỎI SỐ: 1</div>
+                <div class="q-section" id="question-text">Đang tải câu hỏi...</div>
+                <div class="options-grid" id="options-box"></div>
+                
+                <div class="lifelines">
+                    <button class="life-btn" id="btn-50" onclick="use5050()">⚡ 50:50</button>
+                    <button class="life-btn" id="btn-class" onclick="askClass()">👥 Hỏi Ý Kiến Lớp</button>
+                </div>
+            </div>
+
+            <script>
+                const questions = {js_quiz};
+                let currentIdx = 0;
+
+                function loadQuestion() {{
+                    if(currentIdx >= questions.length) {{
+                        document.getElementById('game-box').innerHTML = "<h2 style='color:#00e676;'>🎉 XUẤT SẮC VƯỢT QUA TẤT CẢ CÂU HỎI!</h2><p>Học sinh đã chiến thắng mốc phần thưởng cao nhất!</p>";
+                        confetti({{particleCount: 200, spread: 100}});
+                        return;
+                    }}
+                    
+                    document.getElementById('score-board').innerText = "CÂU HỎI SỐ: " + (currentIdx + 1) + " / " + questions.length;
+                    const qData = questions[currentIdx];
+                    document.getElementById('question-text').innerText = qData.cau_hoi;
+                    
+                    const optionsBox = document.getElementById('options-box');
+                    optionsBox.innerHTML = "";
+                    
+                    qData.options.forEach((opt, i) => {{
+                        const btn = document.createElement('button');
+                        btn.className = 'opt-btn';
+                        btn.innerHTML = "<b>" + String.fromCharCode(65 + i) + ":</b> " + opt;
+                        btn.onclick = () => checkAnswer(opt, btn);
+                        optionsBox.appendChild(btn);
+                    }});
+                }}
+
+                function checkAnswer(selectedOpt, btn) {{
+                    const correctAns = questions[currentIdx].dap_an;
+                    if(selectedOpt === correctAns) {{
+                        btn.style.background = "#00e676";
+                        btn.style.color = "black";
+                        setTimeout(() => {{
+                            currentIdx++;
+                            loadQuestion();
+                        }}, 1500);
+                    }} else {{
+                        btn.style.background = "#ff4b4b";
+                        alert("❌ Câu trả lời chưa chính xác! Hãy khuyến khích học sinh khác cứu trợ.");
+                    }}
+                }}
+
+                function use5050() {{
+                    document.getElementById('btn-50').classList.add('used');
+                    const correctAns = questions[currentIdx].dap_an;
+                    const buttons = document.getElementsByClassName('opt-btn');
+                    let removed = 0;
+                    for(let btn of buttons) {{
+                        if(!btn.innerText.includes(correctAns) && removed < 2) {{
+                            btn.style.visibility = 'hidden';
+                            removed++;
+                        }}
+                    }}
+                }}
+
+                function askClass() {{
+                    document.getElementById('btn-class').classList.add('used');
+                    alert("📊 Thầy/Cô hãy lấy biểu quyết nhanh từ các tổ trong lớp học!");
+                }}
+
+                // Khởi chạy câu hỏi đầu tiên khi load game
+                loadQuestion();
+            </script>
+        </body>
+        </html>
+        """
+        components.html(millionaire_html, height=480)
 
 # --- TAB 4: KỊCH BẢN SƯ PHẠM ---
 with tabs[3]:
