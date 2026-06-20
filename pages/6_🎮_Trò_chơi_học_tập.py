@@ -27,23 +27,19 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 2. THANH THÔNG TIN BỔ TRỢ (SIDEBAR) - CẤU HÌNH TIÊU CHUẨN SƯ PHẠM
-# --- TRÍCH XUẤT VÀ KIỂM TRA API KEY TỪ SESSION STATE CHUNG ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     gemini_key = st.session_state["gemini_api_key"].strip()
 else:
     st.warning("⚠️ Vui lòng cấu hình Google Gemini API Key tại **Trang chủ** trước khi vận hành.")
     st.stop()
 
-# (Tùy chọn) Nếu bạn vẫn muốn hỗ trợ OpenAI làm phương án dự phòng từ session_state:
 openai_key = st.session_state.get("openai_api_key", "").strip()
 
-# --- THANH THÔNG TIN BỔ TRỢ (SIDEBAR) ---
 with st.sidebar:
-    st.image("https://img.icons8.com/fluent/96/000000/brainstorm-skill.png", width=80)
+    st.image("[https://img.icons8.com/fluent/96/000000/brainstorm-skill.png](https://img.icons8.com/fluent/96/000000/brainstorm-skill.png)", width=80)
     st.title("⚙️ CẤU HÌNH HOẠT ĐỘNG")
     st.markdown("---")
     
-    # Giữ nguyên các thông số sư phạm cũ của thầy/cô
     subject = st.selectbox("Môn học", ["Toán học", "Ngữ văn", "Tiếng Anh", "Khoa học tự nhiên", "Lịch sử & Địa lý", "Tin học", "STEM"])
     grade = st.selectbox("Khối lớp", [f"Lớp {i}" for i in range(1, 13)])
     duration = st.slider("Thời lượng hoạt động (Phút)", 5, 45, 15, step=5)
@@ -52,14 +48,13 @@ with st.sidebar:
     
     st.markdown("---")
     st.success("✔ Đã đồng bộ API Key thành công từ Trang chủ.")
-# Khởi tạo dịch vụ AI dựa trên Key đã nhập
+
 ai_engine = AIService(gemini_key=gemini_key, openai_key=openai_key)
 
 # 3. KHU VỰC ĐIỀU KHIỂN CHÍNH (MAIN DASHBOARD)
 st.title("🚀 AI Thiết Kế Hoạt Động Tương Tác Trong Lớp Học")
 st.caption("Giải pháp số hóa bài giảng, tạo trò chơi tương tác trực tiếp chuẩn Kahoot/Quizizz cho giáo viên hiện đại.")
 
-# Khởi tạo hệ thống Tab chức năng chuyên sâu
 tabs = st.tabs([
     "🎯 Khởi Động & Sinh Hoạt Trình", 
     "📘 Thiết Kế Câu Hỏi AI", 
@@ -79,14 +74,11 @@ with tabs[0]:
         warmup_prompt = st.text_area("Yêu cầu bổ sung cho trò chơi", placeholder="Ví dụ: Thiết kế trò chơi khởi động liên quan đến kiến thức phân số...")
     with col2:
         if st.button("🔥 Tạo Kịch Bản Trò Chơi", type="primary"):
-            if not gemini_key and not openai_key:
-                st.error("Vui lòng cung cấp ít nhất một API Key tại Sidebar để kích hoạt AI.")
-            else:
-                with st.spinner("AI đang thiết kế cấu trúc trò chơi..."):
-                    prompt_cmd = f"Tạo kịch bản chi tiết cho trò chơi khởi động '{warmup_type}' dành cho môn {subject}, {grade}. Yêu cầu: {warmup_prompt}. Gồm Luật chơi, Cách tính điểm."
-                    res = ai_engine.generate_content(prompt_cmd)
-                    st.success("Tạo thành công!")
-                    st.markdown(res)
+            with st.spinner("AI đang thiết kế cấu trúc trò chơi..."):
+                prompt_cmd = f"Tạo kịch bản chi tiết cho trò chơi khởi động '{warmup_type}' dành cho môn {subject}, {grade}. Yêu cầu: {warmup_prompt}. Gồm Luật chơi, Cách tính điểm."
+                res = ai_engine.generate_content(prompt_cmd)
+                st.success("Tạo thành công!")
+                st.markdown(res)
 
 # --- TAB 2: THIẾT KẾ CÂU HỎI AI ---
 with tabs[1]:
@@ -96,7 +88,6 @@ with tabs[1]:
         topic_input = st.text_input("Tên bài học học tập", placeholder="Ví dụ: Định lý Pitago")
         goals_input = st.text_input("Mục tiêu cần đạt", placeholder="Ví dụ: Học sinh vận dụng tính cạnh huyền")
         content_input = st.text_area("Nội dung cốt lõi/Tóm tắt tài liệu", placeholder="Nhập nội dung bài học để AI bám sát...")
-        
         generate_btn = st.button("✨ Kích hoạt Trí Tuệ Nhân Tạo", type="primary")
         
     with c2:
@@ -111,40 +102,34 @@ with tabs[1]:
                         st.session_state.current_topic = topic_input
                         db.save_history(subject, grade, topic_input, "Quiz Tổng Hợp", quiz_res)
                     except Exception as err:
-                        st.error(f"Lỗi hệ thống: {err}")
+                        st.error(f"Lỗi hệ thống khi phân tích JSON: {err}")
                         
         if st.session_state.generated_quiz:
             st.success(f"Dữ liệu bộ câu hỏi chuẩn hóa cho bài học: {st.session_state.current_topic}")
             q_data = st.session_state.generated_quiz
             
-            # Hiển thị trực quan dữ liệu trắc nghiệm thu được từ AI
             if "trac_nghiem" in q_data:
                 for idx, t in enumerate(q_data["trac_nghiem"]):
                     with st.expander(f"🔹 Câu hỏi trắc nghiệm {idx+1}: {t['cau_hoi']}"):
                         st.write(f"**Các phương án chọn:** {', '.join(t['options'])}")
                         st.info(f"✔ **Đáp án:** {t['dap_an']} | **Giải thích:** {t['giai_thich']}")
 
-# --- TAB 3: TRÒ CHƠI TƯƠNG TÁC TRỰC TIẾP (BẢNG TRÌNH CHIẾU LỚP HỌC) ---
+# --- TAB 3: TRÒ CHƠI TƯƠNG TÁC TRỰC TIẾP ---
 with tabs[2]:
     st.header("🎬 Đấu Trường Tương Tác Thời Gian Thực")
     st.info("💡 Mẹo: Nhấn F11 để toàn màn hình trình duyệt khi chiếu cho học sinh chơi trực tiếp tại lớp.")
     
     game_select = st.selectbox("Lựa chọn Game Engine vận hành", ["Vòng Quay May Mắn", "Ô Chữ Kỳ Diệu", "Ai Là Triệu Phú"])
     
-    # Lấy câu hỏi từ AI (nếu có ở Tab 2), ngược lại dùng bộ câu hỏi demo mặc định
     if st.session_state.generated_quiz and "trac_nghiem" in st.session_state.generated_quiz:
         quiz_source = st.session_state.generated_quiz["trac_nghiem"]
     else:
-        # Bộ câu hỏi mặc định phục vụ chạy thử nghiệm
         quiz_source = [
             {"cau_hoi": "Đâu là hành tinh gần Mặt Trời nhất?", "options": ["Sao Thủy", "Sao Kim", "Trái Đất", "Sao Hỏa"], "dap_an": "Sao Thủy", "giai_thich": "Sao Thủy cách Mặt Trời 58 triệu km."},
             {"cau_hoi": "Số nguyên tố nhỏ nhất là số nào?", "options": ["0", "1", "2", "3"], "dap_an": "2", "giai_thich": "Số 2 là số nguyên tố chẵn duy nhất và nhỏ nhất."},
             {"cau_hoi": "Nước chiếm khoảng bao nhiêu phần trăm bề mặt Trái Đất?", "options": ["50%", "60%", "71%", "85%"], "dap_an": "71%", "giai_thich": "Đại dương và biển bao phủ khoảng 71% bề mặt hành tinh."}
         ]
 
-    # ----------------------------------------------------
-    # ENGINE 1: VÒNG QUAY MAY MẮN
-    # ----------------------------------------------------
     if game_select == "Vòng Quay May Mắn":
         col_g1, col_g2 = st.columns([1, 3])
         with col_g1:
@@ -155,20 +140,13 @@ with tabs[2]:
         with col_g2:
             render_lucky_wheel(students_list, q_list)
 
-    # ----------------------------------------------------
-    # ----------------------------------------------------
-    # ENGINE 2: Ô CHỮ KỲ DIỆU (TỰ ĐỘNG HÓA HOÀN TOÀN TỪ AI)
-    # ----------------------------------------------------
     elif game_select == "Ô Chữ Kỳ Diệu":
         st.subheader("🧩 Ô Chữ Kiến Thức (Đồng bộ dữ liệu AI)")
         
-        # Kiểm tra xem AI đã sinh dữ liệu ô chữ trong session_state chưa
         if st.session_state.generated_quiz and "o_chu" in st.session_state.generated_quiz:
-            # 🌟 Lấy dữ liệu bài học thực tế do AI vừa bóc tách sinh ra
             crossword_data = st.session_state.generated_quiz["o_chu"]
             st.success(f"✔ Đã nạp thành công ma trận ô chữ AI cho bài: **{st.session_state.current_topic}**")
         else:
-            # 📦 Bộ dữ liệu dự phòng (Demo) khi giáo viên chưa bấm sinh từ AI ở Tab 2
             crossword_data = [
                 {"hang": 1, "tu_khoa": "TOANHOC", "goi_y": "Môn học nghiên cứu về các số, hình học và cấu trúc?"},
                 {"hang": 2, "tu_khoa": "PITAGO", "goi_y": "Định lý toán học nổi tiếng tính cạnh huyền tam giác vuông?"},
@@ -176,7 +154,6 @@ with tabs[2]:
                 {"hang": 4, "tu_khoa": "STREAMLIT", "goi_y": "Thư viện Python giúp xây dựng nhanh ứng dụng web này?"}
             ]
         
-        import json
         js_crossword = json.dumps(crossword_data, ensure_ascii=False)
         
         crossword_html = f"""
@@ -196,17 +173,15 @@ with tabs[2]:
         <body>
             <div id="board"></div>
             <div id="hint-display">💡 Nhấn vào nút tiêu đề hàng bên trái để xem câu hỏi gợi ý!</div>
-
             <script>
                 const data = {js_crossword};
                 const board = document.getElementById('board');
                 const hintDisplay = document.getElementById('hint-display');
 
-                data.forEach((item, index) => {{
+                data.forEach((item) => {{
                     const rowDiv = document.createElement('div');
                     rowDiv.className = 'row-container';
                     
-                    // Nút xem gợi ý
                     const btn = document.createElement('button');
                     btn.className = 'hint-btn';
                     btn.innerText = "Hàng ngang " + item.hang;
@@ -215,7 +190,6 @@ with tabs[2]:
                     }};
                     rowDiv.appendChild(btn);
                     
-                    // Tự động dựng số ô vuông dựa trên độ dài từ khóa AI trả về
                     for(let i=0; i < item.tu_khoa.length; i++) {{
                         const cell = document.createElement('div');
                         cell.className = 'cell';
@@ -233,20 +207,15 @@ with tabs[2]:
         """
         components.html(crossword_html, height=480)
 
-    # ----------------------------------------------------
-    # ENGINE 3: AI LÀ TRIỆU PHÚ (MỚI)
-    # ----------------------------------------------------
     elif game_select == "Ai Là Triệu Phú":
         st.subheader("💰 Đấu Trường: Ai Là Triệu Phú Giáo Khoa")
-        
-        import json
         js_quiz = json.dumps(quiz_source, ensure_ascii=False)
         
         millionaire_html = f"""
         <!DOCTYPE html>
         <html>
         <head>
-            <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+            <script src="[https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js](https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js)"></script>
             <style>
                 body {{ background: #0c1020; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 10px; }}
                 .game-box {{ max-width: 700px; margin: auto; background: #121830; padding: 25px; border-radius: 12px; border: 2px solid #1e295d; box-shadow: 0 0 20px rgba(0,0,0,0.6); }}
@@ -265,13 +234,11 @@ with tabs[2]:
                 <div id="score-board">CÂU HỎI SỐ: 1</div>
                 <div class="q-section" id="question-text">Đang tải câu hỏi...</div>
                 <div class="options-grid" id="options-box"></div>
-                
                 <div class="lifelines">
                     <button class="life-btn" id="btn-50" onclick="use5050()">⚡ 50:50</button>
                     <button class="life-btn" id="btn-class" onclick="askClass()">👥 Hỏi Ý Kiến Lớp</button>
                 </div>
             </div>
-
             <script>
                 const questions = {js_quiz};
                 let currentIdx = 0;
@@ -282,7 +249,6 @@ with tabs[2]:
                         confetti({{particleCount: 200, spread: 100}});
                         return;
                     }}
-                    
                     document.getElementById('score-board').innerText = "CÂU HỎI SỐ: " + (currentIdx + 1) + " / " + questions.length;
                     const qData = questions[currentIdx];
                     document.getElementById('question-text').innerText = qData.cau_hoi;
@@ -331,8 +297,6 @@ with tabs[2]:
                     document.getElementById('btn-class').classList.add('used');
                     alert("📊 Thầy/Cô hãy lấy biểu quyết nhanh từ các tổ trong lớp học!");
                 }}
-
-                // Khởi chạy câu hỏi đầu tiên khi load game
                 loadQuestion();
             </script>
         </body>
@@ -378,4 +342,3 @@ with tabs[4]:
             )
     else:
         st.info("Chưa có dữ liệu học liệu được tạo từ AI. Hãy hoàn tất tạo câu hỏi ở Tab 2 để tiến hành xuất file.")
-
