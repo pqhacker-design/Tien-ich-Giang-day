@@ -8,7 +8,7 @@ parent_dir = os.path.dirname(current_dir)
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 
-# Import trực tiếp từ thư mục gốc hoặc qua gói components nội bộ
+# Import các hàm và module thành phần
 try:
     from database import init_db, save_project, get_all_projects
     from ai_engine import call_ai_stream, get_council_critique
@@ -19,7 +19,6 @@ try:
     from components.library import show_library_module
     from components.evidence_creator import show_evidence_creator_module
 except ModuleNotFoundError:
-    # Dự phòng nếu thầy bọc dự án trong gói edu_research_assistant
     from edu_research_assistant.database import init_db, save_project, get_all_projects
     from edu_research_assistant.ai_engine import call_ai_stream, get_council_critique
     from edu_research_assistant.components.generator import show_generator_module
@@ -29,7 +28,7 @@ except ModuleNotFoundError:
     from edu_research_assistant.components.library import show_library_module
     from edu_research_assistant.components.evidence_creator import show_evidence_creator_module
 
-# Cấu hình Page cấu trúc hiện đại
+# Cấu hình Page (Phải là lệnh Streamlit đầu tiên)
 st.set_page_config(
     page_title="Hệ thống Trợ lý Hồ sơ Khoa học Giáo dục AI",
     page_icon="🎓",
@@ -38,15 +37,12 @@ st.set_page_config(
 )
 
 # --- 🔑 KIỂM TRA VÀ ÉP ĐỒNG BỘ API KEY TỪ TRANG CHỦ ---
-# Kiểm tra cả chữ hoa chữ thường hoặc khoảng trắng biến session_state
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     user_api_key = st.session_state["gemini_api_key"].strip()
-    
-    # Ép bộ nhớ tạm lưu trữ ổn định cho trang con này
     st.session_state["current_page_api_key"] = user_api_key
 else:
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
-    st.info("💡 Mẹo: Sau khi nhập ở Trang chủ, hãy đảm bảo thầy nhấn 'Lưu' hoặc 'Enter' để hệ thống kích hoạt bộ nhớ tạm.")
+    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
     st.stop()
 
 # Khởi tạo DB nội bộ
@@ -70,7 +66,7 @@ with st.sidebar:
         ]
     )
     st.markdown("---")
-    st.caption("⚡ Phát triển bởi Chuyên gia Công nghệ Giáo dục Việt Nam. Phiên bản tối ưu hóa 2026.")
+    st.caption("⚡ Phiên bản tối ưu hóa hệ thống liên kết tập trung 2026.")
 
 # --- MÀN HÌNH CHÍNH ---
 if menu == "🏠 Tổng quan hệ thống":
@@ -82,7 +78,6 @@ if menu == "🏠 Tổng quan hệ thống":
     * **Phản biện giả thuyết khoa học chặt chẽ nhờ mô hình AI chuyên sâu ngành giáo dục.**
     """)
     
-    # Hiển thị các dự án đã lưu trong hệ thống SQLite địa phương
     st.subheader("📂 Danh sách dự án nghiên cứu hiện hành trong cơ sở dữ liệu")
     try:
         projects = get_all_projects()
@@ -96,7 +91,7 @@ if menu == "🏠 Tổng quan hệ thống":
 
 elif menu == "💡 I. Tạo Đề tài Thông minh":
     show_generator_module(api_key=user_api_key)
-    
+
 elif menu == "📝 II & III. Thiết kế Đề cương & Viết nội dung":
     show_content_writer_module(api_key=user_api_key)
 
@@ -114,11 +109,10 @@ elif menu == "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI":
     council_level = st.selectbox("Cấp hội đồng chấm duyệt", ["Cấp Trường / Cơ sở", "Cấp Quận / Huyện / Phòng GDĐT", "Cấp Tỉnh / Thành phố / Sở GDĐT"])
     
     if st.button("⚖️ Bắt đầu Thẩm định & Chấm điểm"):
-    if critique_content:
-        with st.spinner("Hội đồng đang thảo luận..."):
-            # CHÚ Ý: Phải có api_key=user_api_key ở cuối hàm
-            critique_res = get_council_critique(critique_title, critique_content, council_level, api_key=user_api_key)
-            st.markdown(critique_res)
+        if critique_content:
+            with st.spinner("Hội đồng đang thảo luận, phản biện kín và chấm điểm..."):
+                critique_res = get_council_critique(critique_title, critique_content, council_level, api_key=user_api_key)
+                st.markdown(critique_res)
         else:
             st.error("Vui lòng cung cấp nội dung văn bản đề tài để hội đồng phân tích.")
 
