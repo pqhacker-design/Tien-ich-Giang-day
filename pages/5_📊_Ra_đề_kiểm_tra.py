@@ -58,88 +58,30 @@ SUBJECTS_CONFIG = {
 # ==========================================
 # BỘ CHUYỂN ĐỔI LATEX SANG WORD EQUATION (OMML)
 # ==========================================
-def convert_latex_to_omml_xml(latex_str):
-    """
-    Bộ dịch Regex thực chiến v5.0: Chấp nhận và xử lý cả mã toán học BỊ MẤT DẤU GẠCH CHÉO (frac, neq, triangle, sim)
-    """
-    # Làm sạch khoảng trắng rác và đồng bộ hóa chữ thường để dễ lọc
-    latex_str = str(latex_str).replace('text ', '').replace('\\\\', '\\').strip()
-    
-    # 1. Xử lý Phân số (Bắt cả \frac{a}{b} và frac{a}{b})
-    frac_match = re.findall(r'\\?frac\{([^}]+)\}\{([^}]+)\}', latex_str)
-    if frac_match:
-        num, den = frac_match[0]
-        return f'<m:f {nsdecls("m")}><m:num><m:r><m:t>{num}</m:t></m:r></m:num><m:den><m:r><m:t>{den}</m:t></m:r></m:den></m:f>'
-
-    # 2. Xử lý dấu Khác (Bắt cả \neq, neq, \ne, ne, x neq 3)
-    if 'ne' in latex_str or 'neq' in latex_str or '≠' in latex_str:
-        # Lấy phần ký tự xung quanh nếu có (ví dụ: x neq 3 -> lấy x và 3)
-        parts = re.split(r'\\?neq|\\?ne|≠', latex_str)
-        left = parts[0].strip() if len(parts) > 0 else ""
-        right = parts[1].strip() if len(parts) > 1 else ""
-        return f'<m:r {nsdecls("m")}><m:t>{left} ≠ {right}</m:t></m:r>'
-
-    # 3. Xử lý Đồng dạng & Tam giác (Bắt cả \triangle, triangle, \sim, sim)
-    if 'sim' in latex_str or 'triangle' in latex_str or 'Δ' in latex_str:
-        # Thay thế các chữ rác thành ký hiệu Unicode đẹp trong Word
-        val = latex_str.replace('\\triangle', '').replace('triangle', '').replace('Δ', '')
-        val = val.replace('\\sim', ' ∽ ').replace('sim', ' ∽ ')
-        return f'<m:r {nsdecls("m")}><m:t>Δ{val.strip()}</m:t></m:r>'
-
-    # 4. Xử lý số mũ đa năng (x^2, cm^2, x^2+9)
-    bracket_pow = re.findall(r'([a-zA-Z0-9]+)\^\{([^}]+)\}', latex_str)
-    if bracket_pow:
-        base, exp = bracket_pow[0]
-        return f'<m:sSup {nsdecls("m")}><m:e><m:r><m:t>{base}</m:t></m:r></m:e><m:sup><m:r><m:t>{exp}</m:t></m:r></m:sup></m:sSup>'
-    
-    simple_pow = re.findall(r'([a-zA-Z0-9]+)\^([a-zA-Z0-9+-]+)', latex_str)
-    if simple_pow:
-        base, exp = simple_pow[0]
-        return f'<m:sSup {nsdecls("m")}><m:e><m:r><m:t>{base}</m:t></m:r></m:e><m:sup><m:r><m:t>{exp}</m:t></m:r></m:sup></m:sSup>'
-
-    # Nếu là văn bản bình thường, trả về text sạch không chứa dấu gạch chéo rác
-    clean_text = latex_str.replace('\\', '')
-    return f'<m:r {nsdecls("m")}><m:t>{clean_text}</m:t></m:r>'
-
-
 def add_math_run_to_paragraph(paragraph, text):
     """
-    Quét và ép xử lý tất cả các vùng chứa công thức toán học kể cả khi AI quên bọc dấu $
+    Kiến trúc Unicode Thực chiến: Loại bỏ hoàn toàn gánh nặng render XML/LaTeX,
+    ghi trực tiếp text chứa ký tự toán học Unicode giúp triệt tiêu 100% lỗi hiển thị.
     """
     if not text: return
     
-    # 1. Triệt tiêu chữ 'text ' rác đứng cạnh đơn vị đo lường
-    text = re.sub(r'\btext\s+(km/h|km|phút|giờ|cm\^2|cm|s|kg|m)\b', r'\1', text)
-    text = text.replace('\\n', '\n').replace('\r', '')
+    # 1. Dọn dẹp triệt để các lỗi ký tự thoát chuỗi hệ thống rác nếu có
+    text = str(text).replace('\\n', '\n').replace('\\', '').replace('$', '').strip()
     
-    # 2. TỰ ĐỘNG BỌC GIẢ LẬP: Nếu AI quên bọc $, nhưng chuỗi chứa cấu trúc toán học (frac, neq, ^) thì tự bọc lại
-    if '$' not in text:
-        # Nếu dòng chứa chữ frac{...}{...} hoặc neq hoặc số mũ, bọc toàn bộ phân đoạn đó
-        text = re.sub(r'(\bfrac\{[^}]+\}\{[^}]+\})', r'$\1$', text)
-        text = re.sub(r'([a-zA-Z0-9]+\s+neq\s+[a-zA-Z0-9\-]+)', r'$\1$', text)
-        text = re.sub(r'([a-zA-Z0-9]+\^[a-zA-Z0-9+\-]+)', r'$\1$', text)
-        text = re.sub(r'(triangle\s+[A-Z]+\s+sim\s+triangle\s+[A-Z]+)', r'$\1$', text)
-
-    # 3. Tiến hành phân tách bằng dấu $ và ghi vào Word
+    # Dọn sạch chữ 'text' rác đứng cạnh đơn vị
+    text = re.sub(r'\btext\s+(km/h|km|phút|giờ|cm²|cm|s|kg|m)\b', r'\1', text)
+    
+    # 2. Tách dòng thực tế để xử lý xuống hàng ngay ngắn cho các ý a), b), c)
     lines = text.split('\n')
     for index, line in enumerate(lines):
         if index > 0:
+            # Xuống dòng bằng add_break (Shift + Enter) cực kỳ an toàn trong Word
             new_run = paragraph.add_run()
             new_run.add_break()
             
-        parts = re.split(r'(\$.*?\$)', line)
-        for part in parts:
-            if part.startswith('$') and part.endswith('$'):
-                latex_content = part[1:-1]
-                try:
-                    omml_xml_str = convert_latex_to_omml_xml(latex_content)
-                    oMath_elm = parse_xml(f'<m:oMath {nsdecls("m")}>{omml_xml_str}</m:oMath>')
-                    paragraph._p.append(oMath_elm)
-                except Exception:
-                    paragraph.add_run(latex_content.replace('\\', ''))
-            else:
-                if part: 
-                    paragraph.add_run(part)
+        # Ghi trực tiếp chuỗi văn bản sạch chứa Unicode toán học vào Word
+        if line.strip():
+            paragraph.add_run(line)
 # ==========================================
 # KHỞI TẠO SESSION STATE
 # ==========================================
@@ -259,12 +201,14 @@ def generate_step2_questions(model, config, matrix_data, subject_rule):
     Thông số đề thi: Môn {config['subject']}, Khối {config['grade']}. Tổng điểm: 10.0. 
     Mỗi câu trắc nghiệm trị giá {10 * 0.7 / max(1, config['num_tn']):.2f} điểm. Tổng điểm tự luận là {10 * 0.3:.1f} điểm.
 
-    QUY ĐỊNH KÝ HIỆU CHUYÊN BIỆT (BẮT BUỘC):
-    - Tuyệt đối KHÔNG sử dụng chữ 'text' trong công thức và đơn vị. Đơn vị diện tích viết là $cm^2$, không viết trơn.
-    - Ký hiệu đồng dạng viết là $\\sim$ (Phải có 2 dấu gạch chéo ngược để chống nuốt ký tự trong JSON).
-    - Ký hiệu tam giác viết là $\\triangle ABC$.
-    - Mọi đa thức, số mũ, phân số bắt buộc phải nằm gọn trong cặp dấu $...$. Ví dụ: $P = 5x^2y - 3xy^2$.
-    "Vật lý": "Mọi góc số độ PHẢI viết dạng $30 \\circ$, tên gương hoặc ký hiệu nguồn có chỉ số dưới PHẢI viết dạng $G_1$, $G_2$. Đơn vị đo lường thông thường (km/h, kg, m, s) viết thường, TUYỆT ĐỐI không chèn chữ 'text' phía trước. Để xuống dòng các câu ý a, b, c, hãy sử dụng dấu xuống dòng thực tế, không dùng ký tự thoát chuỗi lỗi.",
+    QUY ĐỊNH ĐỊNH DẠNG TOÁN HỌC & KHTN (BẮT BUỘC KHÔNG DÙNG LATEX):
+    - TUYỆT ĐỐI KHÔNG sử dụng ký tự $, \, frac, neq, sim, triangle, cdot, circ hoặc ^.
+    - Sử dụng ký tự Unicode toán học trực tiếp trong văn bản trơn:
+      + Số mũ: Dùng kí tự mũ trực tiếp như ², ³, ⁴ (Ví dụ: x², cm²).
+      + Phân số: Viết dạng chia ngang hoặc dùng ký tự phân số (Ví dụ: (x + 1)/(x - 3) hoặc OA/OC).
+      + Ký hiệu hình học: Dùng các ký tự Unicode: ΔABC, ∽ (đồng dạng), ⊥ (vuông góc), // (song song).
+      + Ký hiệu Vật lý & Khác: Dùng dấu · (nhân), ≠ (khác), ° (độ - Ví dụ: 30°), G₁, G₂ (chỉ số dưới).
+    - Xuống dòng các ý a), b), c) bằng cách gõ ký tự xuống dòng thực tế, không chèn các ký tự điều khiển hệ thống lỗi.
     BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN CÓ CẤU TRÚC (Tuyệt đối không lặp lại phần ma_tran):
     {{
       "de_kiem_tra": {{
