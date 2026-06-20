@@ -96,7 +96,7 @@ if menu == "🏠 Tổng quan hệ thống":
 
 elif menu == "💡 I. Tạo Đề tài Thông minh":
     show_generator_module(api_key=user_api_key)
-
+    
 elif menu == "📝 II & III. Thiết kế Đề cương & Viết nội dung":
     show_content_writer_module(api_key=user_api_key)
 
