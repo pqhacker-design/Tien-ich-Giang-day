@@ -37,12 +37,16 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 🔑 LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
+# --- 🔑 KIỂM TRA VÀ ÉP ĐỒNG BỘ API KEY TỪ TRANG CHỦ ---
+# Kiểm tra cả chữ hoa chữ thường hoặc khoảng trắng biến session_state
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
-    user_api_key = st.session_state["gemini_api_key"]
+    user_api_key = st.session_state["gemini_api_key"].strip()
+    
+    # Ép bộ nhớ tạm lưu trữ ổn định cho trang con này
+    st.session_state["current_page_api_key"] = user_api_key
 else:
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
-    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
+    st.info("💡 Mẹo: Sau khi nhập ở Trang chủ, hãy đảm bảo thầy nhấn 'Lưu' hoặc 'Enter' để hệ thống kích hoạt bộ nhớ tạm.")
     st.stop()
 
 # Khởi tạo DB nội bộ
