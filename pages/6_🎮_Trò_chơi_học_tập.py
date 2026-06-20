@@ -156,18 +156,25 @@ with tabs[2]:
             render_lucky_wheel(students_list, q_list)
 
     # ----------------------------------------------------
-    # ENGINE 2: Ô CHỮ KỲ DIỆU (MỚI)
+    # ----------------------------------------------------
+    # ENGINE 2: Ô CHỮ KỲ DIỆU (TỰ ĐỘNG HÓA HOÀN TOÀN TỪ AI)
     # ----------------------------------------------------
     elif game_select == "Ô Chữ Kỳ Diệu":
-        st.subheader("🧩 Ô Chữ Kiến Thức (Trình chiếu lớp học)")
+        st.subheader("🧩 Ô Chữ Kiến Thức (Đồng bộ dữ liệu AI)")
         
-        # Thiết lập bộ ô chữ mẫu (Có thể tùy biến sinh tự động từ AI)
-        crossword_data = [
-            {"hang": 1, "tu_khoa": "TOANHOC", "goi_y": "Môn học nghiên cứu về các số, hình học và cấu trúc?"},
-            {"hang": 2, "tu_khoa": "PITAGO", "goi_y": "Định lý toán học nổi tiếng tính cạnh huyền tam giác vuông?"},
-            {"hang": 3, "tu_khoa": "GEMINI", "goi_y": "Tên mô hình AI tiên tiến của Google hiện nay?"},
-            {"hang": 4, "tu_khoa": "STREAMLIT", "goi_y": "Thư viện Python giúp xây dựng nhanh ứng dụng web này?"}
-        ]
+        # Kiểm tra xem AI đã sinh dữ liệu ô chữ trong session_state chưa
+        if st.session_state.generated_quiz and "o_chu" in st.session_state.generated_quiz:
+            # 🌟 Lấy dữ liệu bài học thực tế do AI vừa bóc tách sinh ra
+            crossword_data = st.session_state.generated_quiz["o_chu"]
+            st.success(f"✔ Đã nạp thành công ma trận ô chữ AI cho bài: **{st.session_state.current_topic}**")
+        else:
+            # 📦 Bộ dữ liệu dự phòng (Demo) khi giáo viên chưa bấm sinh từ AI ở Tab 2
+            crossword_data = [
+                {"hang": 1, "tu_khoa": "TOANHOC", "goi_y": "Môn học nghiên cứu về các số, hình học và cấu trúc?"},
+                {"hang": 2, "tu_khoa": "PITAGO", "goi_y": "Định lý toán học nổi tiếng tính cạnh huyền tam giác vuông?"},
+                {"hang": 3, "tu_khoa": "GEMINI", "goi_y": "Tên mô hình AI tiên tiến của Google hiện nay?"},
+                {"hang": 4, "tu_khoa": "STREAMLIT", "goi_y": "Thư viện Python giúp xây dựng nhanh ứng dụng web này?"}
+            ]
         
         import json
         js_crossword = json.dumps(crossword_data, ensure_ascii=False)
@@ -179,16 +186,16 @@ with tabs[2]:
             <style>
                 body {{ background: #0e1117; color: white; font-family: sans-serif; text-align: center; }}
                 .row-container {{ margin: 12px 0; display: flex; justify-content: center; align-items: center; }}
-                .hint-btn {{ background: #262730; color: #fff; border: 1px solid #464855; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-right: 15px; width: 120px; }}
-                .hint-btn:hover {{ background: #ff4b4b; }}
-                .cell {{ width: 35px; height: 35px; border: 2px solid #464855; display: inline-block; text-align: center; line-height: 35px; font-weight: bold; font-size: 20px; text-transform: uppercase; margin: 2px; background: #1e222b; color: transparent; border-radius: 4px; }}
+                .hint-btn {{ background: #262730; color: #fff; border: 1px solid #464855; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-right: 15px; width: 120px; text-align: center; }}
+                .hint-btn:hover {{ background: #ff4b4b; border-color: #ff4b4b; }}
+                .cell {{ width: 35px; height: 35px; border: 2px solid #464855; display: inline-block; text-align: center; line-height: 35px; font-weight: bold; font-size: 20px; text-transform: uppercase; margin: 2px; background: #1e222b; color: transparent; border-radius: 4px; cursor: pointer; user-select: none; transition: background 0.2s; }}
                 .cell.reveal {{ color: #00e676; background: #2e3d30; border-color: #00e676; }}
-                #hint-display {{ font-size: 20px; color: #ffeb3b; margin-top: 20px; min-height: 40px; font-style: italic; }}
+                #hint-display {{ font-size: 20px; color: #ffeb3b; margin-top: 20px; min-height: 40px; font-style: italic; background: #1a1c24; padding: 10px; border-radius: 6px; display: inline-block; padding-left: 20px; padding-right: 20px; }}
             </style>
         </head>
         <body>
             <div id="board"></div>
-            <div id="hint-display">💡 Nhấn vào nút hàng bên trái để xem câu hỏi gợi ý!</div>
+            <div id="hint-display">💡 Nhấn vào nút tiêu đề hàng bên trái để xem câu hỏi gợi ý!</div>
 
             <script>
                 const data = {js_crossword};
@@ -199,21 +206,20 @@ with tabs[2]:
                     const rowDiv = document.createElement('div');
                     rowDiv.className = 'row-container';
                     
-                    // Tạo nút bấm xem gợi ý / mở hàng
+                    // Nút xem gợi ý
                     const btn = document.createElement('button');
                     btn.className = 'hint-btn';
-                    btn.innerText = "Hàng dọc " + item.hang;
+                    btn.innerText = "Hàng ngang " + item.hang;
                     btn.onclick = () => {{
-                        hintDisplay.innerText = "❓ Gợi ý hàng " + item.hang + ": " + item.goi_y;
+                        hintDisplay.innerText = "❓ Gợi ý dòng " + item.hang + ": " + item.goi_y;
                     }};
                     rowDiv.appendChild(btn);
                     
-                    // Tạo các ô chữ
+                    // Tự động dựng số ô vuông dựa trên độ dài từ khóa AI trả về
                     for(let i=0; i < item.tu_khoa.length; i++) {{
                         const cell = document.createElement('div');
                         cell.className = 'cell';
                         cell.innerText = item.tu_khoa[i];
-                        // Lượt click trực tiếp vào ô để lật chữ
                         cell.onclick = () => {{
                             cell.classList.toggle('reveal');
                         }};
@@ -225,7 +231,7 @@ with tabs[2]:
         </body>
         </html>
         """
-        components.html(crossword_html, height=450)
+        components.html(crossword_html, height=480)
 
     # ----------------------------------------------------
     # ENGINE 3: AI LÀ TRIỆU PHÚ (MỚI)
