@@ -59,8 +59,8 @@ with st.sidebar:
         [
             "🏠 Tổng quan hệ thống",
             "💡 I. Tạo Đề tài Thông minh",
-            "📝 II & III. Thiết kế Đề cương & Viết nội dung",
-            "📊 IV & XI. Xử lý Thống kê & Sinh Minh chứng",
+            "📝 II. Thiết kế Đề cương & Viết nội dung",
+            "📊 III. Xử lý Thống kê & Sinh Minh chứng",
             "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI",
             "📚 Thư viện Mẫu Sáng kiến"
         ]
@@ -92,10 +92,10 @@ if menu == "🏠 Tổng quan hệ thống":
 elif menu == "💡 I. Tạo Đề tài Thông minh":
     show_generator_module(api_key=user_api_key)
 
-elif menu == "📝 II & III. Thiết kế Đề cương & Viết nội dung":
+elif menu == "📝 II. Thiết kế Đề cương & Viết nội dung":
     show_content_writer_module(api_key=user_api_key)
 
-elif menu == "📊 IV & XI. Xử lý Thống kê & Sinh Minh chứng":
+elif menu == "📊 III. Xử lý Thống kê & Sinh Minh chứng":
     show_data_analysis_module()
     st.markdown("---")
     show_evidence_creator_module()
@@ -117,4 +117,4 @@ elif menu == "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI":
             st.error("Vui lòng cung cấp nội dung văn bản đề tài để hội đồng phân tích.")
 
 elif menu == "📚 Thư viện Mẫu Sáng kiến":
-    show_library_module()
+    show_library_module(api_key=user_api_key) # Truyền Key tập trung vào đây
