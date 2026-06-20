@@ -257,13 +257,17 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     style.font.name = 'Times New Roman'
     style.font.size = Pt(12)
     
-    # Tiêu đề trường học và thông tin đề thi công tác
+    # --- PHẦN TIÊU ĐỀ ĐỀ THI ĐỘNG THEO HÌNH THỨC KIỂM TRA ---
     p_top = doc.add_paragraph()
     p_top.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_top.add_run("TRƯỜNG THCS & THPT THÔNG MINH\n").bold = True
-    run_title = p_top.add_run(f"ĐỀ KIỂM TRA CHÍNH THỨC - MÃ ĐỀ: {code_label}\n")
+    p_top.add_run("TRƯỜNG THCS & THPT Artificial Intelligence\n").bold = True
+    
+    # Ép tên tiêu đề động theo lựa chọn: ĐỀ KIỂM TRA KIỂM TRA GIỮA HỌC KỲ I - MÃ ĐỀ...
+    exam_title = f"ĐỀ KIỂM TRA {config.get('exam_type', '').upper()} - MÃ ĐỀ: {code_label}\n"
+    run_title = p_top.add_run(exam_title)
     run_title.bold = True
     run_title.size = Pt(14)
+    
     p_top.add_run(f"Môn: {config['subject']} | Khối: {config['grade']} | Thời gian: {config['duration']} phút\n")
     p_top.add_run("-------------------------------------\n")
     
@@ -461,7 +465,7 @@ with tab1:
         st.markdown('<div class="section-header">Lựa chọn bộ môn & Thông tin chung</div>', unsafe_allow_html=True)
         subject = st.selectbox("Chọn môn học cần thiết lập đề thi:", list(SUBJECTS_CONFIG.keys()))
         grade = st.selectbox("Khối lớp học:", [str(i) for i in range(1, 13)], index=7)
-        exam_type = st.selectbox("Hình thức kiểm tra:", ["Giữa học kỳ", "Cuối học kỳ", "Khảo sát chất lượng định kỳ"])
+        exam_type = st.selectbox("Hình thức kiểm tra:", ["15 phút", "45 phút", "Giữa học kỳ I", "Cuối học kỳ I", "Giữa học kỳ II", "Cuối học kỳ II"])
         duration = st.number_input("Thời lượng làm bài (phút):", min_value=15, max_value=150, value=60, step=5)
         school_year = st.text_input("Năm học:", value="2026-2027")
 
