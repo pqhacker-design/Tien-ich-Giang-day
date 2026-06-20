@@ -45,6 +45,8 @@ class AIService:
 
     def generate_quiz(self, topic, content, goals):
         instruction = "Bạn là chuyên gia khảo thí ngôn ngữ và sư phạm. Hãy tạo bộ câu hỏi trắc nghiệm và ma trận ô chữ từ khóa dựa trên nội dung bài học."
+        
+        # CHÚ Ý: Mẹo sử dụng dấu ngoặc nhọn đôi {{ }} trong f-string của Python để không bị lẫn với cú pháp biến
         prompt = f"""
         Hãy tạo bộ câu hỏi tương tác và ô chữ cho bài học: '{topic}' với nội dung: '{content}'. Mục tiêu: '{goals}'.
         
@@ -56,11 +58,24 @@ class AIService:
         Trả về định dạng JSON thuần túy theo cấu trúc mẫu sau (không chứa markdown ```json):
         {{
           "trac_nghiem": [
-            {{"cau_hoi": "Nội dung câu hỏi?", "options": ["A", "B", "C", "D"], "dap_an": "A", "giai_thich": "Lý do"}}
+            {{
+              "cau_hoi": "Nội dung câu hỏi?",
+              "options": ["A", "B", "C", "D"],
+              "dap_an": "A",
+              "giai_thich": "Lý do"
+            }}
           ],
           "o_chu": [
-            {{"hang": 1, "tu_khoa": "TUKHOAONE", "goi_y": "Gợi ý cho từ khóa số 1"}},
-            {{"hang": 2, "tu_khoa": "TUKHOATWO", "goi_y": "Gợi ý cho từ khóa số 2"}}
+            {{
+              "hang": 1,
+              "tu_khoa": "TUKHOAONE",
+              "goi_y": "Gợi ý cho từ khóa số 1"
+            }},
+            {{
+              "hang": 2,
+              "tu_khoa": "TUKHOATWO",
+              "goi_y": "Gợi ý cho từ khóa số 2"
+            }}
           ]
         }}
         """
