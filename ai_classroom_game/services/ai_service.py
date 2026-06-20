@@ -46,7 +46,7 @@ class AIService:
     def generate_quiz(self, topic, content, goals):
         instruction = "Bạn là chuyên gia khảo thí ngôn ngữ và sư phạm. Hãy tạo bộ câu hỏi trắc nghiệm và ma trận ô chữ từ khóa dựa trên nội dung bài học."
         
-        # CHÚ Ý: Mẹo sử dụng dấu ngoặc nhọn đôi {{ }} trong f-string của Python để không bị lẫn với cú pháp biến
+        # Sử dụng dấu ngoặc nhọn đôi {{ }} trong f-string của Python để không lỗi cú pháp JSON
         prompt = f"""
         Hãy tạo bộ câu hỏi tương tác và ô chữ cho bài học: '{topic}' với nội dung: '{content}'. Mục tiêu: '{goals}'.
         
@@ -78,7 +78,5 @@ class AIService:
             }}
           ]
         }}
-        """
-        return json.loads(self.generate_content(prompt, instruction))
         """
         return json.loads(self.generate_content(prompt, instruction))
