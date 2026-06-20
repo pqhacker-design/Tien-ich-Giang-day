@@ -86,7 +86,7 @@ col7, col8, col9 = st.columns(3)
 
 with col7:
     with st.container(border=True):
-        st.markdown("### 🎓_Trợ lý viết Sáng kiến kinh nghiệm")
+        st.markdown("### 🎓 7. Trợ lý viết Sáng kiến kinh nghiệm")
         st.write("Hệ thống Trợ lý AI Hỗ trợ viết Sáng kiến kinh nghiệm và Nghiên cứu Khoa học Sư phạm Toàn diện")
         if st.button("🚀 Mở ứng Viết SKKN", key="btn_sang_kien_kinh_nghiem", use_container_width=True):
             st.switch_page("pages/7_🎓_Viết_Sáng_kiến_kinh_nghiệm.py")
