@@ -459,7 +459,7 @@ with tab1:
     col1, col2 = st.columns(2)
     with col1:
         st.markdown('<div class="section-header">Lựa chọn bộ môn & Thông tin chung</div>', unsafe_allow_html=True)
-        subject = st.selectbox("Chọn môn học cần thiết lập đề thi:", list(SUBJECTS_CONFIG.keys()))
+        subject = st.selectbox("Chọn môn học cần thiết lập đề thi:".bold, list(SUBJECTS_CONFIG.keys()))
         grade = st.selectbox("Khối lớp học:", [str(i) for i in range(1, 13)], index=7)
         exam_type = st.selectbox("Hình thức kiểm tra:", ["Giữa học kỳ", "Cuối học kỳ", "Khảo sát chất lượng định kỳ"])
         duration = st.number_input("Thời lượng làm bài (phút):", min_value=15, max_value=150, value=60, step=5)
