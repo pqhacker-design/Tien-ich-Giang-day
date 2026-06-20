@@ -128,20 +128,17 @@ def show_docx_processor_module(api_key=None):
     st.subheader("📂 Trợ Lý AI Phân Tích & Thẩm Định Bản Nháp Word")
     st.info("Hỗ trợ đọc file .docx, tự động phát hiện lỗi chính tả, câu từ sư phạm và đánh giá cấu trúc theo quy chuẩn.")
     
-    # Tải file Word lên hệ thống
     uploaded_file = st.file_uploader("Tải lên bản nháp Sáng kiến kinh nghiệm của thầy (.docx)", type=["docx"])
     
     if uploaded_file is not None:
         st.success("✅ Đã tải tệp lên thành công!")
         
-        # Nhập tên đề tài để định hình tiêu đề chính xác khi kết xuất tệp Word
         doc_title = st.text_input("Xác nhận hoặc nhập Tên Đề Tài để xuất file (.docx):", value="Ứng dụng công nghệ đổi mới phương pháp dạy học")
         
-        # Nút bấm kích hoạt AI quét văn bản
         if st.button("🧠 Kích hoạt AI quét và kiểm tra toàn diện"):
-            with st.spinner("AI đang đọc dữ liệu văn bản và tiến hành thẩm định..."):
+            with st.spinner("AI đang tiến hành thẩm định và hiệu đính văn bản song song..."):
                 try:
-                    # 1. Tiến hành đọc toàn bộ nội dung từ file Word
+                    # 1. Đọc nội dung file Word
                     doc = Document(uploaded_file)
                     full_text = []
                     for paragraph in doc.paragraphs:
@@ -152,60 +149,61 @@ def show_docx_processor_module(api_key=None):
                     preview_text = text_content[:8000]
                     
                     if len(text_content) == 0:
-                        st.error("❌ File Word của thầy không có nội dung chữ hoặc nội dung nằm hoàn toàn trong bảng biểu/hình ảnh.")
+                        st.error("❌ File Word của thầy không có nội dung chữ.")
                         return
 
                     st.info(f"📋 Hệ thống đã ghi nhận đoạn văn bản dài {len(text_content)} ký tự.")
                     
-                    # --- LUỒNG 1: PHÂN TÍCH & THẨM ĐỊNH (Giữ nguyên cấu trúc gốc của thầy) ---
-                    analysis_prompt = f"""
-                    Bạn là Thư ký Hội đồng Khoa học Giáo dục kiêm chuyên gia hiệu đính văn bản học thuật.
-                    Hãy phân tích và kiểm tra đoạn văn bản trích từ bản nháp Sáng kiến kinh nghiệm dưới đây:
+                    # 2. Tạo Prompt tích hợp gộp luồng để tránh xung đột Streamlit
+                    unified_prompt = f"""
+                    Bạn là Thư ký Hội đồng Khoa học Giáo dục kiêm chuyên gia hiệu đính văn bản học thuật cấp cao.
+                    Hãy xử lý đoạn văn bản trích từ bản nháp Sáng kiến kinh nghiệm dưới đây theo 2 nhiệm vụ riêng biệt.
                     
-                    --- NỘI DUNG VĂN BẢN ---
+                    --- NỘI DUNG VĂN BẢN GỐC ---
                     {preview_text}
-                    ------------------------
+                    ---------------------------
                     
-                    Let's provide the critique.
-                    Hãy đưa ra báo cáo thẩm định chi tiết theo các mục sau (sử dụng định dạng Markdown):
-                    1. 📝 ĐÁNH GIÁ VĂN PHONG SƯ PHẠM: (Kiểm tra xem câu từ đã chuẩn hành chính chưa, có bị sáo rỗng hoặc dùng ngôn ngữ nói không? Chỉ ra từ ngữ cần sửa nếu có).
-                    2. 📐 ĐÁNH GIÁ CẤU TRÚC KHOA HỌC: (Các phần Đặt vấn đề, Biện pháp đã logic chưa? Các biện pháp có tính mới, tính đột phá và ứng dụng công nghệ/AI/chuyển đổi số không?).
-                    3. 📈 ĐÁNH GIÁ TÍNH MINH CHỨNG: (Số liệu thực nghiệm, kết quả giả định hoặc các biểu mẫu đi kèm đã đủ thuyết phục hội đồng chấm chưa?).
-                    4. 🛠️ ĐỀ XUẤT HƯỚNG SỬA ĐỔI: (Đưa ra ít nhất 3 gợi ý cụ thể để thầy cô bổ sung, chỉnh sửa nhằm nâng cao tỷ lệ đạt giải cao).
+                    YÊU CẦU ĐẦU RA (BẮT BUỘC TUÂN THỦ ĐÚNG CẤU TRÚC PHÂN TÁCH):
+                    
+                    [PHAN_1_THAM_DINH]
+                    Hãy đưa ra báo cáo thẩm định chi tiết theo các mục sau:
+                    1. 📝 ĐÁNH GIÁ VĂN PHONG SƯ PHẠM: (Chỉ ra từ ngữ cần sửa nếu có).
+                    2. 📐 ĐÁNH GIÁ CẤU TRÚC KHOA HỌC: (Tính logic, tính mới, ứng dụng công nghệ/AI).
+                    3. 📈 ĐÁNH GIÁ TÍNH MINH CHỨNG: (Số liệu thực nghiệm, tính thuyết phục).
+                    4. 🛠️ ĐỀ XUẤT HƯỚNG SỬA ĐỔI: (Gợi ý cụ thể).
+                    
+                    [PHAN_2_HIEU_DINH]
+                    Hãy viết lại toàn bộ văn bản gốc ở trên một cách hoàn chỉnh sau khi đã sửa hết lỗi chính tả, tối ưu câu từ thành văn phong hành chính sư phạm trang trọng. Không thêm lời bình luận, lời chào hay giải thích gì thêm ở phần này.
                     """
                     
-                    st.markdown("### 📊 1. Kết quả Thẩm định từ Trợ lý AI:")
-                    ai_analysis = call_ai_stream(
-                        prompt=analysis_prompt,
+                    # Gọi AI 1 lần duy nhất
+                    ai_total_response = call_ai_stream(
+                        prompt=unified_prompt,
                         system_instruction="Bạn là Giáo sư, Viện trưởng Viện Khoa học Giáo dục Việt Nam.",
                         api_key=api_key
                     )
                     
-                    # --- LUỒNG 2: TỰ ĐỘNG BIÊN TẬP VÀ XUẤT FILE WORD CHỈNH SỬA ---
+                    # 3. Kỹ thuật bóc tách chuỗi (String Splitting) để đưa vào giao diện
+                    if "[PHAN_1_THAM_DINH]" in ai_total_response and "[PHAN_2_HIEU_DINH]" in ai_total_response:
+                        parts = ai_total_response.split("[PHAN_2_HIEU_DINH]")
+                        analysis_part = parts[0].replace("[PHAN_1_THAM_DINH]", "").strip()
+                        refined_part = parts[1].strip()
+                    else:
+                        # Phương án dự phòng nếu AI quên ghi tag
+                        analysis_part = ai_total_response
+                        refined_part = ai_total_response
+
+                    # 4. Hiển thị mượt mà lên giao diện từng phần tách biệt
+                    st.markdown("### 📊 1. Kết quả Thẩm định từ Trợ lý AI:")
+                    st.markdown(analysis_part)
+                    
                     st.markdown("---")
                     st.markdown("### 📝 2. Bản thảo Sáng kiến sau khi AI tự động sửa đổi trực tiếp:")
+                    st.markdown(refined_part)
                     
-                    refine_prompt = f"""
-                    Bạn là Chuyên gia biên tập cấp cao của Bộ Giáo dục và Đào tạo. 
-                    Dựa vào đoạn bản nháp dưới đây, hãy tiến hành sửa toàn bộ lỗi chính tả, chuyển đổi các câu văn nói thành câu văn hành chính sư phạm mượt mà, chuyên nghiệp và tăng tính khoa học.
+                    # Đóng gói xuất file Word
+                    docx_bytes = export_refined_docx(doc_title, refined_part)
                     
-                    --- NỘI DUNG BẢN NHÁP GỐC ---
-                    {preview_text}
-                    ----------------------------
-                    
-                    YÊU CẦU: Chỉ viết lại nội dung bài viết hoàn chỉnh sau khi chỉnh sửa dưới dạng Markdown sạch. Không thêm lời chào, không viết nhận xét dài dòng như "Tôi đã sửa...".
-                    """
-                    
-                    ai_refined_text = call_ai_stream(
-                        prompt=refine_prompt,
-                        system_instruction="Nhiệm vụ của bạn là hiệu đính, viết lại văn bản sư phạm một cách mượt mà và trực tiếp.",
-                        api_key=api_key
-                    )
-                    
-                    # Tạo file Word nhị phân từ bản đã hiệu đính
-                    docx_bytes = export_refined_docx(doc_title, ai_refined_text)
-                    
-                    # Hiển thị nút tải file Word chuẩn Nghị định 30
                     st.markdown("<br>", unsafe_allow_html=True)
                     st.download_button(
                         label="📥 Tải Bản Sáng Kiến Đã Chỉnh Sửa Hoàn Thiện (.docx)",
@@ -213,7 +211,7 @@ def show_docx_processor_module(api_key=None):
                         file_name=f"SKKN_Da_Chinh_Sua_{doc_title.replace(' ', '_')[:25]}.docx",
                         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     )
-                    st.success("✨ Đã đóng gói thành công file Word! Bấm nút phía trên để tải về bản chỉnh sửa hoàn thiện lề lối hành chính.")
+                    st.success("✨ Đã đóng gói thành công file Word chuẩn thể thức!")
                     
                 except Exception as e:
                     st.error(f"❌ Có lỗi xảy ra khi xử lý cấu trúc file Word: {str(e)}")
