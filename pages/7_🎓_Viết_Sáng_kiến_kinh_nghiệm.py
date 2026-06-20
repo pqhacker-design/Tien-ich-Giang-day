@@ -1,14 +1,33 @@
 import streamlit as st
-from edu_research_assistant.database import init_db, save_project, get_all_projects
-from edu_research_assistant.ai_engine import call_ai_stream, get_council_critique
+import os
+import sys
 
-# Đầu file app.py, thầy import thêm các module mới vào: 
-from edu_research_assistant.components.generator import show_generator_module
-from edu_research_assistant.components.content_writer import show_content_writer_module
-from edu_research_assistant.components.data_analysis import show_data_analysis_module
-from edu_research_assistant.components.docx_processor import show_docx_processor_module
-from edu_research_assistant.components.library import show_library_module
-from edu_research_assistant.components.evidence_creator import show_evidence_creator_module
+# Tự động cấu hình sys.path để nhận diện các module ở thư mục cha nếu chạy trong thư mục pages/
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
+
+# Import trực tiếp từ thư mục gốc hoặc qua gói components nội bộ
+try:
+    from database import init_db, save_project, get_all_projects
+    from ai_engine import call_ai_stream, get_council_critique
+    from components.generator import show_generator_module
+    from components.content_writer import show_content_writer_module
+    from components.data_analysis import show_data_analysis_module
+    from components.docx_processor import show_docx_processor_module
+    from components.library import show_library_module
+    from components.evidence_creator import show_evidence_creator_module
+except ModuleNotFoundError:
+    # Dự phòng nếu thầy bọc dự án trong gói edu_research_assistant
+    from edu_research_assistant.database import init_db, save_project, get_all_projects
+    from edu_research_assistant.ai_engine import call_ai_stream, get_council_critique
+    from edu_research_assistant.components.generator import show_generator_module
+    from edu_research_assistant.components.content_writer import show_content_writer_module
+    from edu_research_assistant.components.data_analysis import show_data_analysis_module
+    from edu_research_assistant.components.docx_processor import show_docx_processor_module
+    from edu_research_assistant.components.library import show_library_module
+    from edu_research_assistant.components.evidence_creator import show_evidence_creator_module
 
 # Cấu hình Page cấu trúc hiện đại
 st.set_page_config(
@@ -53,12 +72,15 @@ if menu == "🏠 Tổng quan hệ thống":
     
     # Hiển thị các dự án đã lưu trong hệ thống SQLite địa phương
     st.subheader("📂 Danh sách dự án nghiên cứu hiện hành trong cơ sở dữ liệu")
-    projects = get_all_projects()
-    if projects:
-        for p in projects:
-            st.info(f"ID: {p[0]} - Đề tài: **{p[1]}** - Bộ môn: {p[2]} ({p[3]})")
-    else:
-        st.write("Chưa có dự án nào được lưu. Hãy bắt đầu tạo đề tài tại thanh điều hướng bên trái.")
+    try:
+        projects = get_all_projects()
+        if projects:
+            for p in projects:
+                st.info(f"ID: {p[0]} - Đề tài: **{p[1]}** - Bộ môn: {p[2]} ({p[3]})")
+        else:
+            st.write("Chưa có dự án nào được lưu. Hãy bắt đầu tạo đề tài tại thanh điều hướng bên trái.")
+    except Exception as e:
+        st.error(f"Không thể kết nối cơ sở dữ liệu: {e}")
 
 elif menu == "💡 I. Tạo Đề tài Thông minh":
     show_generator_module()
@@ -67,18 +89,10 @@ elif menu == "📝 II & III. Thiết kế Đề cương & Viết nội dung":
     show_content_writer_module()
 
 elif menu == "📊 IV & XI. Xử lý Thống kê & Sinh Minh chứng":
-    # Tích hợp cả xử lý thống kê lẫn minh chứng nâng cao
     show_data_analysis_module()
     st.markdown("---")
     show_evidence_creator_module()
 
-elif menu == "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI":
-    # (Đoạn mã Phản biện cũ...)
-    pass
-
-elif menu == "📚 Thư viện Mẫu Sáng kiến":
-    show_library_module()
-    
 elif menu == "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI":
     st.header("🕵️‍♂️ Trợ Lý AI Phản Biện Đề Tài - Đóng vai Hội đồng chấm Sáng kiến")
     st.warning("Hãy dán nội dung bản nháp đề tài của thầy vào đây để Hội đồng AI chấm điểm thử nghiệm trước khi nộp chính thức lên cấp trên.")
