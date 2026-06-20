@@ -24,7 +24,7 @@ def export_refined_docx(topic, refined_text):
         section.page_width = Inches(210 / 25.4)
         section.page_height = Inches(297 / 25.4)
 
-    # Cấu hình Style mặc định (Times New Roman, 14pt)
+    # Cấu hình Style mặc định
     style = doc.styles['Normal']
     font = style.font
     font.name = 'Times New Roman'
@@ -71,7 +71,7 @@ def export_refined_docx(topic, refined_text):
     r_t2.bold = True
     r_t2.font.size = Pt(15)
 
-    # 4. QUÉT BIÊN DỊCH NỘI DUNG NÂNG CAO (Lọc sạch các ký tự Markdown rác)
+    # 4. QUÉT BIÊN DỊCH NỘI DUNG NÂNG CAO
     lines = refined_text.split('\n')
     for line in lines:
         cleaned_line = line.strip()
@@ -85,9 +85,9 @@ def export_refined_docx(topic, refined_text):
             is_heading = False
             
         p = doc.add_paragraph()
-        p.paragraph_format.line_spacing = 1.3  # Giãn dòng 1.3 lines chuẩn
-        p.paragraph_format.space_after = Pt(6)   # Cách đoạn dưới 6pt
-        p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY # Căn đều hai bên
+        p.paragraph_format.line_spacing = 1.3
+        p.paragraph_format.space_after = Pt(6)
+        p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         
         is_bullet = False
         if cleaned_line.startswith(('* ', '- ', '• ')):
@@ -104,18 +104,22 @@ def export_refined_docx(topic, refined_text):
         elif not is_bullet:
             p.paragraph_format.first_line_indent = Inches(0.5)
 
-        # Xử lý bóc tách in đậm cục bộ (Inline bold **) do AI trả ra
+        # Xử lý bóc tách in đậm cục bộ (Inline bold **) an toàn
         parts = re.split(r'(\*\*.*?\*\*)', cleaned_line)
         for part in parts:
+            if not part:  # Bỏ qua nếu part trống để tránh lỗi UnboundLocalError
+                continue
+                
             if part.startswith('**') and part.endswith('**'):
                 text_run = part.replace('**', '')
                 run = p.add_run(text_run)
                 run.bold = True
             else:
-                if part:
-                    run = p.add_run(part)
-                    if is_heading or is_admin_heading:
-                        run.bold = True
+                run = p.add_run(part)
+                if is_heading or is_admin_heading:
+                    run.bold = True
+            
+            # Đảm bảo cấu hình font luôn đi liền sau khi 'run' chắc chắn tồn tại
             run.font.name = 'Times New Roman'
             run.font.size = Pt(14)
             
