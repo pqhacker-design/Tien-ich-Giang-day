@@ -36,7 +36,6 @@ else:
 openai_key = st.session_state.get("openai_api_key", "").strip()
 
 with st.sidebar:
-    s# Nếu lưu ảnh về máy/server
     st.image("assets/brainstorm-skill.png", width=80)
     st.title("⚙️ CẤU HÌNH HOẠT ĐỘNG")
     st.markdown("---")
