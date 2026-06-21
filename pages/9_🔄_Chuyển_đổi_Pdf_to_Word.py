@@ -3,7 +3,6 @@ import io
 import re
 from google import genai
 from google.genai import types
-import pdfplumber
 from docx import Document
 from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -11,8 +10,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 # --- CẤU HÌNH GIAO DIỆN ---
 st.set_page_config(page_title="Chuyển đổi Tài liệu sang Word", page_icon="🔄", layout="centered")
 
-st.title("🔄 Chuyển đổi Tài liệu sang Word")
-st.caption("Giúp chuyển đổi tài liệu PDF hoặc ảnh chụp xuất ra file word.")
+st.title("🔄 Chuyển đổi Tài liệu sang Word (Chống Rác Watermark/Mộc Đỏ)")
+st.caption("Phiên bản nâng cấp: Sử dụng mắt thần AI OCR để tự động loại bỏ chữ chìm, mộc đỏ rác và giữ nguyên định dạng.")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
@@ -31,40 +30,29 @@ if "gemini_client" not in st.session_state:
 client = st.session_state.gemini_client
 
 # ==================== BỘ PHÂN TÍCH CHỮ IN ĐẬM / IN NGHIÊNG TỪ AI ====================
-# ==================== BỘ PHÂN TÍCH CHỮ IN ĐẬM / IN NGHIÊNG TỪ AI ====================
 def add_formatted_text(paragraph, text):
     """
     Hàm tự động quét qua chuỗi văn bản chứa ký tự markdown (* hoặc **)
-    để phân tách, áp dụng thuộc tính Bold, Italic và XÓA BỎ dấu $ của công thức.
+    để phân tách, áp dụng thuộc tính Bold, Italic và dọn sạch dấu vết rác.
     """
-    # Tách chuỗi dựa trên các token định dạng ẩn của markdown
     tokens = re.split(r'(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*)', text)
     
     for token in tokens:
         if token.startswith('***') and token.endswith('***'):
-            # Vừa đậm vừa nghiêng - Làm sạch dấu $
             clean_token = token[3:-3].replace('$', '')
             run = paragraph.add_run(clean_token)
             run.bold = True
             run.italic = True
         elif token.startswith('**') and token.endswith('**'):
-            # Chữ in đậm - Làm sạch dấu $
             clean_token = token[2:-2].replace('$', '')
             run = paragraph.add_run(clean_token)
             run.bold = True
         elif token.startswith('*') and token.endswith('*'):
-            # Chữ in nghiêng - Làm sạch dấu $
             clean_token = token[1:-1].replace('$', '')
             run = paragraph.add_run(clean_token)
             run.italic = True
-        # (Tìm đến đoạn chữ thường trong hàm add_formatted_text)
         else:
-            # Chữ thường - Làm sạch dấu $ và các ký tự LaTeX rác nếu AI lọt lưới
             clean_token = token.replace('$', '')
-            clean_token = clean_token.replace('\\cdot', '·')
-            clean_token = clean_token.replace('\\neq', '≠')
-            clean_token = clean_token.replace('\\leq', '≤')
-            clean_token = clean_token.replace('\\geq', '≥')
             paragraph.add_run(clean_token)
 
 # ==================== HÀM TẠO FILE WORD GIỮ ĐỊNH DẠNG TỐI ĐA ====================
@@ -78,7 +66,6 @@ def create_word_document(text_content):
         section.left_margin = Inches(0.79)
         section.right_margin = Inches(0.79)
 
-    # Đặt font chữ mặc định cho toàn văn bản là Times New Roman
     style = doc.styles['Normal']
     font = style.font
     font.name = 'Times New Roman'
@@ -120,10 +107,9 @@ def create_word_document(text_content):
                 in_table = False
                 table_data = []
 
-        # 2. XỬ LÝ ĐÁP ÁN TRẮC NGHIỆM CĂN NGANG HÀNG
+        # 2. XỬ LÝ ĐÁP ÁN TRẮC NGHIỆM CĂN NGANG HÀNG (Dành cho đề thi)
         if re.search(r'A\..*B\..*C\..*D\.', clean_line) or re.search(r'A\s*[\.\)].*B\s*[\.\)].*C\s*[\.\)].*D\s*[\.\)]', clean_line):
             p = doc.add_paragraph()
-            # Bảo toàn thụt lề nếu đầu dòng có khoảng trống
             if raw_line.startswith('    ') or raw_line.startswith('\t'):
                 p.paragraph_format.left_indent = Inches(0.4)
                 
@@ -136,7 +122,7 @@ def create_word_document(text_content):
                     add_formatted_text(p, part)
             continue
 
-        # 3. XỬ LÝ TIÊU ĐỀ HOẶC CÁC CÂU HỎI VÀ VĂN BẢN THƯỜNG
+        # 3. XỬ LÝ TIÊU ĐỀ HOẶC ĐOẠN VĂN THƯỜNG
         if clean_line.startswith('# '):
             h = doc.add_heading('', level=1)
             h.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -147,7 +133,7 @@ def create_word_document(text_content):
         else:
             p = doc.add_paragraph()
             
-            # --- XỬ LÝ THỤT LỀ ĐẦU DÒNG (INDENTATION) ---
+            # Xử lý thụt lề đầu dòng
             if raw_line.startswith('    ') or raw_line.startswith('\t'):
                 p.paragraph_format.left_indent = Inches(0.4)
 
@@ -162,7 +148,6 @@ def create_word_document(text_content):
             else:
                 add_formatted_text(p, clean_line)
 
-    # Đề phòng bảng biểu nằm ở dòng cuối cùng của file
     if in_table and table_data:
         word_table = doc.add_table(rows=len(table_data), cols=max(len(row) for row in table_data))
         word_table.style = 'Table Grid'
@@ -177,9 +162,9 @@ def create_word_document(text_content):
     bio.seek(0)
     return bio
 
-# --- GIAO DIỆN STREAMLIT ---
+# --- GIAO DIỆN STREAMLIT UPLOAD VÀ XỬ LÝ ---
 uploaded_file = st.file_uploader(
-    "Tải lên Tài liệu dạng Ảnh hoặc PDF cần chuyển:",
+    "Tải lên Tài liệu dạng Ảnh hoặc PDF cần xử lý chống rác:",
     type=["png", "jpg", "jpeg", "pdf"]
 )
 
@@ -189,76 +174,58 @@ if uploaded_file is not None:
     
     st.info(f"📁 Đã nhận file: **{uploaded_file.name}**")
     
-    if st.button("🚀 Bắt đầu chuyển đổi"):
-        with st.spinner("Hệ thống AI đang phân tích cấu trúc và thực hiện chuyển đổi..."):
+    if st.button("🚀 Bắt đầu trích xuất sạch (Bỏ Watermark)"):
+        with st.spinner("Hệ thống AI thông minh đang bóc tách văn bản gốc và lọc bỏ chữ chìm..."):
             
-            if file_type == "application/pdf":
-                try:
-                    with pdfplumber.open(uploaded_file) as pdf:
-                        text_pages = []
-                        for page in pdf.pages:
-                            page_text = page.extract_text(layout=True)
-                            if page_text:
-                                text_pages.append(page_text)
-                        extracted_text = "\n".join(text_pages)
-                except Exception:
-                    pass
+            # KHÔNG DÙNG THƯ VIỆN ĐỌC TEXT LAYER ĐỂ TRÁNH DÍNH WATERMARK RÁC
+            # Chuyển trực tiếp file byte sang cho Gemini phân tích hình ảnh trực quan (OCR bằng mắt AI)
+            uploaded_file.seek(0)
+            file_bytes = uploaded_file.read()
+            file_part = types.Part.from_bytes(data=file_bytes, mime_type=file_type)
             
-            if not extracted_text.strip():
-                uploaded_file.seek(0)
-                file_bytes = uploaded_file.read()
-                file_part = types.Part.from_bytes(data=file_bytes, mime_type=file_type)
+            # Bộ Prompt chỉ thị khắt khe ép AI lọc bỏ hoàn toàn các loại dấu chìm rác
+            prompt = (
+                "Bạn là chuyên gia số hóa tài liệu hành chính và văn bản pháp luật.\n"
+                "Nhiệm vụ của bạn là trích xuất chính xác 100% nội dung văn bản chữ từ tài liệu này.\n\n"
                 
-                # Prompt ÉP AI phân biệt chữ Đậm, chữ Nghiêng bằng cú pháp Markdown cụ thể
-                # Bộ Prompt nâng cấp chuyên sâu ép AI chuyển đổi Toán học sang Unicode phẳng trực quan
-                prompt = (
-                    "Bạn là một chuyên gia số hóa tài liệu giáo dục và đề thi toán học cấp cao.\n"
-                    "Hãy trích xuất chính xác 100% văn bản từ hình ảnh này sang định dạng Unicode phẳng.\n\n"
-                    
-                    "🔴 QUY TẮC CHUYỂN ĐỔI TOÁN HỌC SANG UNICODE TRỰC QUAN (CẤM DÙNG LATEX HOẶC DẤU $):\n"
-                    "1. Phân số phức tạp: Hãy viết rõ ràng theo hàng ngang trực quan bằng ký tự Unicode, hoặc viết dạng tử/mẫu cách khoảng rõ ràng, ví dụ: 'f_1(x) = (5x⁴)/4' hoặc '(x + 1)/(x - 2)'. Tránh viết dính liền gây hiểu lầm.\n"
-                    "2. Hệ phương trình (cases): Chuyển thành dạng ký tự phẳng sử dụng dấu ngoặc nhọn lớn '{' và xuống dòng rõ ràng cho từng phương trình, ví dụ:\n"
-                    "   Hệ phương trình: {\n"
-                    "   x + y - 2 < 0\n"
-                    "   x - y + 2 > 0\n"
-                    "3. Số mũ và Chỉ số: BẮT BUỘC dùng ký tự Unicode nhỏ trên và dưới (Ví dụ: x², y³, u_n, u₁, u₂, log₃(3x), f'(x)). Không được để dạng dấu mũ ^ hoặc gạch dưới _ thô.\n"
-                    "4. Ký hiệu hình học & Giải tích: Chuyển toàn bộ về ký tự Unicode tương ứng:\n"
-                    "   - Vectơ: Dùng mũi tên đứng trước (Ví dụ: →AD, →AB).\n"
-                    "   - Tích phân / Nguyên hàm: Dùng ký tự ∫ (Ví dụ: ∫f(x)dx).\n"
-                    "   - Tập hợp & Logic: Dùng chuẩn ký tự ℝ, ∈, ∉, ⊂, ∩, ∪, ≠, ≥, ≤, · (dấu nhân).\n\n"
-                    
-                    "🔴 QUY TẮC ĐỊNH DẠNG VĂN BẢN ĐỀ THI:\n"
-                    "1. BẢO TOÀN CHỮ IN ĐẬM/IN NGHIÊNG: Đoạn văn nào in đậm bắt buộc bọc trong `**` (Ví dụ: **BỘ GIÁO DỤC VÀ ĐÀO TẠO**), đoạn nào in nghiêng bọc trong `*` (Ví dụ: *xem hình dưới*).\n"
-                    "2. CĂN NGANG ĐÁP ÁN: 4 đáp án trắc nghiệm A, B, C, D phải nằm ngang trên cùng một dòng văn bản giống hệt đề gốc, cách nhau bằng khoảng trắng lớn.\n"
-                    "3. THỤT LỀ ĐẦU DÒNG: Thêm 4 dấu cách '    ' vào trước mỗi dòng câu hỏi (Câu 1, Câu 2...) hoặc đoạn văn có thụt lề.\n"
-                    "4. Chỉ trả về nội dung đề thi đã số hóa sạch sẽ, không thêm bất kỳ lời thoại hay giải thích nào của AI."
+                "⚠️ LƯU Ý QUAN TRỌNG ĐỂ LỌC RÁC WATERMARK:\n"
+                "Trong tài liệu có thể xuất hiện các dòng chữ mờ đóng dấu chìm (ví dụ: tên người, phòng ban, ngày giờ chạy dọc trang) hoặc mộc đỏ đè lên chữ. "
+                "Hãy BỎ QUA HOÀN TOÀN toàn bộ các nội dung dấu chìm này, không trích xuất chúng, không chèn các ký tự rác vụn vặt đó vào văn bản trả về.\n\n"
+                
+                "🔴 QUY TẮC ĐỊNH DẠNG VĂN BẢN HÀNH CHÍNH:\n"
+                "1. BẢO TOÀN CHỮ IN ĐẬM/IN NGHIÊNG: Đoạn văn nào in đậm bắt buộc bọc trong `**` (Ví dụ: **CHÍNH PHỦ**), đoạn nào in nghiêng bọc trong `*`.\n"
+                "2. THỤT LỀ ĐẦU DÒNG: Nếu đoạn văn hoặc điều khoản có thụt lề đầu dòng, hãy thêm đúng 4 dấu cách '    ' vào đầu dòng.\n"
+                "3. TOÁN HỌC / SỐ LIỆU: Chuyển toàn bộ công thức toán hoặc số mũ về Unicode thuần đẹp mắt (Ví dụ: x², u_n, phân số dùng dấu / rõ ràng).\n"
+                "4. Dựng bảng biểu số liệu chính xác bằng cấu trúc bảng Markdown sử dụng ký tự '|'.\n"
+                "5. Chỉ trả về nội dung tài liệu sạch, không thêm bất kỳ lời bình luận hay giải thích nào của AI."
+            )
+            
+            try:
+                # Sử dụng gemini-2.5-flash hoặc gemini-2.5-pro để có năng lực xử lý hình ảnh OCR tốt nhất
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=[file_part, prompt]
                 )
-                
-                try:
-                    response = client.models.generate_content(
-                        model="gemini-3.5-flash",
-                        contents=[file_part, prompt]
-                    )
-                    extracted_text = response.text
-                except Exception as e:
-                    st.error(f"Lỗi khi kết nối API: {e}")
+                extracted_text = response.text
+            except Exception as e:
+                st.error(f"Lỗi khi kết nối hệ thống AI OCR: {e}")
 
         if extracted_text.strip():
-            st.success("✅ Đã chuyển đổi thành công!")
+            st.success("✅ Đã xử lý lọc rác và bảo toàn cấu trúc thành công!")
             
-            with st.expander("👀 Xem trước văn bản trích xuất"):
-                st.text_area("Mã nguồn văn bản:", extracted_text, height=300)
+            with st.expander("👀 Xem trước văn bản sạch (Đã lọc bỏ dấu chìm)"):
+                st.text_area("Văn bản trích xuất:", extracted_text, height=300)
             
             word_file = create_word_document(extracted_text)
             
             st.download_button(
-                label="📥 Tải file WORD (.docx) đã chuyển đổi về máy",
+                label="📥 Tải file WORD (.docx) Văn Bản Sạch về máy",
                 data=word_file,
-                file_name=uploaded_file.name.rsplit('.', 1)[0] + "_da_chuyen_doi.docx",
+                file_name=uploaded_file.name.rsplit('.', 1)[0] + "_van_ban_sach.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
         else:
-            st.warning("Không thể xử lý cấu trúc từ file.")
+            st.warning("Không thể xử lý dữ liệu từ file này.")
 
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
