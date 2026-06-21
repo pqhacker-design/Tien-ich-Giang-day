@@ -9,7 +9,6 @@ class AIService:
 
     def generate_content(self, prompt: str, system_instruction: str = None) -> str:
         """Gọi API sinh nội dung với cơ chế Fallback: Thử Gemini trước -> Nếu lỗi chuyển sang OpenAI"""
-        # Thử nghiệm với Gemini API
         if self.gemini_key:
             try:
                 genai.configure(api_key=self.gemini_key)
@@ -23,7 +22,6 @@ class AIService:
             except Exception as e:
                 print(f"[Warning] Gemini API Error: {e}. Switching to Fallback OpenAI...")
         
-        # Cơ chế Fallback sang OpenAI API
         if self.openai_key:
             try:
                 client = OpenAI(api_key=self.openai_key)
@@ -45,8 +43,6 @@ class AIService:
 
     def generate_quiz(self, topic, content, goals):
         instruction = "Bạn là chuyên gia khảo thí ngôn ngữ và sư phạm. Hãy tạo bộ câu hỏi trắc nghiệm và ma trận ô chữ từ khóa dựa trên nội dung bài học."
-        
-        # Sử dụng dấu ngoặc nhọn đôi {{ }} trong f-string của Python để không lỗi cú pháp JSON
         prompt = f"""
         Hãy tạo bộ câu hỏi tương tác và ô chữ cho bài học: '{topic}' với nội dung: '{content}'. Mục tiêu: '{goals}'.
         
@@ -70,11 +66,34 @@ class AIService:
               "hang": 1,
               "tu_khoa": "TUKHOAONE",
               "goi_y": "Gợi ý cho từ khóa số 1"
+            }}
+          ]
+        }}
+        """
+        return json.loads(self.generate_content(prompt, instruction))
+
+    def generate_warmup_game(self, warmup_type, subject, grade, warmup_prompt):
+        """Sinh kịch bản trò chơi khởi động kèm ma trận câu hỏi trắc nghiệm dưới dạng JSON để xuất Excel"""
+        instruction = "Bạn là chuyên gia thiết kế trò chơi học đường và phương pháp sư phạm tích cực."
+        prompt = f"""
+        Thiết kế một trò chơi khởi động loại '{warmup_type}' cho môn {subject}, {grade}. 
+        Yêu cầu bổ sung: {warmup_prompt}.
+        
+        Bạn PHẢI trả về định dạng JSON cấu trúc chính xác như sau (Không bọc trong ký tự markdown ```json):
+        {{
+          "kich_ban_chu": "Văn bản chi tiết về Luật chơi, Cách tính điểm, Hướng dẫn giáo viên dẫn dắt trò chơi...",
+          "trac_nghiem": [
+            {{
+              "cau_hoi": "Câu hỏi trắc nghiệm số 1 liên quan đến phần khởi động này?",
+              "options": ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
+              "dap_an": "Phương án A",
+              "giai_thich": "Giải thích ngắn gọn"
             }},
             {{
-              "hang": 2,
-              "tu_khoa": "TUKHOATWO",
-              "goi_y": "Gợi ý cho từ khóa số 2"
+              "cau_hoi": "Câu hỏi trắc nghiệm số 2?",
+              "options": ["A", "B", "C", "D"],
+              "dap_an": "B",
+              "giai_thich": "Giải thích"
             }}
           ]
         }}
