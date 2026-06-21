@@ -98,10 +98,10 @@ with col8:
             st.switch_page("pages/8_🎓_Gia_Sư_AI.py")
 with col9:
     with st.container(border=True):
-        st.markdown("### 🎓 8. Gia sư AI - Hỗ trợ HS")
-        st.write("Hỗ trợ HS và hướng dẫn các em học tập Tất cả các môn học từ TH đến THPT.")
-        if st.button("🚀 Mở ứng dụng Gia sư", key="btn_pdf_to_word", use_container_width=True):
-            st.switch_page("pages/9_📝_Chuyển_đổi_Pdf_to_Word.py")
+        st.markdown("### 9_🔄_Chuyển đổi file .Pdf thành Word(.docx)")
+        st.write("Ứng dụng trích xuất văn bản từ tài liệu hoặc hình ảnh và xuất bản thành file Word.")
+        if st.button("🚀 Mở ứng dụng Pdf to Word", key="btn_pdf_to_word", use_container_width=True):
+            st.switch_page("pages/9_🔄_Chuyển_đổi_Pdf_to_Word.py")
             
 st.markdown("---")
 
