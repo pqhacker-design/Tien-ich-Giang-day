@@ -231,7 +231,7 @@ def show_library_module(api_key=None):
                 "title": "Biện pháp ứng dụng công nghệ số trong dạy học Hình học lớp 8",
                 "author": "Mẫu chuẩn Bộ GD&ĐT",
                 "summary": "Giải pháp tập trung vào việc sử dụng các phần mềm hình học động (Geogebra) kết hợp mô hình lớp học đảo ngược...",
-                "content": "content": "ĐẶT VẤN ĐỀ\n1. Lý do chọn đề tài...\n\nNỘI DUNG CỐT LÕI..."
+                "content": "ĐẶT VẤN ĐỀ\n1. Lý do chọn đề tài...\n\nNỘI DUNG CỐT LÕI..."
             }
         ]
     }
