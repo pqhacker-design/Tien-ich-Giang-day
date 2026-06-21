@@ -1,3 +1,4 @@
+import pandas as pd
 import io
 from docx import Document
 from pptx import Presentation
@@ -40,3 +41,47 @@ class DocumentExporter:
         prs.save(buffer)
         buffer.seek(0)
         return buffer
+    @staticmethod
+    def export_to_platform_excel(quiz_data, platform="Quizizz"):
+        """Xuất ma trận câu hỏi ra file Excel theo form chuẩn của Kahoot hoặc Quizizz"""
+        buffer = io.BytesIO()
+        rows = []
+        
+        # Duyệt qua bộ câu hỏi trắc nghiệm được sinh ra từ AI
+        for idx, item in enumerate(quiz_data.get("trac_nghiem", [])):
+            opts = item.get("options", ["", "", "", ""])
+            # Đảm bảo đủ 4 phương án
+            while len(opts) < 4:
+                opts.append("")
+                
+            if platform == "Quizizz":
+                # Định dạng cột chuẩn của Quizizz
+                rows.append({
+                    "Question Text": item.get("cau_hoi", ""),
+                    "Question Type": "Multiple Choice",
+                    "Option 1": opts[0],
+                    "Option 2": opts[1],
+                    "Option 3": opts[2],
+                    "Option 4": opts[3],
+                    "Correct Answer": opts.index(item.get("dap_an")) + 1 if item.get("dap_an") in opts else 1,
+                    "Time in seconds": 30
+                })
+            else:
+                # Định dạng cột chuẩn của Kahoot
+                rows.append({
+                    "Question - max 120 chars": item.get("cau_hoi", ""),
+                    "Answer 1 - max 75 chars": opts[0],
+                    "Answer 2 - max 75 chars": opts[1],
+                    "Answer 3 - max 75 chars": opts[2],
+                    "Answer 4 - max 75 chars": opts[3],
+                    "Time limit (sec)": 30,
+                    "Correct answer(s)": opts.index(item.get("dap_an")) + 1 if item.get("dap_an") in opts else 1
+                })
+                
+        df = pd.DataFrame(rows)
+        
+        # Ghi đè xuất file Excel qua openpyxl
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Questions")
+            
+        return buffer.getvalue()
