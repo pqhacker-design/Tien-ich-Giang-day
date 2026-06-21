@@ -67,7 +67,7 @@ st.markdown("""
 # **********************************************
 
 # ********** BƯỚC 3: Xây Dựng Giao Diện Người Dùng (UI) **********
-st.title("🎓 Gia Sư AI - THCS Bình San")
+st.title("🎓 Gia Sư AI - Hỗ trợ học sinh học tốt")
 st.caption("Xin chào! Tôi là Gia Sư AI, sẵn sàng hỗ trợ bạn trong **Tất cả các môn học từ TH đến THPT**.")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
