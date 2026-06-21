@@ -8,7 +8,7 @@ st.set_page_config(
 )
 
 # 2. Tiêu đề chính tối ưu siêu gọn (Kết hợp H2 và Caption để tiết kiệm dòng)
-st.markdown("## 🎓 Hệ sinh thái Trợ lý Giáo dục AI")
+st.markdown("## 🎓 [Hệ sinh thái Trợ lý Giáo dục AI](https://aistudio.google.com/)")
 st.caption("Nền tảng CNTT và AI hỗ trợ giảng dạy và học tập bám sát Chương trình GDPT 2018. (LƯU Ý: AI không làm giúp bạn, AI chỉ hỗ trợ cho bạn.)")
 
 # 3. QUẢN LÝ API KEY TẬP TRUNG (Thu gọn vào Expander - Mặc định ĐÓNG để đỡ chiếm chỗ)
