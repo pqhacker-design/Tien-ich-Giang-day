@@ -7,12 +7,14 @@ import pdfplumber
 from docx import Document
 from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 
 # --- CẤU HÌNH GIAO DIỆN ---
 st.set_page_config(page_title="Chuyển đổi Tài liệu sang Word", page_icon="🔄", layout="centered")
 
-st.title("🔄 Chuyển đổi Ảnh/PDF sang Word Pro")
-st.caption("Phiên bản cao cấp: Tự động dựng bảng, căn ngang đáp án trắc nghiệm và tối ưu công thức.")
+st.title("🔄 Chuyển đổi Tài liệu sang Word Pro (Math Equation)")
+st.caption("Hệ thống chuyển đổi nâng cao: Tự động dựng công thức Toán chuẩn Microsoft Equation, giữ bảng và căn cột trắc nghiệm.")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
@@ -30,121 +32,194 @@ if "gemini_client" not in st.session_state:
 
 client = st.session_state.gemini_client
 
-# --- HÀM TẠO FILE WORD THÔNG MINH (GIỮ ĐỊNH DẠNG HÌNH HỌC & BẢNG) ---
+# ================= HỆ THỐNG BIẾN ĐỔI LATEX SANG MS WORD EQUATION (OMML) =================
+def create_element(name):
+    return OxmlElement(name)
+
+def create_attribute(element, name, value):
+    element.set(qn(name), value)
+
+def convert_latex_to_omml_run(paragraph, text):
+    """
+    Hàm phân tích chuỗi văn bản xen kẽ công thức toán dạng $...$ 
+    và dựng hộp công thức Equation trực tiếp vào đoạn văn Word.
+    """
+    # Khai báo namespace toán học chuẩn Office
+    m_ns = 'http://schemas.openxmlformats.org/officeDocument/2006/math'
+    
+    # Tách chuỗi theo dấu $ câu công thức
+    parts = re.split(r'(\$.*?\$)', text)
+    
+    for part in parts:
+        if part.startswith('$') and part.endswith('$'):
+            latex_formula = part[1:-1].strip()
+            
+            # --- TỐI ƯU CƠ BẢN CÁC KÝ HIỆU TOÁN THƯỜNG GẶP SANG OMML ---
+            # Tạo thẻ vùng chứa công thức toán (m:oMath)
+            oMath = OxmlElement('m:oMath')
+            
+            # Xử lý phân số dạng \frac{tử}{mẫu}
+            frac_match = re.search(r'\\frac{(.*?)}{(.*?)}', latex_formula)
+            if frac_match:
+                num, den = frac_match.groups()
+                f_elem = OxmlElement('m:f')
+                num_elem = OxmlElement('m:num')
+                den_elem = OxmlElement('m:den')
+                
+                # Tạo text cho tử số
+                r1 = OxmlElement('m:r')
+                t1 = OxmlElement('m:t')
+                t1.text = num
+                r1.append(t1)
+                num_elem.append(r1)
+                
+                # Tạo text cho mẫu số
+                r2 = OxmlElement('m:r')
+                t2 = OxmlElement('m:t')
+                t2.text = den
+                r2.append(t2)
+                den_elem.append(r2)
+                
+                f_elem.append(num_elem)
+                f_elem.append(den_elem)
+                oMath.append(f_elem)
+            else:
+                # Dọn rác các ký tự gạch chéo LaTeX phổ biến để hiển thị đẹp trong Word
+                display_text = latex_formula
+                display_text = display_text.replace(r'\vec', 'Vectơ ')
+                display_text = display_text.replace(r'\int', '∫')
+                display_text = display_text.replace(r'\sin', 'sin')
+                display_text = display_text.replace(r'\cos', 'cos')
+                display_text = display_text.replace(r'\log', 'log')
+                display_text = display_text.replace(r'\mathbb{R}', 'ℝ')
+                display_text = display_text.replace(r'\neq', '≠')
+                display_text = display_text.replace(r'\cdot', '·')
+                display_text = display_text.replace(r'\prime', "'")
+                
+                mr = OxmlElement('m:r')
+                mt = OxmlElement('m:t')
+                mt.text = display_text
+                mr.append(mt)
+                oMath.append(mr)
+                
+            paragraph._p.append(oMath)
+        else:
+            if part:
+                # Nếu là văn bản thông thường, chèn dạng văn bản thường
+                paragraph.add_run(part)
+
+# ==================== HÀM TẠO FILE WORD CHUẨN CẤU TRÚC ĐỀ THI ====================
 def create_word_document(text_content):
     doc = Document()
     
-    # Thiết lập căn lề trang chuẩn văn bản hành chính (Lề 2cm mỗi bên)
+    # Định dạng căn lề trang đề thi chuẩn (Top/Bottom/Left/Right = 2cm)
     for section in doc.sections:
         section.top_margin = Inches(0.79)
         section.bottom_margin = Inches(0.79)
         section.left_margin = Inches(0.79)
         section.right_margin = Inches(0.79)
 
-    # Đặt font chữ mặc định cho toàn văn bản là Times New Roman
+    # Cấu hình font chữ hệ thống
     style = doc.styles['Normal']
     font = style.font
     font.name = 'Times New Roman'
     font.size = Pt(12)
 
     lines = text_content.split('\n')
-    
     in_table = False
     table_data = []
 
     for line in lines:
         clean_line = line.strip()
-        
-        # Loại bỏ ký tự bao công thức toán học $ để hiển thị sạch đẹp
-        clean_line = clean_line.replace('$', '')
+        if not clean_line:
+            continue
 
-        # 1. Xử lý Bảng biểu (Nhận diện định dạng bảng Markdown của AI)
+        # 1. NHẬN DIỆN VÀ DỰNG BẢNG BIỂU CỦA ĐỀ THI
         if clean_line.startswith('|'):
             if '---|' in clean_line or '===' in clean_line:
-                continue # Bỏ qua dòng kẻ phân cách bảng của markdown
-            
+                continue
             in_table = True
-            # Tách các cột dựa trên ký tự |
             columns = [col.strip() for col in clean_line.split('|')[1:-1]]
             if columns:
                 table_data.append(columns)
             continue
         else:
-            # Nếu vừa kết thúc một bảng, tiến hành dựng bảng vào Word
             if in_table and table_data:
                 num_rows = len(table_data)
                 num_cols = max(len(row) for row in table_data)
-                
                 word_table = doc.add_table(rows=num_rows, cols=num_cols)
-                word_table.style = 'Table Grid' # Thêm đường viền ô lưới cho bảng
+                word_table.style = 'Table Grid'
                 
                 for r_idx, row in enumerate(table_data):
                     for c_idx, val in enumerate(row):
                         if c_idx < len(word_table.rows[r_idx].cells):
-                            word_table.rows[r_idx].cells[c_idx].text = val
+                            # Áp dụng công thức toán học vào từng ô của bảng nếu có
+                            p_cell = word_table.rows[r_idx].cells[c_idx].paragraphs[0]
+                            convert_latex_to_omml_run(p_cell, val)
                 
-                doc.add_paragraph() # Dòng trống sau bảng
+                doc.add_paragraph()
                 in_table = False
                 table_data = []
 
-        # 2. Xử lý cấu trúc Đáp án Trắc nghiệm (Căn ngang hàng nếu chứa A. B. C. D.)
+        # 2. XỬ LÝ CĂN NGANG ĐÁP ÁN TRẮC NGHIỆM TỰ ĐỘNG
         if re.search(r'A\..*B\..*C\..*D\.', clean_line) or re.search(r'A\s*[\.\)].*B\s*[\.\)].*C\s*[\.\)].*D\s*[\.\)]', clean_line):
             p = doc.add_paragraph()
-            # Tìm kiếm các mốc đáp án để tab khoảng cách đều nhau trên Word
             parts = re.split(r'(A\.|B\.|C\.|D\.)', clean_line)
-            current_run = None
             for part in parts:
                 if part in ['A.', 'B.', 'C.', 'D.']:
-                    current_run = p.add_run("   " + part + " ")
-                    current_run.bold = True
+                    run = p.add_run("    " + part + " ")
+                    run.bold = True
                 else:
-                    p.add_run(part)
+                    convert_latex_to_omml_run(p, part)
             continue
 
-        # 3. Xử lý Tiêu đề lớn (Ví dụ: BỘ GIÁO DỤC VÀ ĐÀO TẠO, ĐỀ THI...)
+        # 3. XỬ LÝ TIÊU ĐỀ HOẶC CÁC DÒNG CHỮ ĐẶC BIỆT CHÍNH THỨC
         if clean_line.startswith('# '):
-            h = doc.add_heading(clean_line.replace('# ', ''), level=1)
+            h = doc.add_heading('', level=1)
             h.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            convert_latex_to_omml_run(h, clean_line.replace('# ', ''))
         elif clean_line.startswith('## '):
-            doc.add_heading(clean_line.replace('## ', ''), level=2)
+            h = doc.add_heading('', level=2)
+            convert_latex_to_omml_run(h, clean_line.replace('## ', ''))
         elif any(keyword in clean_line.upper() for keyword in ["BỘ GIÁO DỤC", "ĐỀ THI CHÍNH THỨC", "KỲ THI TỐT NGHIỆP"]):
             p = doc.add_paragraph()
-            run = p.add_run(clean_line)
-            run.bold = True
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = p.add_run()
+            convert_latex_to_omml_run(p, clean_line)
+            for r in p.runs:
+                r.bold = True
         else:
-            # Các dòng văn bản hoặc câu hỏi thông thường
-            if clean_line:
-                p = doc.add_paragraph()
-                if clean_line.startswith("Câu "):
-                    # Bôi đậm chữ "Câu X." cho đúng chuẩn đề thi
-                    match = re.match(r'(Câu \d+\.)(.*)', clean_line)
-                    if match:
-                        bold_part, regular_part = match.groups()
-                        p.add_run(bold_part).bold = True
-                        p.add_run(regular_part)
-                    else:
-                        p.add_run(clean_line)
+            # DÒNG CÂU HỎI VÀ NỘI DUNG VĂN BẢN THƯỜNG
+            p = doc.add_paragraph()
+            if clean_line.startswith("Câu "):
+                match = re.match(r'(Câu \d+\.)(.*)', clean_line)
+                if match:
+                    bold_part, regular_part = match.groups()
+                    p.add_run(bold_part).bold = True
+                    convert_latex_to_omml_run(p, regular_part)
                 else:
-                    p.add_run(clean_line)
+                    convert_latex_to_omml_run(p, clean_line)
+            else:
+                convert_latex_to_omml_run(p, clean_line)
 
-    # Xử lý trường hợp bảng nằm ở cuối cùng của văn bản
+    # Đề phòng bảng biểu nằm ở dòng cuối cùng của văn bản
     if in_table and table_data:
         word_table = doc.add_table(rows=len(table_data), cols=max(len(row) for row in table_data))
         word_table.style = 'Table Grid'
         for r_idx, row in enumerate(table_data):
             for c_idx, val in enumerate(row):
                 if c_idx < len(word_table.rows[r_idx].cells):
-                    word_table.rows[r_idx].cells[c_idx].text = val
+                    p_cell = word_table.rows[r_idx].cells[c_idx].paragraphs[0]
+                    convert_latex_to_omml_run(p_cell, val)
 
     bio = io.BytesIO()
     doc.save(bio)
     bio.seek(0)
     return bio
 
-# --- GIAO DIỆN TẢI FILE ---
+# --- GIAO DIỆN STREAMLIT UPLOAD VÀ XỬ LÝ ---
 uploaded_file = st.file_uploader(
-    "Tải lên File ảnh đề thi hoặc File PDF cần chuyển đổi cấu trúc:",
+    "Tải lên Đề thi dạng Ảnh (PNG, JPG) hoặc File PDF toán học cần số hóa:",
     type=["png", "jpg", "jpeg", "pdf"]
 )
 
@@ -152,10 +227,10 @@ if uploaded_file is not None:
     file_type = uploaded_file.type
     extracted_text = ""
     
-    st.info(f"📁 Đã nhận dữ liệu: **{uploaded_file.name}**")
+    st.info(f"📁 Đã tải lên file thành công: **{uploaded_file.name}**")
     
-    if st.button("🚀 Bắt đầu trích xuất & Dựng bố cục Word"):
-        with st.spinner("Hệ thống AI đang phân tích dạng cột, tái lập bảng biểu và xóa rác định dạng..."):
+    if st.button("🚀 Thực hiện trích xuất và dựng Equation"):
+        with st.spinner("Hệ thống toán học AI đang bóc tách cấu trúc và mã hóa hộp công thức MS Word..."):
             
             if file_type == "application/pdf":
                 try:
@@ -169,22 +244,20 @@ if uploaded_file is not None:
                 except Exception:
                     pass
             
-            # Nếu trích xuất text thô từ PDF trống (PDF dạng scanned), hoặc file tải lên là file Ảnh
             if not extracted_text.strip():
                 uploaded_file.seek(0)
                 file_bytes = uploaded_file.read()
                 file_part = types.Part.from_bytes(data=file_bytes, mime_type=file_type)
                 
-                # Prompt ép cấu trúc văn bản đầu ra cho AI
+                # Ép AI bắt buộc phải bao bọc toàn bộ ký hiệu, biểu thức toán học vào cặp dấu đô la $...$
                 prompt = (
-                    "Bạn là một chuyên gia số hóa đề thi. Hãy trích xuất toàn bộ chữ trong ảnh này.\n"
-                    "QUY TẮC ĐỊNH DẠNG BẮT BUỘC:\n"
-                    "1. Các câu hỏi trắc nghiệm có đáp án A, B, C, D nằm ngang thì PHẢI giữ nguyên trên cùng một dòng văn bản. Không được tự ý xuống dòng các lựa chọn A, B, C, D.\n"
-                    "2. Nếu có bảng biểu (ví dụ: bảng tần số, bảng số liệu học trực tuyến), hãy xuất ra dưới dạng bảng cấu trúc Markdown hoàn chỉnh sử dụng các ký tự |. Ví dụ:\n"
-                    "| Cột 1 | Cột 2 |\n"
-                    "|---|---|\n"
-                    "| Dữ liệu | Dữ liệu |\n"
-                    "3. Không thêm các lời giải thích, lời thoại của AI. Chỉ trả về nội dung đề thi."
+                    "Bạn là chuyên gia chuyển đổi đề thi toán học sang LaTeX chất lượng cao.\n"
+                    "YÊN CẦU QUY TẮC BẮT BUỘC:\n"
+                    "1. BẮT BUỘC bao bọc TẤT CẢ các công thức toán, biểu thức số, vectơ, dấu tích phân, biến số (x, y, u_n, d, q...) "
+                    "bên trong cặp dấu đô la một lớp. Ví dụ: $A B C D \\cdot A^{\\prime} B^{\\prime} C^{\\prime} D^{\\prime}$, $\\overrightarrow{A D}$, $y=f(x)$, $\\int f(x)dx$, $\\frac{8}{3}$. Không được để công thức toán ở dạng text trần.\n"
+                    "2. Các câu hỏi trắc nghiệm có đáp án A, B, C, D nằm ngang thì PHẢI giữ nguyên trên cùng một dòng văn bản.\n"
+                    "3. Dựng bảng biểu số liệu (nếu có) chính xác bằng cấu trúc bảng Markdown.\n"
+                    "4. Chỉ trả về đề thi, tuyệt đối không viết thêm lời bình luận giải thích."
                 )
                 
                 try:
@@ -194,25 +267,24 @@ if uploaded_file is not None:
                     )
                     extracted_text = response.text
                 except Exception as e:
-                    st.error(f"Lỗi khi kết nối với máy chủ AI OCR: {e}")
+                    st.error(f"Lỗi khi kết nối API: {e}")
 
-        # --- HIỂN THỊ KẾT QUẢ VÀ NÚT TẢI FILE ---
         if extracted_text.strip():
-            st.success("✅ Đã xử lý bố cục cấu trúc thành công!")
+            st.success("✅ Đã xử lý bóc tách toán học thành công!")
             
-            with st.expander("👀 Xem trước cấu trúc văn bản trích xuất"):
-                st.text_area("Bản xem trước:", extracted_text, height=300)
+            with st.expander("👀 Xem trước văn bản trích xuất (Đã gán tag mã hóa toán học)"):
+                st.text_area("Mã nguồn văn bản:", extracted_text, height=300)
             
             word_file = create_word_document(extracted_text)
             
             st.download_button(
-                label="📥 Tải file WORD (.docx) chuẩn cấu trúc về máy",
+                label="📥 Tải file WORD (.docx) chứa Equation chuẩn về máy",
                 data=word_file,
-                file_name=uploaded_file.name.rsplit('.', 1)[0] + "_chuan_dinh_dang.docx",
+                file_name=uploaded_file.name.rsplit('.', 1)[0] + "_math_equation.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
         else:
-            st.warning("Không thể đọc được cấu trúc từ file này. Anh vui lòng tải lại file rõ nét hơn nhé.")
+            st.warning("Không tìm thấy nội dung ký tự từ file. Bạn vui lòng chụp ảnh rõ nét hơn nhé.")
 
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
