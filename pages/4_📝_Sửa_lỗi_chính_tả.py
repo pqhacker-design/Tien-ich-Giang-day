@@ -14,6 +14,9 @@ from vietnamese_word_corrector.report_generator import generate_excel_report
 
 st.set_page_config(page_title="AI Document & School Record Processor", layout="wide")
 
+st.title("📑 AI CHUẨN HÓA VĂN BẢN HÀNH CHÍNH và GIÁO DỤC")
+st.caption("Giải pháp tự động hóa rà soát Nghị định 30/2020/NĐ-CP và Chương trình GDPT 2018")
+
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
@@ -32,9 +35,6 @@ if st.sidebar.button("Cập nhật tiêu chí"):
         current_criteria[profile_type].append(new_criterion)
         save_criteria(current_criteria)
         st.sidebar.success("Đã cập nhật tiêu chí động!")
-
-st.title("📑 AI CHUẨN HÓA VĂN BẢN HÀNH CHÍNH và GIÁO DỤC")
-st.caption("Giải pháp tự động hóa rà soát Nghị định 30/2020/NĐ-CP và Chương trình GDPT 2018")
 
 uploaded_file = st.file_uploader("Kéo thả file văn bản hành chính hoặc Hồ sơ trường học của bạn (.DOCX)", type=["docx"])
 
