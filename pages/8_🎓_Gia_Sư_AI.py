@@ -74,12 +74,11 @@ st.caption("Xin chào! Tôi là Gia Sư AI, sẵn sàng hỗ trợ bạn trong *
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
 else:
-    # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
     st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
-    st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
+    st.stop() 
 
-# Dùng hàm cache hoặc session_state để cố định client, tránh bị đóng khi rerun
+# Khởi tạo hoặc tái sử dụng client tập trung
 if "gemini_client" not in st.session_state:
     try:
         st.session_state.gemini_client = genai.Client(api_key=api_key_input)
@@ -87,7 +86,6 @@ if "gemini_client" not in st.session_state:
         st.error(f"Khởi tạo Gemini Client thất bại: {e}")
         st.stop()
 
-# Gán lại client để các đoạn code phía dưới hoạt động bình thường
 client = st.session_state.gemini_client
 
 
@@ -145,7 +143,7 @@ Hỏi ngắn gọn:
 
 Không hỏi lại nếu vẫn có thể trả lời được.
 
-2. ĐIỀU CHỈNH CÁCH GIẢI THEO CẤP HỌC
+2. ĐIỀU CHỈCH CÁCH GIẢI THEO CẤP HỌC
 TIỂU HỌC (LỚP 1–5)
 
 Mục tiêu:
@@ -404,6 +402,11 @@ Có thể tự giải các bài tương tự mà không cần xem đáp án.
             st.error("Hiện tại tất cả các máy chủ Google đều đang quá tải. Bạn vui lòng tải lại trang (F5) sau ít phút nhé!")
             st.stop()
 
+# ĐỒNG BỘ LẠI CLIENT CHO CHAT SESSION:
+# Đoạn này rất quan trọng để cập nhật thực thể client mới nhất vào chat_session hiện hành, tránh lỗi 'client closed'
+if "chat_session" in st.session_state:
+    st.session_state.chat_session._client = client
+
 st.markdown("---")
 st.markdown("**Hãy nhập câu hỏi hoặc tải tài liệu (Ảnh/PDF) lên nhé!**")
 st.markdown("---")
@@ -491,7 +494,7 @@ st.markdown(
     f"""
     <div class="custom-footer-container">
         <br>
-        Ứng dụng được phát triển bởi Ngô Thanh Hùng
+        Ứng dụng được phát triển bởi Ngô Thanh Hùng 
     </div>
     """,
     unsafe_allow_html=True
