@@ -166,7 +166,7 @@ def show_library_module(api_key=None):
         placeholder="Ví dụ: Ứng dụng AI và chuyển đổi số nâng cao hiệu quả dạy học môn Toán lớp 8"
     )
     
-    if st.button("🔥 Kích hoạt AI biên soạn Bản mẫu Sư phạm"):
+    if st.button("🔥 Kích hoạt AI biên soạn Bản mẫu"):
         if not user_topic.strip():
             st.warning("⚠️ Vui lòng nhập tên đề tài trước khi bấm tạo mẫu.")
         else:
