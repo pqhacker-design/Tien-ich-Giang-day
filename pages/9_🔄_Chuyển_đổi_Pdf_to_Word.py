@@ -31,31 +31,36 @@ if "gemini_client" not in st.session_state:
 client = st.session_state.gemini_client
 
 # ==================== BỘ PHÂN TÍCH CHỮ IN ĐẬM / IN NGHIÊNG TỪ AI ====================
+# ==================== BỘ PHÂN TÍCH CHỮ IN ĐẬM / IN NGHIÊNG TỪ AI ====================
 def add_formatted_text(paragraph, text):
     """
     Hàm tự động quét qua chuỗi văn bản chứa ký tự markdown (* hoặc **)
-    để phân tách và áp dụng thuộc tính Bold, Italic chính xác vào Word.
+    để phân tách, áp dụng thuộc tính Bold, Italic và XÓA BỎ dấu $ của công thức.
     """
     # Tách chuỗi dựa trên các token định dạng ẩn của markdown
     tokens = re.split(r'(\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*)', text)
     
     for token in tokens:
         if token.startswith('***') and token.endswith('***'):
-            # Vừa đậm vừa nghiêng
-            run = paragraph.add_run(token[3:-3])
+            # Vừa đậm vừa nghiêng - Làm sạch dấu $
+            clean_token = token[3:-3].replace('$', '')
+            run = paragraph.add_run(clean_token)
             run.bold = True
             run.italic = True
         elif token.startswith('**') and token.endswith('**'):
-            # Chữ in đậm
-            run = paragraph.add_run(token[2:-2])
+            # Chữ in đậm - Làm sạch dấu $
+            clean_token = token[2:-2].replace('$', '')
+            run = paragraph.add_run(clean_token)
             run.bold = True
         elif token.startswith('*') and token.endswith('*'):
-            # Chữ in nghiêng
-            run = paragraph.add_run(token[1:-1])
+            # Chữ in nghiêng - Làm sạch dấu $
+            clean_token = token[1:-1].replace('$', '')
+            run = paragraph.add_run(clean_token)
             run.italic = True
         else:
-            # Chữ thường
-            paragraph.add_run(token)
+            # Chữ thường - Làm sạch dấu $
+            clean_token = token.replace('$', '')
+            paragraph.add_run(clean_token)
 
 # ==================== HÀM TẠO FILE WORD GIỮ ĐỊNH DẠNG TỐI ĐA ====================
 def create_word_document(text_content):
@@ -138,7 +143,6 @@ def create_word_document(text_content):
             p = doc.add_paragraph()
             
             # --- XỬ LÝ THỤT LỀ ĐẦU DÒNG (INDENTATION) ---
-            # Nếu dòng gốc có ký tự khoảng trắng thụt lề, thiết lập thụt lề trong đoạn Word
             if raw_line.startswith('    ') or raw_line.startswith('\t'):
                 p.paragraph_format.left_indent = Inches(0.4)
 
