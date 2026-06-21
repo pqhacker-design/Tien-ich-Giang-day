@@ -11,8 +11,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 # --- CẤU HÌNH GIAO DIỆN ---
 st.set_page_config(page_title="Chuyển đổi Tài liệu sang Word", page_icon="🔄", layout="centered")
 
-st.title("🔄 Chuyển đổi Tài liệu sang Word (Giữ nguyên Định dạng gốc)")
-st.caption("Phiên bản Cao cấp: Giữ chính xác in đậm, in nghiêng, thụt lề, bảng biểu và đưa công thức về Unicode thuần.")
+st.title("🔄 Chuyển đổi Tài liệu sang Word")
+st.caption("Giúp chuyển đổi tài liệu PDF hoặc ảnh chụp xuất ra file word.")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
@@ -179,7 +179,7 @@ def create_word_document(text_content):
 
 # --- GIAO DIỆN STREAMLIT ---
 uploaded_file = st.file_uploader(
-    "Tải lên Tài liệu dạng Ảnh hoặc PDF cần giữ nguyên định dạng:",
+    "Tải lên Tài liệu dạng Ảnh hoặc PDF cần chuyển:",
     type=["png", "jpg", "jpeg", "pdf"]
 )
 
@@ -189,8 +189,8 @@ if uploaded_file is not None:
     
     st.info(f"📁 Đã nhận file: **{uploaded_file.name}**")
     
-    if st.button("🚀 Bắt đầu chuyển đổi bảo toàn định dạng"):
-        with st.spinner("Hệ thống AI đang phân tích cấu trúc chữ đậm, chữ nghiêng và thụt lề gốc..."):
+    if st.button("🚀 Bắt đầu chuyển đổi"):
+        with st.spinner("Hệ thống AI đang phân tích cấu trúc và thực hiện chuyển đổi..."):
             
             if file_type == "application/pdf":
                 try:
@@ -244,17 +244,17 @@ if uploaded_file is not None:
                     st.error(f"Lỗi khi kết nối API: {e}")
 
         if extracted_text.strip():
-            st.success("✅ Đã chuẩn hóa định dạng thành công!")
+            st.success("✅ Đã chuyển đổi thành công!")
             
-            with st.expander("👀 Xem trước văn bản trích xuất (Đã gán tag định dạng)"):
+            with st.expander("👀 Xem trước văn bản trích xuất"):
                 st.text_area("Mã nguồn văn bản:", extracted_text, height=300)
             
             word_file = create_word_document(extracted_text)
             
             st.download_button(
-                label="📥 Tải file WORD (.docx) Full Định Dạng về máy",
+                label="📥 Tải file WORD (.docx) đã chuyển đổi về máy",
                 data=word_file,
-                file_name=uploaded_file.name.rsplit('.', 1)[0] + "_full_dinh_dang.docx",
+                file_name=uploaded_file.name.rsplit('.', 1)[0] + "_da_chuyen_doi.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
         else:
