@@ -198,6 +198,23 @@ if uploaded_file is not None:
                 "3. TOÁN HỌC / SỐ LIỆU: Chuyển toàn bộ công thức toán hoặc số mũ về Unicode thuần đẹp mắt (Ví dụ: x², u_n, phân số dùng dấu / rõ ràng).\n"
                 "4. Dựng bảng biểu số liệu chính xác bằng cấu trúc bảng Markdown sử dụng ký tự '|'.\n"
                 "5. Chỉ trả về nội dung tài liệu sạch, không thêm bất kỳ lời bình luận hay giải thích nào của AI."
+                "🔴 QUY TẮC CHUYỂN ĐỔI TOÁN HỌC SANG UNICODE TRỰC QUAN (CẤM DÙNG LATEX HOẶC DẤU $):\n"
+                    "1. Phân số phức tạp: Hãy viết rõ ràng theo hàng ngang trực quan bằng ký tự Unicode, hoặc viết dạng tử/mẫu cách khoảng rõ ràng, ví dụ: 'f_1(x) = (5x⁴)/4' hoặc '(x + 1)/(x - 2)'. Tránh viết dính liền gây hiểu lầm.\n"
+                    "2. Hệ phương trình (cases): Chuyển thành dạng ký tự phẳng sử dụng dấu ngoặc nhọn lớn '{' và xuống dòng rõ ràng cho từng phương trình, ví dụ:\n"
+                    "   Hệ phương trình: {\n"
+                    "   x + y - 2 < 0\n"
+                    "   x - y + 2 > 0\n"
+                    "3. Số mũ và Chỉ số: BẮT BUỘC dùng ký tự Unicode nhỏ trên và dưới (Ví dụ: x², y³, u_n, u₁, u₂, log₃(3x), f'(x)). Không được để dạng dấu mũ ^ hoặc gạch dưới _ thô.\n"
+                    "4. Ký hiệu hình học & Giải tích: Chuyển toàn bộ về ký tự Unicode tương ứng:\n"
+                    "   - Vectơ: Dùng mũi tên đứng trước (Ví dụ: →AD, →AB).\n"
+                    "   - Tích phân / Nguyên hàm: Dùng ký tự ∫ (Ví dụ: ∫f(x)dx).\n"
+                    "   - Tập hợp & Logic: Dùng chuẩn ký tự ℝ, ∈, ∉, ⊂, ∩, ∪, ≠, ≥, ≤, · (dấu nhân).\n\n"
+                    
+                    "🔴 QUY TẮC ĐỊNH DẠNG VĂN BẢN ĐỀ THI:\n"
+                    "1. BẢO TOÀN CHỮ IN ĐẬM/IN NGHIÊNG: Đoạn văn nào in đậm bắt buộc bọc trong `**` (Ví dụ: **BỘ GIÁO DỤC VÀ ĐÀO TẠO**), đoạn nào in nghiêng bọc trong `*` (Ví dụ: *xem hình dưới*).\n"
+                    "2. CĂN NGANG ĐÁP ÁN: 4 đáp án trắc nghiệm A, B, C, D phải nằm ngang trên cùng một dòng văn bản giống hệt đề gốc, cách nhau bằng khoảng trắng lớn.\n"
+                    "3. THỤT LỀ ĐẦU DÒNG: Thêm 4 dấu cách '    ' vào trước mỗi dòng câu hỏi (Câu 1, Câu 2...) hoặc đoạn văn có thụt lề.\n"
+                    "4. Chỉ trả về nội dung đề thi đã số hóa sạch sẽ, không thêm bất kỳ lời thoại hay giải thích nào của AI."
             )
             
             try:
