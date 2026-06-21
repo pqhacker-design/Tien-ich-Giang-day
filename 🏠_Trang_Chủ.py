@@ -88,16 +88,16 @@ with col7:
     with st.container(border=True):
         st.markdown("### 🎓 7. Trợ lý viết Sáng kiến kinh nghiệm")
         st.write("Hệ thống Trợ lý AI Hỗ trợ viết Sáng kiến kinh nghiệm và Nghiên cứu Khoa học Sư phạm Toàn diện")
-        if st.button("🚀 Mở ứng Viết SKKN", key="btn_sang_kien_kinh_nghiem", use_container_width=True):
+        if st.button("🚀 Mở ứng dụng Viết SKKN", key="btn_sang_kien_kinh_nghiem", use_container_width=True):
             st.switch_page("pages/7_🎓_Viết_Sáng_kiến_kinh_nghiệm.py")
 st.markdown("---")
 
 with col8:
     with st.container(border=True):
-        st.markdown("### 🎓 7. Trợ lý viết Sáng kiến kinh nghiệm")
-        st.write("Hệ thống Trợ lý AI Hỗ trợ viết Sáng kiến kinh nghiệm và Nghiên cứu Khoa học Sư phạm Toàn diện")
-        if st.button("🚀 Mở ứng Viết SKKN", key="btn_sang_kien_kinh_nghiem", use_container_width=True):
-            st.switch_page("pages/7_🎓_Viết_Sáng_kiến_kinh_nghiệm.py")
+        st.markdown("### 🎓 8. Gia sư AI - Hỗ trợ HS")
+        st.write("Hỗ trợ HS học tập trong Tất cả các môn học từ TH đến THPT.")
+        if st.button("🚀 Mở ứng dụng Gia sư", key="btn_gia_su_ai", use_container_width=True):
+            st.switch_page("pages/8_🎓_Gia_Sư_AI.py")
 st.markdown("---")
 
 # 5. Chân trang (Footer)
