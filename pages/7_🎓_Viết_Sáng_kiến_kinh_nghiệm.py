@@ -36,15 +36,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 🔑 KIỂM TRA VÀ ÉP ĐỒNG BỘ API KEY TỪ TRANG CHỦ ---
-if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
-    user_api_key = st.session_state["gemini_api_key"].strip()
-    st.session_state["current_page_api_key"] = user_api_key
-else:
-    st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
-    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
-    st.stop()
-
 # Khởi tạo DB nội bộ
 init_db()
 
@@ -89,6 +80,15 @@ if menu == "🏠 Tổng quan hệ thống":
             st.write("Chưa có dự án nào được lưu. Hãy bắt đầu tạo đề tài tại thanh điều hướng bên trái.")
     except Exception as e:
         st.error(f"Không thể kết nối cơ sở dữ liệu: {e}")
+
+# --- 🔑 KIỂM TRA VÀ ÉP ĐỒNG BỘ API KEY TỪ TRANG CHỦ ---
+if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
+    user_api_key = st.session_state["gemini_api_key"].strip()
+    st.session_state["current_page_api_key"] = user_api_key
+else:
+    st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
+    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
+    st.stop()
 
 elif menu == "💡 I. Tạo Đề tài Thông minh":
     show_generator_module(api_key=user_api_key)
