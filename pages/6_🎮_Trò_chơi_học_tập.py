@@ -65,22 +65,63 @@ tabs = st.tabs([
 ])
 
 # --- TAB 1: KHỞI ĐỘNG ---
+# --- TAB 1: KHỞI ĐỘNG ---
 with tabs[0]:
     st.header("⚡ Tạo Hoạt Động Khởi Động Sinh Động")
+    
+    # Khởi tạo session lưu dữ liệu game khởi động độc lập
+    if "warmup_game_data" not in st.session_state:
+        st.session_state.warmup_game_data = None
+    if "warmup_game_topic" not in st.session_state:
+        st.session_state.warmup_game_topic = ""
+
     col1, col2 = st.columns([1, 1])
     with col1:
         warmup_type = st.selectbox("Chọn loại trò chơi khởi động nhanh", [
             "Vòng quay may mắn", "Đuổi hình bắt chữ", "Ai nhanh hơn", "Mật mã bí mật", "Lật mảnh ghép"
         ])
         warmup_prompt = st.text_area("Yêu cầu bổ sung cho trò chơi", placeholder="Ví dụ: Thiết kế trò chơi khởi động liên quan đến kiến thức phân số...")
-    with col2:
+        
         if st.button("🔥 Tạo Kịch Bản Trò Chơi", type="primary"):
-            with st.spinner("AI đang thiết kế cấu trúc trò chơi..."):
-                prompt_cmd = f"Tạo kịch bản chi tiết cho trò chơi khởi động '{warmup_type}' dành cho môn {subject}, {grade}. Yêu cầu: {warmup_prompt}. Gồm Luật chơi, Cách tính điểm."
-                res = ai_engine.generate_content(prompt_cmd)
-                st.success("Tạo thành công!")
-                st.markdown(res)
-
+            with st.spinner("AI đang thiết kế cấu trúc trò chơi và nạp ma trận câu hỏi..."):
+                try:
+                    game_res = ai_engine.generate_warmup_game(warmup_type, subject, grade, warmup_prompt)
+                    st.session_state.warmup_game_data = game_res
+                    st.session_state.warmup_game_topic = f"{warmup_type}_{subject}_{grade}"
+                except Exception as err:
+                    st.error(f"Lỗi phân tách cấu trúc dữ liệu trò chơi: {err}")
+                    
+    with col2:
+        if st.session_state.warmup_game_data:
+            st.success("Tạo kịch bản trò chơi thành công!")
+            
+            # 1. Hiển thị kịch bản sư phạm bằng chữ
+            st.markdown("### 📋 Kịch bản chi tiết")
+            st.write(st.session_state.warmup_game_data.get("kich_ban_chu", ""))
+            
+            st.markdown("---")
+            st.markdown("### 📥 Xuất câu hỏi lên nền tảng trực tuyến")
+            st.caption("Tải file Excel để Import thẳng vào Kahoot/Quizizz mà không cần tạo thủ công từng câu:")
+            
+            c_btn1, c_btn2 = st.columns(2)
+            with c_btn1:
+                quizizz_excel = DocumentExporter.export_to_platform_excel(st.session_state.warmup_game_data, platform="Quizizz")
+                st.download_button(
+                    label="🔮 Tải Excel cho Quizizz",
+                    data=quizizz_excel,
+                    file_name=f"Quizizz_Warmup_{st.session_state.warmup_game_topic}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key="btn_warmup_quizizz"
+                )
+            with c_btn2:
+                kahoot_excel = DocumentExporter.export_to_platform_excel(st.session_state.warmup_game_data, platform="Kahoot")
+                st.download_button(
+                    label="🟢 Tải Excel cho Kahoot",
+                    data=kahoot_excel,
+                    file_name=f"Kahoot_Warmup_{st.session_state.warmup_game_topic}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key="btn_warmup_kahoot"
+                )
 # --- TAB 2: THIẾT KẾ CÂU HỎI AI ---
 with tabs[1]:
     st.header("🧠 Hệ Thống Sinh Câu Hỏi Tương Tác Đa Dạng")
