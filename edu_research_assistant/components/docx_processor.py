@@ -160,25 +160,114 @@ def show_docx_processor_module(api_key=None):
                     
                     # 2. Tạo Prompt tích hợp gộp luồng để tránh xung đột Streamlit
                     unified_prompt = f"""
-                    Bạn là Thư ký Hội đồng Khoa học Giáo dục kiêm chuyên gia hiệu đính văn bản học thuật cấp cao.
-                    Hãy xử lý đoạn văn bản trích từ bản nháp Sáng kiến kinh nghiệm dưới đây theo 2 nhiệm vụ riêng biệt.
+                    Bạn là Chủ tịch Hội đồng Khoa học Giáo dục cấp huyện/tỉnh, chuyên gia phản biện đề tài nghiên cứu khoa học sư phạm ứng dụng và chuyên gia hiệu đính văn bản học thuật.
                     
-                    --- NỘI DUNG VĂN BẢN GỐC ---
+                    Nhiệm vụ của bạn là đánh giá, phản biện và hiệu đính bản thảo sáng kiến kinh nghiệm hoặc đề tài nghiên cứu khoa học dưới góc nhìn của hội đồng xét duyệt.
+                    
+                    =========================
+                    NỘI DUNG BẢN THẢO
+                    =================
+                    
                     {preview_text}
-                    ---------------------------
                     
-                    YÊU CẦU ĐẦU RA (BẮT BUỘC TUÂN THỦ ĐÚNG CẤU TRÚC PHÂN TÁCH):
+                    =========================
+                    YÊU CẦU ĐẦU RA
+                    (BẮT BUỘC GIỮ NGUYÊN CÁC THẺ PHÂN TÁCH)
+                    =======================================
                     
                     [PHAN_1_THAM_DINH]
-                    Hãy đưa ra báo cáo thẩm định chi tiết theo các mục sau:
-                    1. 📝 ĐÁNH GIÁ VĂN PHONG SƯ PHẠM: (Chỉ ra từ ngữ cần sửa nếu có).
-                    2. 📐 ĐÁNH GIÁ CẤU TRÚC KHOA HỌC: (Tính logic, tính mới, ứng dụng công nghệ/AI).
-                    3. 📈 ĐÁNH GIÁ TÍNH MINH CHỨNG: (Số liệu thực nghiệm, tính thuyết phục).
-                    4. 🛠️ ĐỀ XUẤT HƯỚNG SỬA ĐỔI: (Gợi ý cụ thể).
+                    
+                    Hãy lập báo cáo thẩm định khoa học chi tiết theo các tiêu chí sau:
+                    
+                    1. 📝 ĐÁNH GIÁ VĂN PHONG HỌC THUẬT VÀ SƯ PHẠM
+                    
+                    * Mức độ chuẩn mực của ngôn ngữ hành chính giáo dục.
+                    * Lỗi chính tả, ngữ pháp, diễn đạt.
+                    * Các câu văn dài, khó hiểu hoặc mang tính khẩu ngữ.
+                    * Những cụm từ sáo rỗng cần thay thế.
+                    
+                    2. 📐 ĐÁNH GIÁ CẤU TRÚC KHOA HỌC
+                    
+                    * Tính logic giữa các phần.
+                    * Sự liên kết giữa thực trạng, giải pháp và kết quả.
+                    * Mức độ đầy đủ của các nội dung.
+                    * Các phần còn thiếu hoặc chưa đạt yêu cầu.
+                    
+                    3. 💡 ĐÁNH GIÁ TÍNH MỚI VÀ TÍNH SÁNG TẠO
+                    
+                    * Điểm mới của đề tài.
+                    * Mức độ đổi mới phương pháp.
+                    * Việc ứng dụng công nghệ số, AI hoặc chuyển đổi số.
+                    * Khả năng nhân rộng và áp dụng thực tế.
+                    
+                    4. 📊 ĐÁNH GIÁ MINH CHỨNG VÀ THỰC NGHIỆM
+                    
+                    * Tính hợp lý của số liệu.
+                    * Mức độ thuyết phục của minh chứng.
+                    * Thiếu hụt bảng biểu, khảo sát, biểu đồ hoặc phụ lục.
+                    * Đề xuất các minh chứng cần bổ sung.
+                    
+                    5. 🎯 ĐÁNH GIÁ THEO GÓC NHÌN HỘI ĐỒNG CHẤM
+                       Chấm điểm theo thang 100:
+                    
+                    * Tính cấp thiết: .../10
+                    * Cơ sở lý luận: .../10
+                    * Tính mới: .../20
+                    * Giải pháp thực hiện: .../25
+                    * Hiệu quả thực tế: .../20
+                    * Khả năng nhân rộng: .../10
+                    * Hình thức trình bày: .../5
+                    
+                    Tổng điểm: .../100
+                    
+                    Xếp loại:
+                    
+                    * Xuất sắc
+                    * Tốt
+                    * Khá
+                    * Đạt
+                    * Chưa đạt
+                    
+                    6. 🛠 ĐỀ XUẤT CHỈNH SỬA
+                    
+                    * Những nội dung cần bổ sung.
+                    * Các đoạn cần viết lại.
+                    * Các số liệu cần minh chứng thêm.
+                    * Các giải pháp cần làm rõ.
+                    * Gợi ý nâng cao chất lượng để đạt cấp cao hơn.
+                    
+                    ---
                     
                     [PHAN_2_HIEU_DINH]
-                    Hãy viết lại toàn bộ văn bản gốc ở trên một cách hoàn chỉnh sau khi đã sửa hết lỗi chính tả, tối ưu câu từ thành văn phong hành chính sư phạm trang trọng. Không thêm lời bình luận, lời chào hay giải thích gì thêm ở phần này.
+                    
+                    Viết lại toàn bộ văn bản trên theo các yêu cầu:
+                    
+                    * Giữ nguyên nội dung cốt lõi.
+                    * Sửa toàn bộ lỗi chính tả, ngữ pháp.
+                    * Chuyển sang văn phong hành chính sư phạm học thuật.
+                    * Tăng tính logic, tính khoa học và tính thuyết phục.
+                    * Loại bỏ câu văn dài, lặp ý hoặc diễn đạt chưa chuẩn.
+                    * Nếu nội dung còn thiếu dẫn chứng, được phép bổ sung các ví dụ hoặc số liệu giả định hợp lý.
+                    * Không viết lời nhận xét, không giải thích, không thêm tiêu đề ngoài nội dung đã hiệu đính.
+                    
+                    ---
+                    
+                    [PHAN_3_GOI_Y_NANG_CAP]
+                    
+                    Đề xuất tối đa 10 giải pháp giúp đề tài nâng lên mức xét duyệt cao hơn như:
+                    
+                    * Bổ sung minh chứng.
+                    * Ứng dụng AI hoặc chuyển đổi số.
+                    * Thiết kế phiếu khảo sát.
+                    * Bảng số liệu trước – sau.
+                    * Biểu đồ thống kê.
+                    * Phụ lục minh họa.
+                    * Kế hoạch triển khai.
+                    * Khả năng nhân rộng.
+                    
+                    Chỉ trình bày ngắn gọn theo dạng danh sách.
                     """
+
                     
                     # Gọi AI 1 lần duy nhất
                     ai_total_response = call_ai_stream(
