@@ -10,8 +10,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 # --- CẤU HÌNH GIAO DIỆN ---
 st.set_page_config(page_title="Chuyển đổi Tài liệu sang Word", page_icon="🔄", layout="centered")
 
-st.title("🔄 Chuyển đổi Tài liệu sang Word (Chống Rác Watermark/Mộc Đỏ)")
-st.caption("Phiên bản nâng cấp: Sử dụng mắt thần AI OCR để tự động loại bỏ chữ chìm, mộc đỏ rác và giữ nguyên định dạng.")
+st.title("🔄 Chuyển đổi Tài liệu PDF hoặc Ảnh sang Word")
+st.caption("Trợ lý giúp chuyển đổi file .pdf hoặc hình ảnh sang Word.")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
@@ -170,7 +170,7 @@ def create_word_document(text_content):
 
 # --- GIAO DIỆN STREAMLIT UPLOAD VÀ XỬ LÝ ---
 uploaded_file = st.file_uploader(
-    "Tải lên Tài liệu dạng Ảnh hoặc PDF cần xử lý chống rác:",
+    "Tải lên Tài liệu dạng Ảnh hoặc PDF cần chuyển đổi:",
     type=["png", "jpg", "jpeg", "pdf"]
 )
 
@@ -180,8 +180,8 @@ if uploaded_file is not None:
     
     st.info(f"📁 Đã nhận file: **{uploaded_file.name}**")
     
-    if st.button("🚀 Bắt đầu trích xuất sạch (Bỏ Watermark)"):
-        with st.spinner("Hệ thống AI thông minh đang bóc tách văn bản gốc và lọc bỏ chữ chìm..."):
+    if st.button("🚀 Bắt đầu chuyển đổi"):
+        with st.spinner("Hệ thống AI thông minh đang bóc tách văn bản gốc và chuyển đổi..."):
             
             # KHÔNG DÙNG THƯ VIỆN ĐỌC TEXT LAYER ĐỂ TRÁNH DÍNH WATERMARK RÁC
             # Chuyển trực tiếp file byte sang cho Gemini phân tích hình ảnh trực quan (OCR bằng mắt AI)
@@ -231,7 +231,7 @@ if uploaded_file is not None:
                 )
                 extracted_text = response.text
             except Exception as e:
-                st.error(f"Lỗi khi kết nối hệ thống AI OCR: {e}")
+                st.error(f"Hệ thống đang bận, xin thử lại sau!")
 
         if extracted_text.strip():
             st.success("✅ Đã xử lý lọc rác và bảo toàn cấu trúc thành công!")
@@ -242,9 +242,9 @@ if uploaded_file is not None:
             word_file = create_word_document(extracted_text)
             
             st.download_button(
-                label="📥 Tải file WORD (.docx) Văn Bản Sạch về máy",
+                label="📥 Tải file WORD (.docx) về máy",
                 data=word_file,
-                file_name=uploaded_file.name.rsplit('.', 1)[0] + "_van_ban_sach.docx",
+                file_name=uploaded_file.name.rsplit('.', 1)[0] + "_da_chuyen.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
         else:
