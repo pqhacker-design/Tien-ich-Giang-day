@@ -222,16 +222,59 @@ def show_library_module(api_key=None):
     st.markdown("<br><hr><br>", unsafe_allow_html=True)
 
     # --- THƯ VIỆN CÁC MẪU CỐ ĐỊNH CŨ ---
+    # --- THƯ VIỆN CÁC MẪU CỐ ĐỊNH ---
     st.markdown("### 📁 Danh mục các mẫu quy chuẩn có sẵn trong thư viện")
     search_query = st.text_input("🔍 Tìm kiếm nhanh trong kho mẫu sẵn có:", "")
     
     library_data = {
         "Toán học": [
             {
-                "title": "Biện pháp ứng dụng công nghệ số trong dạy học Hình học lớp 8",
-                "author": "Mẫu chuẩn Bộ GD&ĐT",
-                "summary": "Giải pháp tập trung vào việc sử dụng các phần mềm hình học động (Geogebra) kết hợp mô hình lớp học đảo ngược...",
-                "content": "ĐẶT VẤN ĐỀ\n1. Lý do chọn đề tài...\n\nNỘI DUNG CỐT LÕI..."
+                "title": "Biện pháp ứng dụng công nghệ số và phần mềm hình học động GeoGebra trong dạy học Hình học lớp 8",
+                "author": "Mẫu chuẩn phát triển năng lực",
+                "summary": "Giải pháp tập trung vào việc trực quan hóa các định lý hình học, xây dựng lớp học đảo ngược và thiết kế bài tập tương tác nhằm nâng cao tư duy không gian cho học sinh lớp 8.",
+                "content": (
+                    "ĐẶT VẤN ĐỀ\n"
+                    "1. Lý do chọn đề tài:\n"
+                    "Hình học lớp 8 (chương trình GDPT 2018) mang tính trừu tượng cao, học sinh thường gặp khó khăn trong việc tư duy không gian và chứng minh hình học. Phương pháp dạy học truyền thống chưa khơi gợi được hứng thú. Việc ứng dụng phần mềm trực quan như GeoGebra là giải pháp cấp thiết.\n\n"
+                    "NỘI DUNG CỐT LÕI\n"
+                    "Biện pháp 1: Thiết kế các mô hình động (hình thoi, hình chữ nhật, hình chóp tam giác đều) bằng GeoGebra để học sinh tự khám phá tính chất.\n"
+                    "Biện pháp 2: Tổ chức hoạt động nhóm thông qua các trạm học tập số.\n"
+                    "Biện pháp 3: Sử dụng AI hỗ trợ cá nhân hóa bài tập hình học theo học lực.\n\n"
+                    "KẾT LUẬN & KIẾN NGHỊ\n"
+                    "Giải pháp giúp tăng tỷ lệ học sinh đạt điểm khá, giỏi môn Hình học lên 15%, học sinh chủ động và yêu thích môn học hơn."
+                )
+            },
+            {
+                "title": "Ứng dụng mô hình bài toán thực tế kết hợp tính lãi kép vào giảng dạy Đại số lớp 8 (Bộ sách Kết nối tri thức)",
+                "author": "Mẫu chuẩn tích hợp STEM",
+                "summary": "Hướng dẫn tích hợp kiến thức tài chính cốt lõi, công thức tính lãi suất trả góp và lãi kép vào các bài toán đại số, giúp học sinh thấy được tính thực tiễn của toán học.",
+                "content": (
+                    "ĐẶT VẤN ĐỀ\n"
+                    "1. Lý do chọn đề tài:\n"
+                    "Chương trình Toán lớp 8 mới có bổ sung phần nội dung giáo dục tài chính cốt lõi. Tuy nhiên, các bài toán trong sách giáo khoa đôi khi còn mang tính lý thuyết, chưa gắn liền với dòng chảy thực tế đời sống của học sinh.\n\n"
+                    "NỘI DUNG CỐT LÕI\n"
+                    "Biện pháp 1: Xây dựng các tình huống thực tế về gửi tiết kiệm, mua hàng trả góp để dẫn dắt vào bài học công thức Đại số.\n"
+                    "Biện pháp 2: Tổ chức dự án nhỏ 'Nhà đầu tư tương lai' ứng dụng công thức tính lũy tiến.\n\n"
+                    "KẾT LUẬN\n"
+                    "Học sinh không chỉ thành thạo kỹ năng tính toán biến đổi đại số mà còn hình thành tư duy quản lý tài chính thông minh."
+                )
+            }
+        ],
+        "Khoa học tự nhiên": [
+            {
+                "title": "Tổ chức dạy học dự án môn KHTN (Phần Vật lý/Hóa học) lớp 7 nhằm phát triển năng lực giải quyết vấn đề",
+                "author：": "Mẫu chuẩn đổi mới phương pháp",
+                "summary": "Quy trình thiết kế và vận hành các dự án học tập thực nghiệm, hướng dẫn học sinh làm việc nhóm, thu thập dữ liệu và báo cáo sản phẩm.",
+                "content": (
+                    "ĐẶT VẤN ĐỀ\n"
+                    "1. Lý do chọn đề tài:\n"
+                    "Môn KHTN đòi hỏi cao về tính thực tiễn và năng lực thực nghiệm. Dạy học theo dự án giúp phá bỏ rào cản lý thuyết suông, kích thích học sinh tự tay làm và khám phá khoa học.\n\n"
+                    "NỘI DUNG CỐT LÕI\n"
+                    "Biện pháp 1: Xây dựng bộ tiêu chí chọn đề tài dự án gắn với đời sống (Ví dụ: Ô nhiễm nguồn nước địa phương, năng lượng xanh).\n"
+                    "Biện pháp 2: Thiết kế phiếu học tập định hướng và nhật ký hành trình dự án cho học sinh.\n\n"
+                    "KẾT QUẢ\n"
+                    "100% nhóm hoàn thành sản phẩm đúng hạn, năng lực hợp tác và thuyết trình của học sinh tăng trưởng rõ rệt."
+                )
             }
         ]
     }
