@@ -62,7 +62,7 @@ col4, col5, col6 = st.columns(3)
 
 with col4:
     with st.container(border=True):
-        st.markdown("### 📝 4. Sửa lỗi chính tả")
+        st.markdown("### 📝 4. Sửa lỗi chính tả văn bản")
         st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả/Ngữ pháp Tiếng Việt chuyên sâu dành cho file Word (.docx)")
         if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_sua_loi_chinh_ta", use_container_width=True):
             st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
