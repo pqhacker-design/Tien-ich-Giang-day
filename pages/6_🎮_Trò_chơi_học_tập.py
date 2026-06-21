@@ -321,16 +321,18 @@ with tabs[3]:
                 st.markdown(script_res)
 
 # --- TAB 5: XUẤT BẢN TÀI LIỆU ---
+# --- TAB 5: XUẤT BẢN TÀI LIỆU ---
 with tabs[4]:
     st.header("💾 Xuất Bản Học Liệu Số")
     if st.session_state.generated_quiz:
         st.write(f"Học liệu hiện hành sẵn có cho bài học: **{st.session_state.current_topic}**")
         
+        # Khu vực xuất tài liệu giảng dạy truyền thống
         c_down1, c_down2 = st.columns(2)
         with c_down1:
             docx_file = DocumentExporter.export_to_docx(st.session_state.current_topic, st.session_state.generated_quiz)
             st.download_button(
-                label="📥 Tải xuống Giáo án Word (.docx)",
+                label="📥 Tải giáo án Word (.docx)",
                 data=docx_file,
                 file_name=f"Giao_an_AI_{st.session_state.current_topic}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -338,10 +340,34 @@ with tabs[4]:
         with c_down2:
             pptx_file = DocumentExporter.export_to_pptx(st.session_state.current_topic, st.session_state.generated_quiz)
             st.download_button(
-                label="📥 Tải xuống Slide Trình Chiếu (.pptx)",
+                label="📥 Tải Slide Trình Chiếu (.pptx)",
                 data=pptx_file,
                 file_name=f"Slide_Game_{st.session_state.current_topic}.pptx",
                 mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
             )
+            
+        st.markdown("---")
+        st.subheader("⚡ Xuất Bản Lên Nền Tảng Trực Tuyến (Kahoot / Quizizz)")
+        st.caption("Tải file Excel cấu trúc biểu mẫu chuẩn dưới đây để nạp thẳng câu hỏi vào tài khoản Kahoot hoặc Quizizz của Thầy mà không cần gõ lại tay từng câu.")
+        
+        c_online1, c_online2 = st.columns(2)
+        with c_online1:
+            quizizz_excel = DocumentExporter.export_to_platform_excel(st.session_state.generated_quiz, platform="Quizizz")
+            st.download_button(
+                label="🔮 Tải File Excel Mẫu Nhập Quizizz",
+                data=quizizz_excel,
+                file_name=f"Quizizz_Import_{st.session_state.current_topic}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="btn_quizizz"
+            )
+        with c_online2:
+            kahoot_excel = DocumentExporter.export_to_platform_excel(st.session_state.generated_quiz, platform="Kahoot")
+            st.download_button(
+                label="🟢 Tải File Excel Mẫu Nhập Kahoot",
+                data=kahoot_excel,
+                file_name=f"Kahoot_Import_{st.session_state.current_topic}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="btn_kahoot"
+            )
     else:
-        st.info("Chưa có dữ liệu học liệu được tạo từ AI. Hãy hoàn tất tạo câu hỏi ở Tab 2 để tiến hành xuất file.")
+        st.info("Chưa có dữ liệu học liệu được tạo từ AI. Hãy hoàn tất tạo câu hỏi ở Tab 2 để tiến hành xuất bản trực tuyến.")
