@@ -66,6 +66,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 # **********************************************
 
+# ********** BƯỚC 3: Xây Dựng Giao Diện Người Dùng (UI) **********
+st.title("🎓 Gia Sư AI - THCS Bình San")
+st.caption("Xin chào! Tôi là Gia Sư AI, sẵn sàng hỗ trợ bạn trong **Tất cả các môn học từ TH đến THPT**.")
+
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
@@ -395,10 +399,6 @@ Có thể tự giải các bài tương tự mà không cần xem đáp án.
         except Exception as final_error:
             st.error("Hiện tại tất cả các máy chủ Google đều đang quá tải. Bạn vui lòng tải lại trang (F5) sau ít phút nhé!")
             st.stop()
-
-# ********** BƯỚC 3: Xây Dựng Giao Diện Người Dùng (UI) **********
-st.title("🎓 Gia Sư AI - THCS Bình San")
-st.caption("Xin chào! Tôi là Gia Sư AI, sẵn sàng hỗ trợ bạn trong **Tất cả các môn học từ TH đến THPT**.")
 
 st.markdown("---")
 st.markdown("**Hãy nhập câu hỏi hoặc tải tài liệu (Ảnh/PDF) lên nhé!**")
