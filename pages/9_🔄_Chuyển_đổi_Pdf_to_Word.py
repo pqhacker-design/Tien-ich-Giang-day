@@ -51,8 +51,14 @@ def add_formatted_text(paragraph, text):
             clean_token = token[1:-1].replace('$', '')
             run = paragraph.add_run(clean_token)
             run.italic = True
+        # (Tìm đến đoạn chữ thường trong hàm add_formatted_text)
         else:
+            # Chữ thường - Làm sạch dấu $ và các ký tự LaTeX rác nếu AI lọt lưới
             clean_token = token.replace('$', '')
+            clean_token = clean_token.replace('\\cdot', '·')
+            clean_token = clean_token.replace('\\neq', '≠')
+            clean_token = clean_token.replace('\\leq', '≤')
+            clean_token = clean_token.replace('\\geq', '≥')
             paragraph.add_run(clean_token)
 
 # ==================== HÀM TẠO FILE WORD GIỮ ĐỊNH DẠNG TỐI ĐA ====================
