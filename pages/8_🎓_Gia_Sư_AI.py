@@ -79,12 +79,16 @@ else:
     st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
     st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
 
-# Khởi tạo client trực tiếp bằng API Key lấy từ trang chủ
-try:
-    client = genai.Client(api_key=api_key_input)
-except Exception as e:
-    st.error(f"Khởi tạo Gemini Client thất bại. Vui lòng kiểm tra lại tính chính xác của API Key. Chi tiết lỗi: {e}")
-    st.stop()
+# Dùng hàm cache hoặc session_state để cố định client, tránh bị đóng khi rerun
+if "gemini_client" not in st.session_state:
+    try:
+        st.session_state.gemini_client = genai.Client(api_key=api_key_input)
+    except Exception as e:
+        st.error(f"Khởi tạo Gemini Client thất bại: {e}")
+        st.stop()
+
+# Gán lại client để các đoạn code phía dưới hoạt động bình thường
+client = st.session_state.gemini_client
 
 
 # ********** BƯỚC 2: Định Nghĩa "Bộ Não" Đa Môn Học và Khởi Tạo Chat Session **********
