@@ -109,11 +109,11 @@ elif menu == "📂 IV. Kiểm tra & Xuất bản Word":
 
 elif menu == "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI":
     st.header("🕵️‍♂️ Trợ Lý AI Phản Biện Đề Tài - Đóng vai Hội đồng chấm Sáng kiến")
-    st.warning("Hãy dán nội dung bản nháp đề tài của thầy vào đây để Hội đồng AI chấm điểm thử nghiệm trước khi nộp chính thức lên cấp trên.")
+    st.warning("Hãy dán nội dung bản nháp đề tài của thầy/cô vào đây để Hội đồng AI chấm điểm thử nghiệm trước khi nộp chính thức lên cấp trên.")
     
     critique_title = st.text_input("Tên đề tài cần thẩm định", value="Ứng dụng sơ đồ tư duy kết hợp công nghệ AI nhằm nâng cao năng lực tự học hình học của học sinh lớp 8")
     critique_content = st.text_area("Nội dung chi tiết các chương/biện pháp đã viết", height=300, placeholder="Dán toàn bộ nội dung văn bản tại đây...")
-    council_level = st.selectbox("Cấp hội đồng chấm duyệt", ["Cấp Trường / Cơ sở", "Cấp Quận / Huyện / Phòng GDĐT", "Cấp Tỉnh / Thành phố / Sở GDĐT"])
+    council_level = st.selectbox("Cấp hội đồng chấm duyệt", ["Cấp Trường / Cơ sở", "Cấp Xã / Phường / Đặc khu", "Cấp Tỉnh / Thành phố / Sở GDĐT"])
     
     if st.button("⚖️ Bắt đầu Thẩm định & Chấm điểm"):
         if critique_content:
