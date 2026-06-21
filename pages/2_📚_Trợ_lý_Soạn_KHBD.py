@@ -27,6 +27,10 @@ c.execute('''CREATE TABLE IF NOT EXISTS history
              (id INTEGER PRIMARY KEY AUTOINCREMENT, time TEXT, topic TEXT, subject TEXT, grade TEXT, content TEXT)''')
 conn.commit()
 
+# --- Thân Giao Diện Chính Ứng Dụng ---
+st.title("🚀 Hệ thống Tối ưu & Thiết kế KHBD tự động 5512")
+st.write("Tải KHBD cũ (.docx, .pdf) hoặc nhập văn bản thô để AI tự động chuyển đổi số hóa hành chính học tập.")
+
 # --- Giao Diện Thanh Công Cụ Sidebar ---
 # Chỉ để duy nhất chuỗi URL sạch bên trong dấu nháy
 st.sidebar.image("https://img.icons8.com/fluent/96/000000/artificial-intelligence.png", width=80)
@@ -56,10 +60,6 @@ elif grade_num <= 9: level_detected = "THCS"
 else: level_detected = "THPT"
 
 st.sidebar.info(f"Hệ thống tự động kích hoạt Khung năng lực số cấp: **{level_detected}**")
-
-# --- Thân Giao Diện Chính Ứng Dụng ---
-st.title("🚀 Hệ thống Tối ưu & Thiết kế KHBD tự động 5512")
-st.write("Tải KHBD cũ (.docx, .pdf) hoặc nhập văn bản thô để AI tự động chuyển đổi số hóa hành chính học tập.")
 
 # Thiết kế Tab phân vùng các tính năng xử lý đầu vào dữ liệu khác nhau
 tab_upload, tab_direct, tab_history = st.tabs(["📂 Tải lên File giáo án gốc", "📝 Nhập yêu cầu trực tiếp", "📜 Lịch sử soạn thảo số"])
