@@ -66,24 +66,25 @@ st.markdown("""
 """, unsafe_allow_html=True)
 # **********************************************
 
-# ********** BƯỚC 1: Cấu Hình API Key & Sửa Lỗi Client Closed **********
-@st.cache_resource
-def get_gemini_client():
-    try:
-        api_key = st.secrets["GEMINI_API_KEY"]
-        return genai.Client(api_key=api_key)
-    except (AttributeError, KeyError):
-        try:
-            return genai.Client() 
-        except Exception:
-            st.error("Lỗi: Không tìm thấy Gemini API Key. Vui lòng thiết lập biến môi trường (local) hoặc Streamlit Secrets (cloud).")
-            st.stop()
+# --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
+if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
+    api_key_input = st.session_state["gemini_api_key"]
+else:
+    # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
+    st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
+    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
+    st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
 
-client = get_gemini_client()
+# Khởi tạo client trực tiếp bằng API Key lấy từ trang chủ
+try:
+    client = genai.Client(api_key=api_key_input)
+except Exception as e:
+    st.error(f"Khởi tạo Gemini Client thất bại. Vui lòng kiểm tra lại tính chính xác của API Key. Chi tiết lỗi: {e}")
+    st.stop()
+
 
 # ********** BƯỚC 2: Định Nghĩa "Bộ Não" Đa Môn Học và Khởi Tạo Chat Session **********
 if "chat_session" not in st.session_state:
-    # (Giữ nguyên system_instruction cũ của bạn để đảm bảo tính năng)
     system_instruction = """
 Bạn là "Gia Sư AI Việt Nam" – một gia sư cá nhân thông minh, thân thiện, kiên nhẫn và đáng tin cậy dành cho học sinh từ lớp 1 đến lớp 12.
 
@@ -429,7 +430,6 @@ if uploaded_file is not None:
 # ----------------------------------------------------------------
 
 # Hiển thị lịch sử chat
-# LƯU Ý QUAN TRỌNG: Đổi tên role thành "user" và "assistant" để Streamlit nhận diện đúng class CSS cấp cho Avatar
 for message in st.session_state.chat_session.get_history():
     role = "assistant" if message.role == "model" else "user"
     with st.chat_message(role):
