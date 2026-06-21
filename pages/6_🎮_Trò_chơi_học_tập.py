@@ -26,6 +26,10 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# 3. KHU VỰC ĐIỀU KHIỂN CHÍNH (MAIN DASHBOARD)
+st.title("🚀 AI Thiết Kế Hoạt Động Tương Tác Trong Lớp Học")
+st.caption("Giải pháp số hóa bài giảng, tạo trò chơi tương tác trực tiếp chuẩn Kahoot/Quizizz cho giáo viên hiện đại.")
+
 # 2. THANH THÔNG TIN BỔ TRỢ (SIDEBAR) - CẤU HÌNH TIÊU CHUẨN SƯ PHẠM
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     gemini_key = st.session_state["gemini_api_key"].strip()
@@ -50,10 +54,6 @@ with st.sidebar:
     st.success("✔ Đã đồng bộ API Key thành công từ Trang chủ.")
 
 ai_engine = AIService(gemini_key=gemini_key, openai_key=openai_key)
-
-# 3. KHU VỰC ĐIỀU KHIỂN CHÍNH (MAIN DASHBOARD)
-st.title("🚀 AI Thiết Kế Hoạt Động Tương Tác Trong Lớp Học")
-st.caption("Giải pháp số hóa bài giảng, tạo trò chơi tương tác trực tiếp chuẩn Kahoot/Quizizz cho giáo viên hiện đại.")
 
 tabs = st.tabs([
     "🎯 Khởi Động & Sinh Hoạt Trình", 
