@@ -6,7 +6,8 @@ import pdfplumber
 from docx import Document
 
 # --- CẤU HÌNH GIAO DIỆN ---
-st.set_page_config(page_title="Chuyển đổi Tài liệu sang Word", page_icon="🔄", layout="boxed")
+# MỚI (Đã sửa lỗi layout tương thích)
+st.set_page_config(page_title="Chuyển đổi Tài liệu sang Word", page_icon="🔄", layout="centered")
 
 st.title("🔄 Chuyển đổi Ảnh/PDF sang Word (Giữ định dạng)")
 st.caption("Ứng dụng trích xuất văn bản từ tài liệu và xuất bản thành file `.docx` gọn gàng.")
