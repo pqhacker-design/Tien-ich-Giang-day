@@ -8,13 +8,13 @@ st.set_page_config(
 )
 
 # 2. Tiêu đề chính tối ưu siêu gọn (Kết hợp H2 và Caption để tiết kiệm dòng)
-st.markdown("## 🎓 [Hệ sinh thái Trợ lý Giáo dục AI](https://aistudio.google.com/)")
+st.markdown("## 🎓 Hệ sinh thái Trợ lý Giáo dục AI")
 st.caption("Nền tảng CNTT và AI hỗ trợ giảng dạy và học tập bám sát Chương trình GDPT 2018. (LƯU Ý: AI không làm giúp bạn, AI chỉ hỗ trợ cho bạn.)")
 
 # 3. QUẢN LÝ API KEY TẬP TRUNG (Thu gọn vào Expander - Mặc định ĐÓNG để đỡ chiếm chỗ)
 with st.expander("🔑 Cấu hình kết nối AI (Nhập API key của bạn để sử dụng các tiện ích)", expanded=False):
     gemini_api_key = st.text_input(
-        "Nhập Google Gemini API Key của bạn tại đây:",
+        "Nhập Google Gemini API Key của bạn tại đây [Bấm vào đây](https://aistudio.google.com/api-keys) để lấy API key:",
         type="password",
         help="Nhập một lần tại đây, tất cả các ứng dụng thành phần sẽ tự động sử dụng chung."
     )
