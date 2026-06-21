@@ -505,6 +505,7 @@ if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].s
     api_key_input = st.session_state["gemini_api_key"]
 else:
     st.warning("⚠️ Vui lòng cấu hình Google Gemini API Key tại Trang chủ trước khi vận hành.")
+    st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
     st.stop()
 
 model = init_gemini_client(api_key_input)
