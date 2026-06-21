@@ -57,9 +57,14 @@ def add_formatted_text(paragraph, text):
             clean_token = token[1:-1].replace('$', '')
             run = paragraph.add_run(clean_token)
             run.italic = True
+        # (Tìm đến đoạn chữ thường trong hàm add_formatted_text)
         else:
-            # Chữ thường - Làm sạch dấu $
+            # Chữ thường - Làm sạch dấu $ và các ký tự LaTeX rác nếu AI lọt lưới
             clean_token = token.replace('$', '')
+            clean_token = clean_token.replace('\\cdot', '·')
+            clean_token = clean_token.replace('\\neq', '≠')
+            clean_token = clean_token.replace('\\leq', '≤')
+            clean_token = clean_token.replace('\\geq', '≥')
             paragraph.add_run(clean_token)
 
 # ==================== HÀM TẠO FILE WORD GIỮ ĐỊNH DẠNG TỐI ĐA ====================
@@ -205,15 +210,28 @@ if uploaded_file is not None:
                 file_part = types.Part.from_bytes(data=file_bytes, mime_type=file_type)
                 
                 # Prompt ÉP AI phân biệt chữ Đậm, chữ Nghiêng bằng cú pháp Markdown cụ thể
+                # Bộ Prompt nâng cấp chuyên sâu ép AI chuyển đổi Toán học sang Unicode phẳng trực quan
                 prompt = (
-                    "Bạn là một chuyên gia số hóa tài liệu hành chính cao cấp. Hãy trích xuất văn bản từ tài liệu này.\n"
-                    "QUY TẮC PHÂN TÍCH ĐỊNH DẠNG BẮT BUỘC:\n"
-                    "1. BẢO TOÀN CHỮ IN ĐẬM/IN NGHIÊNG: Nếu đoạn chữ nào trong tài liệu gốc được IN ĐẬM, hãy bao bọc đoạn chữ đó bằng cặp dấu `**` (Ví dụ: **BỘ GIÁO DỤC**). Nếu được IN NGHIÊNG, hãy bao bọc bằng cặp dấu `*` (Ví dụ: *Xem hình dưới*).\n"
-                    "2. THỤT LỀ ĐẦU DÒNG: Nếu đoạn văn hoặc câu hỏi có thụt lề đầu dòng, hãy thêm 4 dấu cách '    ' vào đầu dòng văn bản trả về.\n"
-                    "3. CÔNG THỨC TOÁN HỌC SANG UNICODE: Chuyển toàn bộ các công thức toán phức tạp về dạng ký tự Unicode thuần có thể đọc được (Phân số dùng dấu /, số mũ dùng ², ³, vectơ dùng mũi tên →AD hoặc chữ 'vectơ', chỉ số dùng u₁, u_n).\n"
-                    "4. Đáp án trắc nghiệm A, B, C, D nằm ngang thì bắt buộc giữ nguyên trên cùng một dòng văn bản.\n"
-                    "5. Dựng bảng biểu số liệu chính xác bằng cấu trúc bảng Markdown.\n"
-                    "6. Chỉ trả về nội dung đề thi được số hóa sạch đẹp, không thêm lời bình luận."
+                    "Bạn là một chuyên gia số hóa tài liệu giáo dục và đề thi toán học cấp cao.\n"
+                    "Hãy trích xuất chính xác 100% văn bản từ hình ảnh này sang định dạng Unicode phẳng.\n\n"
+                    
+                    "🔴 QUY TẮC CHUYỂN ĐỔI TOÁN HỌC SANG UNICODE TRỰC QUAN (CẤM DÙNG LATEX HOẶC DẤU $):\n"
+                    "1. Phân số phức tạp: Hãy viết rõ ràng theo hàng ngang trực quan bằng ký tự Unicode, hoặc viết dạng tử/mẫu cách khoảng rõ ràng, ví dụ: 'f_1(x) = (5x⁴)/4' hoặc '(x + 1)/(x - 2)'. Tránh viết dính liền gây hiểu lầm.\n"
+                    "2. Hệ phương trình (cases): Chuyển thành dạng ký tự phẳng sử dụng dấu ngoặc nhọn lớn '{' và xuống dòng rõ ràng cho từng phương trình, ví dụ:\n"
+                    "   Hệ phương trình: {\n"
+                    "   x + y - 2 < 0\n"
+                    "   x - y + 2 > 0\n"
+                    "3. Số mũ và Chỉ số: BẮT BUỘC dùng ký tự Unicode nhỏ trên và dưới (Ví dụ: x², y³, u_n, u₁, u₂, log₃(3x), f'(x)). Không được để dạng dấu mũ ^ hoặc gạch dưới _ thô.\n"
+                    "4. Ký hiệu hình học & Giải tích: Chuyển toàn bộ về ký tự Unicode tương ứng:\n"
+                    "   - Vectơ: Dùng mũi tên đứng trước (Ví dụ: →AD, →AB).\n"
+                    "   - Tích phân / Nguyên hàm: Dùng ký tự ∫ (Ví dụ: ∫f(x)dx).\n"
+                    "   - Tập hợp & Logic: Dùng chuẩn ký tự ℝ, ∈, ∉, ⊂, ∩, ∪, ≠, ≥, ≤, · (dấu nhân).\n\n"
+                    
+                    "🔴 QUY TẮC ĐỊNH DẠNG VĂN BẢN ĐỀ THI:\n"
+                    "1. BẢO TOÀN CHỮ IN ĐẬM/IN NGHIÊNG: Đoạn văn nào in đậm bắt buộc bọc trong `**` (Ví dụ: **BỘ GIÁO DỤC VÀ ĐÀO TẠO**), đoạn nào in nghiêng bọc trong `*` (Ví dụ: *xem hình dưới*).\n"
+                    "2. CĂN NGANG ĐÁP ÁN: 4 đáp án trắc nghiệm A, B, C, D phải nằm ngang trên cùng một dòng văn bản giống hệt đề gốc, cách nhau bằng khoảng trắng lớn.\n"
+                    "3. THỤT LỀ ĐẦU DÒNG: Thêm 4 dấu cách '    ' vào trước mỗi dòng câu hỏi (Câu 1, Câu 2...) hoặc đoạn văn có thụt lề.\n"
+                    "4. Chỉ trả về nội dung đề thi đã số hóa sạch sẽ, không thêm bất kỳ lời thoại hay giải thích nào của AI."
                 )
                 
                 try:
