@@ -36,7 +36,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 st.title("📝 Trợ lý AI Hỗ trợ viết SKKN và nghiên cứu Khoa học Sư phạm")
-st.caption("Hỗ trợ, chỉnh sửa, đóng góp và gợi ý GV viết SKKN")
+st.caption("Hỗ trợ, chỉnh sửa, đóng góp và gợi ý GV viết SKKN. (Xem DANH MỤC CHỨC NĂNG bên trái)")
 
 # --- 🔑 KIỂM TRA VÀ ÉP ĐỒNG BỘ API KEY TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
