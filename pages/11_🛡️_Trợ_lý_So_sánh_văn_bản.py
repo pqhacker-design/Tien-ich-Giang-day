@@ -195,7 +195,9 @@ with tab6:
         # Module 13: Cố vấn chiến lược đường dài
         st.subheader("🎯 Module 13: Cố Vấn Chiến Lược Hoàn Thiện")
         st.caption("AI hoạch định lộ trình chuyển đổi nâng hạng giải thưởng dựa trên các điểm nghẽn.")
-        strat_query = st.text_selectbox = st.selectbox(
+        
+        # ĐÃ SỬA: Bỏ đoạn gán đè st.text_selectbox lỗi
+        strat_query = st.selectbox(
             "Lựa chọn câu hỏi chiến lược:",
             [
                 "Tôi cần bổ sung gì cụ thể để hồ sơ này chắc chắn đạt cấp Huyện?",
