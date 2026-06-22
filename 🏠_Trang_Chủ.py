@@ -102,7 +102,28 @@ with col9:
         st.write("Ứng dụng trích xuất văn bản từ tài liệu hoặc hình ảnh và xuất bản thành file Word.")
         if st.button("🚀 Mở ứng dụng Pdf to Word", key="btn_pdf_to_word", use_container_width=True):
             st.switch_page("pages/9_🔄_Chuyển_đổi_Pdf_to_Word.py")
-            
+
+# Hàng 4: Gồm 3 cột cho App 10, App 11, App 12
+col7, col8, col9 = st.columns(3)
+
+with col10:
+    with st.container(border=True):
+        st.markdown("### 🎓 10. Trợ lý giúp vẽ hình Hình học")
+        st.write("Trợ lý AI giúp GV vẽ hình hình học theo đề bài ra để chèn vào KHBD hoặc lời giải trong đề bài.")
+        if st.button("🚀 Mở ứng dụng Vẽ hình HH", key="btn_ve_hinh_hoc", use_container_width=True):
+            st.switch_page("pages/7_🎓_Viết_Sáng_kiến_kinh_nghiệm.py")
+with col8:
+    with st.container(border=True):
+        st.markdown("### 🎓 8. Gia sư AI - Hỗ trợ HS")
+        st.write("Hỗ trợ HS và hướng dẫn các em làm bài tập Tất cả các môn học từ TH đến THPT.")
+        if st.button("🚀 Mở ứng dụng Gia sư", key="btn_gia_su_ai", use_container_width=True):
+            st.switch_page("pages/8_🎓_Gia_Sư_AI.py")
+with col9:
+    with st.container(border=True):
+        st.markdown("### 9_🔄_Chuyển đổi file .Pdf thành Word (.docx)")
+        st.write("Ứng dụng trích xuất văn bản từ tài liệu hoặc hình ảnh và xuất bản thành file Word.")
+        if st.button("🚀 Mở ứng dụng Pdf to Word", key="btn_pdf_to_word", use_container_width=True):
+            st.switch_page("pages/9_🔄_Chuyển_đổi_Pdf_to_Word.py")            
 st.markdown("---")
 
 # 5. Chân trang (Footer)
