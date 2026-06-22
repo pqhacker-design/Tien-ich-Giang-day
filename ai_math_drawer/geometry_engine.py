@@ -1,8 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import sympy as sp
-from shapely import Point, LineString, Polygon
 import io
+
+# Import an toàn cho mọi phiên bản Shapely
+try:
+    from shapely import Point, LineString, Polygon
+    # Tạo nghệ danh (alias) Line tương đương LineString để chiều theo cách viết của AI
+    Line = LineString 
+except ImportError:
+    from shapely.geometry import Point, Line, Polygon
+    LineString = Line
 
 class GeometryEngine:
     @staticmethod
@@ -10,27 +18,29 @@ class GeometryEngine:
         """
         Thực thi đoạn mã vẽ do AI sinh ra và áp dụng cấu hình local (màu sắc, độ dày nét,...)
         """
-        # Chuẩn bị môi trường thực thi với các thư viện cần thiết
+        # Chuẩn bị môi trường thực thi và nạp đầy đủ các biến mà AI có thể gọi
         local_vars = {
             'plt': plt,
             'np': np,
             'sp': sp,
             'Point': Point,
-            'Line': Line,
+            'Line': Line,            # Định nghĩa Line để sửa lỗi "name 'Line' is not defined"
+            'LineString': LineString,  # Dự phòng nếu AI dùng LineString
             'Polygon': Polygon
         }
         
-        # Tạo sẵn fig và ax để code chèn vào
+        # Tạo sẵn fig và ax để code của AI chèn vào
         fig, ax = plt.subplots(figsize=(8, 6))
         local_vars['fig'] = fig
         local_vars['ax'] = ax
         
-        # Thực thi code
-        # Lưu ý an toàn: Trong thực tế cần sanitize hoặc dùng sandbox. Ở đây exec phục vụ việc sinh code linh hoạt.
+        # Thực thi mã nguồn do AI sinh ra trong môi trường đã nạp đủ thư viện
         exec(code_str, globals(), local_vars)
         
-        # Áp dụng các tùy chỉnh từ UI lên các nét vẽ nếu có
+        # Lấy ax sau khi AI đã vẽ xong để tùy chỉnh giao diện theo UI gán vào từ Sidebar
         ax = local_vars['ax']
+        
+        # Áp dụng các tùy chỉnh từ UI lên các nét vẽ (nếu có)
         for line in ax.get_lines():
             if config.get('line_color'):
                 line.set_color(config['line_color'])
