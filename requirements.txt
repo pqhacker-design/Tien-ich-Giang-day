@@ -3,9 +3,7 @@ streamlit-option-menu
 streamlit-extras
 python-docx
 python-pptx
-google-genai
 google-generativeai
-openai
 reportlab
 numpy
 docxcompose
@@ -16,8 +14,6 @@ pypdf
 lxml
 underthesea
 altair
-PyPDF2
-latex2mathml
 matplotlib
 plotly
 scipy
