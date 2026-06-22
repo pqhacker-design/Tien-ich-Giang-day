@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import sympy as sp
-from shapely.geometry import Point, Line, Polygon
+from shapely import Point, LineString, Polygon
 import io
 
 class GeometryEngine:
