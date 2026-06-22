@@ -24,3 +24,6 @@ scipy
 python-dotenv
 httpx
 pdfplumber
+sumpy
+shapely
+pillow
