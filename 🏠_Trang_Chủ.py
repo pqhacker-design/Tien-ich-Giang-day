@@ -41,7 +41,7 @@ with col1:
         st.markdown("### 📝 1. Tích hợp Năng lực số")
         st.write("Tự động phân tích giáo án Word (.docx) và chèn nội dung phát triển năng lực số theo đúng các vị trí hoạt động dạy học thực tế.")
         if st.button("🚀 Mở ứng dụng Tích hợp KNS", key="btn_tich_hop", use_container_width=True):
-            st.switch_page("pages/1_📝_Tích_Hợp_Kỹ_Năng_Số.py")
+            st.switch_page("1_📝_Tích_Hợp_Kỹ_Năng_Số.py")
 
 with col2:
     with st.container(border=True):
