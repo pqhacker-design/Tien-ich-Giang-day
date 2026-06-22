@@ -11,6 +11,19 @@ st.set_page_config(
     layout="wide"
 )
 
+# --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
+if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
+    api_key_input = st.session_state["gemini_api_key"]
+    # Gán vào biến môi trường hệ thống để thư viện google-genai tự động nạp
+    os.environ["GEMINI_API_KEY"] = api_key_input
+    st.session_state.ai_engine = AIEngine()
+else:
+    # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
+    st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
+    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
+    st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
+    st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
+    
 # Khởi tạo các class engine vào session state
 if 'ai_engine' not in st.session_state:
     st.session_state.ai_engine = AIEngine()
@@ -21,18 +34,8 @@ if 'current_code' not in st.session_state:
 if 'generated_fig' not in st.session_state:
     st.session_state.generated_fig = None
 
-# --- SIDEBAR: Cấu hình và Tùy chỉnh ---
+# --- SIDEBAR: CHỈ GIỮ LẠI TÙY CHỈNH ĐỒ HỌA (ĐÃ BỎ PHẦN CAU HINH API) ---
 with st.sidebar:
-    st.header("⚙️ CẤU HÌNH HỆ THỐNG")
-    
-    # Nhập API Key bảo mật
-    api_key_input = st.text_input("Gemini API Key:", type="password", help="Nhập Gemini API Key của bạn để kích hoạt AI.")
-    if api_key_input:
-        import os
-        os.environ["GEMINI_API_KEY"] = api_key_input
-        st.session_state.ai_engine = AIEngine()
-
-    st.divider()
     st.header("🎨 TÙY CHỈNH NÉT VẼ")
     line_color = st.color_picker("Màu nét vẽ chính:", "#1f77b4")
     line_width = st.slider("Độ dày nét vẽ:", 1.0, 5.0, 2.0, 0.5)
@@ -43,6 +46,7 @@ with st.sidebar:
     img_format = st.selectbox("Định dạng ảnh:", ["png", "jpg", "svg", "pdf"])
     dpi_resolution = st.selectbox("Độ phân giải (DPI):", [150, 300, 600], index=1)
 
+# Đóng gói cấu hình để truyền vào GeometryEngine
 config_dict = {
     "line_color": line_color,
     "line_width": line_width,
