@@ -24,8 +24,8 @@ class GeometryEngine:
             'np': np,
             'sp': sp,
             'Point': Point,
-            'Line': Line,            # Định nghĩa Line để sửa lỗi "name 'Line' is not defined"
-            'LineString': LineString,  # Dự phòng nếu AI dùng LineString
+            'Line': Line,            
+            'LineString': LineString,  
             'Polygon': Polygon
         }
         
@@ -47,7 +47,8 @@ class GeometryEngine:
             if config.get('line_width'):
                 line.set_linewidth(config['line_width'])
                 
-        for text in ax.get_texts():
+        # 🛠️ SỬA LỖI TẠI ĐÂY: Đổi ax.get_texts() thành ax.texts
+        for text in ax.texts:
             if config.get('font_size'):
                 text.set_fontsize(config['font_size'])
                 
