@@ -19,12 +19,19 @@ class DocumentProcessor:
 
     @staticmethod
     def read_file(file) -> str:
-        if file.name.endswith('.docx'):
-            return DocumentProcessor.read_docx(file.read())
-        elif file.name.endswith('.pdf'):
-            return DocumentProcessor.read_pdf(file.read())
-        else:
-            raise ValueError("Định dạng file không được hỗ trợ (Chỉ nhận .docx, .pdf)")
+        try:
+            # Đã thêm: Đưa con trỏ file về vị trí ban đầu trước khi đọc
+            file.seek(0) 
+            
+            if file.name.endswith('.docx'):
+                return DocumentProcessor.read_docx(file.read())
+            elif file.name.endswith('.pdf'):
+                return DocumentProcessor.read_pdf(file.read())
+            else:
+                return "LỖI: Định dạng file không được hỗ trợ (Chỉ nhận .docx, .pdf)"
+        except Exception as e:
+            # Bọc lỗi ngăn chặn sập ứng dụng khi file hỏng hoặc lỗi định dạng zip
+            return f"LỖI: Không thể đọc cấu trúc file '{file.name}'. Vui lòng kiểm tra lại định dạng file hoặc lưu lại file (Save as) bằng Microsoft Word chuẩn."
 
     @staticmethod
     def create_audited_docx(original_text: str, suggestions: list, dynamic_content: str = "") -> io.BytesIO:
