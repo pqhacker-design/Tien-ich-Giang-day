@@ -63,7 +63,7 @@ with tabs[0]:
     col_input, col_render = st.columns([1, 1.2])
     
     with col_input:
-        st.subheader("¼ Nhập Đề Bài & Tải File")
+        st.subheader("📤 Nhập Đề Bài & Tải File")
         mode = st.radio("Loại bài toán:", ["Hình học (THCS/THPT/Tọa độ)", "Đồ thị hàm số"], horizontal=True)
         mode_key = 'geometry' if "Hình học" in mode else 'function'
         
