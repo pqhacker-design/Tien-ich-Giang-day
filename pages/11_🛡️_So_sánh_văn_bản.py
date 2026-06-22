@@ -29,19 +29,36 @@ st.title("🛡️ AI Thư Ký Hội Đồng - Trợ Lý Kiểm Định & Hoàn T
 st.caption("Giải pháp ứng dụng Trí tuệ nhân tạo chuyên biệt dành cho Sáng kiến kinh nghiệm, Kế hoạch bài dạy (KHBD), và Đánh giá chuẩn giáo dục.")
 
 # --- SIDEBAR: Cấu hình hệ thống ---
-st.sidebar.header("⚙️ Cấu hình Hệ thống AI")
-api_key = st.sidebar.text_input("Gemini API Key", value=os.getenv("GEMINI_API_KEY", ""), type="password")
-model_name = st.sidebar.selectbox("Lựa chọn Mô hình", ["gemini-2.5-flash", "gemini-3.0-flash"])
-audit_level = st.sidebar.radio("Mức độ rà soát chuyên sâu", ["Toàn diện (Cấu trúc + Câu từ)", "Cấu trúc khung", "Từ khóa & Minh chứng"])
-
-if st.sidebar.button("Lưu & Khởi động Trợ lý"):
-    if not api_key:
-        st.sidebar.error("Vui lòng cung cấp API Key hợp lệ!")
+# ==============================================================================
+# --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ (ĐÃ SỬA LỖI CÚ PHÁP & ĐỒNG BỘ) ---
+# ==============================================================================
+if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
+    api_key_input = st.session_state["gemini_api_key"].strip()
+    # Gán vào biến môi trường hệ thống để thư viện tự động nạp
+    os.environ["GEMINI_API_KEY"] = api_key_input
+    
+    # Lựa chọn mô hình ngay trên thanh sidebar của app con nếu cần thay đổi nhanh
+    st.sidebar.header("⚙️ Cấu hình Mô hình")
+    model_name = st.sidebar.selectbox("Lựa chọn Mô hình", ["gemini-2.5-flash", "gemini-3.0-flash"])
+    audit_level = st.sidebar.radio("Mức độ rà soát", ["Toàn diện (Cấu trúc + Câu từ)", "Cấu trúc khung", "Từ khóa & Minh chứng"])
+    
+    # Khởi tạo hoặc cập nhật đối tượng AIEngine dùng chung
+    if 'ai_engine' not in st.session_state or st.session_state.ai_engine is None:
+        st.session_state.ai_engine = AIEngine(api_key=api_key_input, model_name=model_name)
     else:
-        st.sidebar.success("Hệ thống AI đã sẵn sàng hoạt động!")
+        # Nếu đã có sẵn ai_engine từ trước, chỉ cập nhật lại model_name nếu user thay đổi box
+        st.session_state.ai_engine.model_name = model_name
+    
+    # Gán biến cục bộ để các hàm phía dưới gọi ngắn gọn
+    ai_engine = st.session_state.ai_engine
 
-ai_engine = AIEngine(api_key=api_key, model_name=model_name) if api_key else None
-
+else:
+    # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
+    st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
+    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
+    st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
+    st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
+# ==============================================================================
 # --- Giao diện Tabs chính ---
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "📋 1. Thư viện Mẫu Chuẩn", 
