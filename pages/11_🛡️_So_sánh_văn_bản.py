@@ -28,7 +28,7 @@ st.caption("Giải pháp ứng dụng Trí tuệ nhân tạo chuyên biệt dàn
 # --- SIDEBAR: Cấu hình hệ thống ---
 st.sidebar.header("⚙️ Cấu hình Hệ thống AI")
 api_key = st.sidebar.text_input("Gemini API Key", value=os.getenv("GEMINI_API_KEY", ""), type="password")
-model_name = st.sidebar.selectbox("Lựa chọn Mô hình", ["gemini-1.5-pro", "gemini-1.5-flash"])
+model_name = st.sidebar.selectbox("Lựa chọn Mô hình", ["gemini-2.5-flash", "gemini-3.0-flash"])
 audit_level = st.sidebar.radio("Mức độ rà soát chuyên sâu", ["Toàn diện (Cấu trúc + Câu từ)", "Cấu trúc khung", "Từ khóa & Minh chứng"])
 
 if st.sidebar.button("Lưu & Khởi động Trợ lý"):
