@@ -104,7 +104,7 @@ with col9:
             st.switch_page("pages/9_🔄_Chuyển_đổi_Pdf_to_Word.py")
 
 # Hàng 4: Gồm 3 cột cho App 10, App 11, App 12
-col7, col8, col9 = st.columns(3)
+col10, col11, col12 = st.columns(3)
 
 with col10:
     with st.container(border=True):
