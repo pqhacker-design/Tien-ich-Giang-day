@@ -93,7 +93,7 @@ with col7:
 with col8:
     with st.container(border=True):
         st.markdown("### 🎓 8. Gia sư AI - Hỗ trợ HS")
-        st.write("Hỗ trợ HS và hướng dẫn các em học tập Tất cả các môn học từ TH đến THPT.")
+        st.write("Hỗ trợ HS và hướng dẫn các em làm bài tập Tất cả các môn học từ TH đến THPT.")
         if st.button("🚀 Mở ứng dụng Gia sư", key="btn_gia_su_ai", use_container_width=True):
             st.switch_page("pages/8_🎓_Gia_Sư_AI.py")
 with col9:
