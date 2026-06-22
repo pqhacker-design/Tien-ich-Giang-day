@@ -23,6 +23,4 @@ pdfplumber
 sympy
 shapely
 pillow
-rapidfuzz
-sentence-transformers
-faiss-cpu
+
