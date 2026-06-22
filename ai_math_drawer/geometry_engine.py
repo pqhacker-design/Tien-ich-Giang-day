@@ -16,9 +16,14 @@ class GeometryEngine:
     @staticmethod
     def execute_drawing_code(code_str: str, config: dict) -> plt.Figure:
         """
-        Thực thi đoạn mã vẽ do AI sinh ra và áp dụng cấu hình local (màu sắc, độ dày nét,...)
+        Thực thi đoạn mã vẽ do AI sinh ra và áp dụng cấu hình local
         """
-        # Chuẩn bị môi trường thực thi và nạp đầy đủ các biến mà AI có thể gọi
+        # Xóa tất cả các hình vẽ cũ đang chạy ngầm trong bộ nhớ để tránh bị đè hình
+        plt.close('all') 
+        
+        # Tạo sẵn fig và ax mặc định để AI dùng luôn
+        fig, ax = plt.subplots(figsize=(8, 6))
+        
         local_vars = {
             'plt': plt,
             'np': np,
@@ -26,33 +31,30 @@ class GeometryEngine:
             'Point': Point,
             'Line': Line,            
             'LineString': LineString,  
-            'Polygon': Polygon
+            'Polygon': Polygon,
+            'fig': fig,
+            'ax': ax
         }
         
-        # Tạo sẵn fig và ax để code của AI chèn vào
-        fig, ax = plt.subplots(figsize=(8, 6))
-        local_vars['fig'] = fig
-        local_vars['ax'] = ax
-        
-        # Thực thi mã nguồn do AI sinh ra trong môi trường đã nạp đủ thư viện
+        # Thực thi mã nguồn do AI sinh ra
         exec(code_str, globals(), local_vars)
         
-        # Lấy ax sau khi AI đã vẽ xong để tùy chỉnh giao diện theo UI gán vào từ Sidebar
-        ax = local_vars['ax']
+        # 🛠️ CẢI TIẾN: Lấy Figure hiện tại đang hoạt động (Đảm bảo lấy đúng hình AI vừa vẽ)
+        active_fig = plt.gcf()
+        active_ax = active_fig.gca()
         
-        # Áp dụng các tùy chỉnh từ UI lên các nét vẽ (nếu có)
-        for line in ax.get_lines():
+        # Áp dụng các tùy chỉnh từ UI gán từ Sidebar lên active_ax
+        for line in active_ax.get_lines():
             if config.get('line_color'):
                 line.set_color(config['line_color'])
             if config.get('line_width'):
                 line.set_linewidth(config['line_width'])
                 
-        # 🛠️ SỬA LỖI TẠI ĐÂY: Đổi ax.get_texts() thành ax.texts
-        for text in ax.texts:
+        for text in active_ax.texts:
             if config.get('font_size'):
                 text.set_fontsize(config['font_size'])
                 
-        return local_vars['fig']
+        return active_fig
 
     @staticmethod
     def convert_fig_to_image(fig: plt.Figure, dpi: int = 300, format: str = 'png') -> io.BytesIO:
