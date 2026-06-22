@@ -56,88 +56,70 @@ st.caption("Ứng dụng thông minh hỗ trợ Giáo viên & Học sinh tự đ
 tabs = st.tabs(["🔮 Vẽ Hình Tự Động", "📚 Lịch Sử & Xuất Word Hàng Loạt", "💡 Hướng Dẫn & Ví Dụ"])
 
 # TAB 1: VẼ HÌNH TỰ ĐỘNG
+# ... (Giữ nguyên các đoạn code khởi tạo và sidebar cũ của bạn) ...
+
+# TAB 1: VẼ HÌNH TỰ ĐỘNG
 with tabs[0]:
     col_input, col_render = st.columns([1, 1.2])
     
     with col_input:
-        st.subheader("📝 Nhập Đề Bài")
+        st.subheader("📝 Nhập Đề Bài & Tải File")
         mode = st.radio("Loại toán bài toán:", ["Hình học (THCS/THPT/Tọa độ)", "Đồ thị hàm số"], horizontal=True)
         mode_key = 'geometry' if "Hình học" in mode else 'function'
         
-        prompt = st.text_area(
-            "Nhập đề bài bằng tiếng Việt tự nhiên:",
-            placeholder="Ví dụ: Vẽ tam giác ABC vuông tại A, AB = 4 cm, AC = 3 cm.\nHoặc: Vẽ đồ thị hàm số y = x^2 - 4x + 3",
-            height=120
+        # TÍNH NĂNG MỚI: Cho phép tải file đề bài
+        uploaded_file = st.file_uploader(
+            "Tải lên Ảnh đề bài, file PDF hoặc file Word chứa đề toán:", 
+            type=["png", "jpg", "jpeg", "pdf", "docx"],
+            help="Bạn có thể chụp màn hình câu hỏi toán rồi tải lên đây mà không cần gõ lại ký hiệu phức tạp."
         )
         
-        btn_generate = st.button("🚀 Phân Tích Đề & Vẽ Hình", type="primary", use_container_width=True)
+        # Nhập chỉ dẫn câu cần vẽ
+        prompt = st.text_area(
+            "Yêu cầu cụ thể dành cho AI:",
+            value="Hãy tìm và vẽ hình minh họa cho Câu 5 trong đề bài trên.",
+            placeholder="Ví dụ: Vẽ hình câu 3b / Vẽ đồ thị hàm số ở câu hỏi tự luận cuối cùng...",
+            height=80
+        )
+        
+        btn_generate = st.button("🚀 AI Phân Tích Đề & Vẽ Hình", type="primary", use_container_width=True)
         
         if btn_generate:
-            if not prompt.strip():
-                st.error("Vui lòng nhập đề bài trước khi vẽ!")
+            if uploaded_file is None and not prompt.strip():
+                st.error("Vui lòng tải file đề bài lên hoặc nhập nội dung văn bản đề bài!")
             else:
-                with st.spinner("AI đang phân tích hình học và lập trình tọa độ..."):
-                    result = st.session_state.ai_engine.analyze_and_generate_code(prompt, mode_key)
+                with st.spinner("AI đang 'đọc' tài liệu và lập trình tính toán tọa độ..."):
+                    # Gọi hàm xử lý nâng cấp từ AI Engine
+                    result = st.session_state.ai_engine.analyze_and_generate_code(
+                        mode=mode_key, 
+                        user_request=prompt, 
+                        uploaded_file=uploaded_file
+                    )
                     
                     if result["error"]:
                         st.error(result["error"])
+                        if result["code"]:
+                            st.info(f"Phản hồi từ AI:\n{result['code']}")
                     else:
                         st.session_state.current_code = result["code"]
                         try:
+                            # Thực thi mã vẽ thông qua GeometryEngine
                             fig = GeometryEngine.execute_drawing_code(result["code"], config_dict)
                             st.session_state.generated_fig = fig
                             
-                            # Lưu vào lịch sử vẽ
                             st.session_state.history.append({
-                                "prompt": prompt,
+                                "prompt": prompt if uploaded_file is None else f"[{uploaded_file.name}] {prompt}",
                                 "code": result["code"],
                                 "fig": fig
                             })
-                            st.success("Phân tích đề bài thành công!")
+                            st.success("AI đã phân tích đề toán và dựng hình thành công!")
                         except Exception as exec_err:
-                            st.error(f"Lỗi khi thực thi mã vẽ hình: {str(exec_err)}")
-    
+                            st.error(f"Lỗi khi chạy mã vẽ hình do AI sinh ra: {str(exec_err)}")
+                            st.info("Bạn có thể chỉnh sửa lại đoạn mã bên dưới để sửa lỗi.")
+                            
     with col_render:
         st.subheader("🖼️ Kết Quả Trực Quan")
-        if st.session_state.generated_fig:
-            # Hiển thị đồ thị Matplotlib lên giao diện Streamlit
-            st.pyplot(st.session_state.generated_fig)
-            
-            # Xuất ảnh ra bộ nhớ để download
-            img_buf = GeometryEngine.convert_fig_to_image(
-                st.session_state.generated_fig, 
-                dpi=dpi_resolution, 
-                format=img_format
-            )
-            
-            # Nút bấm download ảnh trực tiếp
-            st.download_button(
-                label=f"📥 Tải xuống ảnh (. {img_format.upper()} - {dpi_resolution} DPI)",
-                data=img_buf,
-                file_name=f"math_drawing.{img_format}",
-                mime=f"image/{img_format}",
-                use_container_width=True
-            )
-        else:
-            st.info("Hình vẽ minh họa sẽ hiển thị ở đây sau khi bạn nhấn nút 'Phân Tích Đề & Vẽ Hình'.")
-
-    # Hiển thị Code Editor tự động bên dưới cho phép chỉnh sửa
-    st.divider()
-    st.subheader("💻 Mã Python Tạo Hình (AI sinh tự động)")
-    if st.session_state.current_code:
-        edited_code = st.text_area("Bạn có thể tùy chỉnh hoặc sao chép đoạn mã này để chạy độc lập:", 
-                                   value=st.session_state.current_code, height=250)
-        
-        if st.button("🔄 Cập nhật hình vẽ bằng mã đã sửa"):
-            try:
-                fig = GeometryEngine.execute_drawing_code(edited_code, config_dict)
-                st.session_state.generated_fig = fig
-                st.rerun()
-            except Exception as e:
-                st.error(f"Lỗi thực thi mã chỉnh sửa: {str(e)}")
-    else:
-        st.code("# Chưa có mã nào được sinh ra", language="python")
-
+        # ... (Giữ nguyên đoạn hiển thị ảnh và nút bấm download ảnh cũ của bạn) ...
 # TAB 2: LỊCH SỬ VÀ XUẤT FILE WORD HÀNG LOẠT
 with tabs[1]:
     st.subheader("📚 Quản lý thư viện hình đã vẽ & Xuất tài liệu Word")
