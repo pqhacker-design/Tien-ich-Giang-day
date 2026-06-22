@@ -169,7 +169,7 @@ with tabs[1]:
             if checked:
                 selected_indices.append(idx)
         
-        if st.button("📝 Xuất Các Bài Đã Chọn Sang Microsoft Word (.docx)", type="secondary"):
+        if st.button("📝 Xuất hình Các Bài Đã Chọn Sang Microsoft Word (.docx)", type="secondary"):
             if not selected_indices:
                 st.warning("Vui lòng chọn ít nhất một hình vẽ để tạo tài liệu!")
             else:
@@ -184,7 +184,7 @@ with tabs[1]:
                     st.download_button(
                         label="📥 Click để Tải File Word (.docx) Về Máy",
                         data=docx_data,
-                        file_name="Giao_An_Hinh_Hoc_AI.docx",
+                        file_name="Ve_Hinh_Hoc_AI.docx",
                         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                         use_container_width=True
                     )
