@@ -6,7 +6,7 @@ import streamlit as st
 # Khai báo chính xác vị trí file trong thư mục pages/
 trang_chu = st.Page("🏠_Trang_Chủ.py", title="Trang Chủ", icon="🏠", default=True)
 tich_hop  = st.Page("pages/1_📝_Tích_Hợp_Kỹ_Năng_Số.py", title="Tích hợp KNS", icon="📝")
-soan_khbd = st.Page("pages/2_📚_Trợ lý_Soạn_KHBD.py", title="Soạn KHBD", icon="📚")
+soan_khbd = st.Page("pages/2_📚_Trợ_lý_Soạn_KHBD.py", title="Soạn KHBD", icon="📚")
 goi_hs    = st.Page("pages/3_🎯_Gọi_HS_ngẫu_nhiên.py", title="Gọi học sinh", icon="🎯")
 sua_loi   = st.Page("pages/4_📝_Sửa_lỗi_chính_tả.py", title="Sửa lỗi chính tả", icon="📝")
 ra_de     = st.Page("pages/5_📊_Ra_đề_kiểm_tra.py", title="Ra đề kiểm tra", icon="📊")
