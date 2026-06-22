@@ -10,7 +10,7 @@ st.set_page_config(
 )
 
 st.title("🤖 Ứng dụng tích hợp Năng lực số tự động vào KHBD")
-st.write("Giải pháp hỗ trợ giáo viên chuyển đổi số giáo án theo Chương trình GDPT 2018 nhanh chóng và chuẩn xác.")
+st.write("Giúp GV tích hợp Năng lực số theo Chương trình GDPT 2018 nhanh chóng và chuẩn xác (Chú ý: Xem cấu hình bên slidebar)")
 
 # --- THANH BÊN (SIDEBAR) ---
 st.sidebar.header("⚙️ CẤU HÌNH HỆ THỐNG")
