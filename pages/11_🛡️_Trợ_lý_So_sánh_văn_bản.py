@@ -1,14 +1,14 @@
 import streamlit as st
 import os
 from dotenv import load_dotenv
-from core.document_proc import DocumentProcessor
-from core.ai_engine import AIEngine
-from core.rag_manager import RAGManager
-from modules.grammar_checker import VietnameseGrammarChecker
-from modules.evidence_gen import EvidenceGenerator
-from modules.criterion_eval import CommitteeEvaluator
-from modules.advanced_audit import AdvancedAuditor
-from modules.dashboard_panel import DashboardPanel
+from ai_auditor_app.core.document_proc import DocumentProcessor
+from ai_auditor_app.core.ai_engine import AIEngine
+from ai_auditor_app.core.rag_manager import RAGManager
+from ai_auditor_app.modules.grammar_checker import VietnameseGrammarChecker
+from ai_auditor_app.modules.evidence_gen import EvidenceGenerator
+from ai_auditor_app.modules.criterion_eval import CommitteeEvaluator
+from ai_auditor_app.modules.advanced_audit import AdvancedAuditor
+from ai_auditor_app.modules.dashboard_panel import DashboardPanel
 
 load_dotenv()
 
