@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 import matplotlib.pyplot as plt
 from ai_math_drawer.ai_engine import AIEngine
 from ai_math_drawer.geometry_engine import GeometryEngine
@@ -16,8 +17,8 @@ st.caption("Trợ lý giúp vẽ hình hình học tự động và vẽ đồ t
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
     # Gán vào biến môi trường hệ thống để thư viện google-genai tự động nạp
-    os.environ["GEMINI_API_KEY"] = api_key_input
-    st.session_state.ai_engine = AIEngine()
+os.environ["GEMINI_API_KEY"] = st.session_state["gemini_api_key"].strip()
+st.session_state.ai_engine = AIEngine()
 else:
     # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
