@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import pandas as pd
 from dotenv import load_dotenv
 from ai_auditor_app.core.document_proc import DocumentProcessor
 from ai_auditor_app.core.ai_engine import AIEngine
@@ -14,13 +15,15 @@ load_dotenv()
 
 st.set_page_config(page_title="AI Thư ký Hội đồng - Kiểm định Hồ sơ Giáo dục", layout="wide")
 
-# Khởi tạo Session State lưu trữ dữ liệu liên tục
+# Khởi tạo Session State lưu trữ dữ liệu liên tục và đồng bộ
 if "rag_manager" not in st.session_state:
     st.session_state.rag_manager = RAGManager()
 if "template_reqs" not in st.session_state:
     st.session_state.template_reqs = []
 if "audit_report" not in st.session_state:
     st.session_state.audit_report = None
+if "user_text_content" not in st.session_state:
+    st.session_state.user_text_content = ""
 
 st.title("🛡️ AI Thư Ký Hội Đồng - Trợ Lý Kiểm Định & Hoàn Thiện Hồ Sơ Chuyên Nghiệp")
 st.caption("Giải pháp ứng dụng Trí tuệ nhân tạo chuyên biệt dành cho Sáng kiến kinh nghiệm, Kế hoạch bài dạy (KHBD), và Đánh giá chuẩn giáo dục.")
@@ -45,8 +48,8 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "📂 2. Hồ Sơ Cần Kiểm Tra", 
     "🔬 3. Phân Tích & Đối Chiếu AI", 
     "📊 4. Thẩm Định Hội Đồng",
-    "🛡️ 5. Thẩm Định AI Nâng Cao", # NEW
-    "📈 6. Bảng Điều Khiển & Phản Biện", # NEW
+    "🛡️ 5. Thẩm Định AI Nâng Cao", 
+    "📈 6. Bảng Điều Khiển & Phản Biện", 
     "🤖 7. Chat Cố Vấn Tương Tác"
 ])
 
@@ -61,22 +64,31 @@ with tab1:
             st.success(f"Đã trích xuất thành công {len(st.session_state.template_reqs)} tiêu chí cốt lõi.")
             st.json(st.session_state.template_reqs)
 
-# --- TAB 2: VĂN BẢN CẦN KIỂM TRA ---
+# --- TAB 2: VĂN BẢN CẦN KIỂY TRA (Điểm mấu chốt xử lý lưu cache) ---
 with tab2:
     st.header("Tải lên tài liệu giáo viên cần thẩm định")
     uploaded_user_file = st.file_uploader("Tải lên Hồ sơ của bạn (DOCX/PDF)", type=["docx", "pdf"], key="user_doc")
     if uploaded_user_file:
-        user_text = DocumentProcessor.read_file(uploaded_user_file)
-        st.text_area("Xem trước Nội dung văn bản hiện tại:", value=user_text[:1500] + "\n...", height=300)
+        # Đọc 1 lần duy nhất để tránh cạn luồng stream bytes và bọc xử lý lỗi
+        raw_text = DocumentProcessor.read_file(uploaded_user_file)
+        if raw_text.startswith("LỖI:"):
+            st.error(raw_text)
+            st.session_state.user_text_content = ""
+        else:
+            st.session_state.user_text_content = raw_text
+            st.success("Tải hồ sơ và đồng bộ bộ nhớ đệm thành công!")
+            st.text_area("Xem trước Nội dung văn bản hiện tại:", value=st.session_state.user_text_content[:1500] + "\n...", height=300)
 
 # --- TAB 3: PHÂN TÍCH AI & TRACK CHANGES ---
 with tab3:
     st.header("Kết quả phân tích, đối chiếu diện rộng")
-    if st.button("🚀 Khởi chạy Rà soát tự động bằng AI") and uploaded_user_file and ai_engine:
-        user_text = DocumentProcessor.read_file(uploaded_user_file)
-        with st.spinner("AI đang tiến hành quét cấu trúc, kiểm tra lỗi hành chính và chính tả..."):
-            res = ai_engine.audit_document(st.session_state.template_reqs, user_text, audit_level)
-            st.session_state.audit_report = res.get("report", [])
+    if st.button("🚀 Khởi chạy Rà soát tự động bằng AI"):
+        if st.session_state.user_text_content and ai_engine:
+            with st.spinner("AI đang tiến hành quét cấu trúc, kiểm tra lỗi hành chính và chính tả..."):
+                res = ai_engine.audit_document(st.session_state.template_reqs, st.session_state.user_text_content, audit_level)
+                st.session_state.audit_report = res.get("report", [])
+        else:
+            st.warning("Vui lòng cấu hình API Key và tải lên hồ sơ tại Tab 2 trước!")
             
     if st.session_state.audit_report:
         st.subheader("Bảng chi tiết thiếu sót và khuyến nghị hành động:")
@@ -85,7 +97,6 @@ with tab3:
                 st.write(f"**Điểm thành phần:** {item.get('score')}/100")
                 st.info(f"💡 **Đề xuất hiệu đính từ Hội đồng AI:** {item.get('fix')}")
                 
-                # Tính năng Track changes lựa chọn áp dụng áp đặt
                 col_acc, col_rej = st.columns(2)
                 if col_acc.button("☑️ Áp dụng Đề xuất này", key=f"acc_{idx}"):
                     st.success("Đã ghi nhận cấu trúc chỉnh sửa vào hàng đợi xuất file!")
@@ -110,10 +121,10 @@ with tab4:
             excel_file = EvidenceGenerator.generate_survey_table("Bảng Thống Kê Điểm Số Khảo Sát Thực Nghiệm Sáng Kiến", ["Năng lực tư duy hình học", "Khả năng vận dụng Chuyển đổi số"])
             st.download_button("📥 Tải xuống Biểu mẫu Excel Minh chứng", data=excel_file, file_name="minh_chung_ai_generated.xlsx")
 
+# --- TAB 5: THẨM ĐỊNH AI NÂNG CAO (MODULE 8 & 9) ---
 with tab5:
     st.header("🔬 Phân Hệ Thẩm Định Ngôn Ngữ Biến Đổi Nâng Cao")
     
-    # HIỂN THỊ CẢNH BÁO QUAN TRỌNG THEO YÊU CẦU NGHIÊM NGẶT
     st.warning("""
     ⚠️ **CẢNH BÁO QUAN TRỌNG:**
     - Các kết quả về: *Tỷ lệ nghi ngờ AI*, *Tỷ lệ tương đồng trùng lặp*, và *Khả năng đạt giải* hoàn toàn chỉ mang tính chất hỗ trợ và tham khảo.
@@ -121,75 +132,73 @@ with tab5:
     - Hệ thống tuyệt đối không đưa ra khẳng định chắc chắn mang tính quy chụp văn bản là đạo văn hay do máy tạo hoàn toàn.
     """)
     
-    if uploaded_user_file and ai_engine:
-        user_text = DocumentProcessor.read_file(uploaded_user_file)
-        
+    if st.session_state.user_text_content and ai_engine:
         col_m8, col_m9 = st.columns(2)
         
         with col_m8:
             st.subheader("🤖 Module 8: Quét Dấu Hiệu AI Sinh Văn Bản")
             if st.button("Chạy quét cấu trúc lặp LLM"):
-                ai_detect_res = AdvancedAuditor.detect_ai_generated(user_text, ai_engine)
-                st.write(f"**Kết luận chung:** `{ai_detect_res.get('summary', 'Cần rà soát')}`")
-                st.info(f"💡 **Gợi ý cá nhân hóa:** {ai_detect_res.get('advice', '')}")
-                
-                # Tạo bảng hiển thị
-                df_ai = pd.DataFrame(ai_detect_res.get('sections', []))
-                st.table(df_ai)
+                with st.spinner("Đang phân tích độ tự nhiên và mật độ phân phối từ..."):
+                    ai_detect_res = AdvancedAuditor.detect_ai_generated(st.session_state.user_text_content, ai_engine)
+                    st.write(f"**Kết luận chung:** `{ai_detect_res.get('summary', 'Cần rà soát')}`")
+                    st.info(f"💡 **Gợi ý cá nhân hóa:** {ai_detect_res.get('advice', '')}")
+                    
+                    df_ai = pd.DataFrame(ai_detect_res.get('sections', []))
+                    st.table(df_ai)
                 
         with col_m9:
             st.subheader("📚 Module 9: Kiểm Tra Đạo Văn & Trùng Lặp")
             if st.button("Đối chiếu hệ thống dữ liệu"):
-                # ĐÃ SỬA: Truyền ai_engine vào thay vì mảng trống []
-                plag_res = AdvancedAuditor.check_plagiarism(user_text, ai_engine)
-                for p in plag_res:
-                    color = "🔴" if p['level'] == "Cao" else "🟡"
-                    st.write(f"{color} **{p['section']}**")
-                    st.progress(p['similarity'] / 100)
-                    st.caption(f"Mức độ tương đồng cấu trúc mạng: {p['similarity']}%")
+                with st.spinner("Đang so sánh biểu mẫu ý tưởng diện rộng..."):
+                    plag_res = AdvancedAuditor.check_plagiarism(st.session_state.user_text_content, ai_engine)
+                    for p in plag_res:
+                        color = "🔴" if p['level'] == "Cao" else "🟡"
+                        st.write(f"{color} **{p['section']}**")
+                        st.progress(p['similarity'] / 100)
+                        st.caption(f"Mức độ tương đồng cấu trúc mạng: {p['similarity']}%")
+    else:
+        st.info("Vui lòng cung cấp API Key và tải hồ sơ tại Tab 2.")
 
 # --- TAB 6: BẢNG ĐIỀU KHIỂN & PHẢN BIỆN (MODULE 11, 12, 13) ---
 with tab6:
     st.header("📊 Trung Tâm Điều Hành Thẩm Định & Dự Đoán")
     
-    if uploaded_user_file and ai_engine:
-        user_text = DocumentProcessor.read_file(uploaded_user_file)
-        
+    if st.session_state.user_text_content and ai_engine:
         # Module 10: Dự đoán khả năng đạt giải
         st.subheader("🔮 Module 10: Dự Đoán Khả Năng Được Công Nhận")
         if st.button("Phân tích xác suất Hội đồng thi đua"):
-            pred_res = AdvancedAuditor.predict_success_rate(user_text, ai_engine)
-            
-            # Khởi tạo Dashboard số liệu (Module 11)
-            col1, col2, col3 = st.columns(3)
-            for rate in pred_res.get("rates", []):
-                if rate['level'] == "Cấp Trường": col1.metric("Xác suất Cấp Trường", f"{rate['probability']}%")
-                if rate['level'] == "Cấp Huyện": col2.metric("Xác suất Cấp Huyện", f"{rate['probability']}%")
-                if rate['level'] == "Cấp Tỉnh": col3.metric("Xác suất Cấp Tỉnh", f"{rate['probability']}%")
-            
-            st.success(f"**Điểm mạnh cấu trúc:** {pred_res.get('strengths')}")
-            st.error(f"**Điểm yếu thiếu sót:** {pred_res.get('weaknesses')}")
-            st.info(f"💬 **Nhận xét dự báo:** *{pred_res.get('advice')}*")
-            
-            # Vẽ biểu đồ Radar/Cột giả lập bằng Streamlit Native Chart
-            st.write("**Biểu đồ phân tích chất lượng tiêu chí:**")
-            chart_data = pd.DataFrame({
-                'Tiêu chí': ['Cấu trúc', 'Nội dung', 'Minh chứng', 'Đổi mới'],
-                'Hồ sơ của bạn': [85, 70, 45, 60],
-                'Chuẩn Cấp Huyện': [80, 75, 70, 70]
-            })
-            st.bar_chart(chart_data, x='Tiêu chí')
+            with st.spinner("Đang chạy mô hình đối chiếu thư viện giải thưởng..."):
+                pred_res = AdvancedAuditor.predict_success_rate(st.session_state.user_text_content, ai_engine)
+                
+                col1, col2, col3 = st.columns(3)
+                for rate in pred_res.get("rates", []):
+                    if rate['level'] == "Cấp Trường": col1.metric("Xác suất Cấp Trường", f"{rate['probability']}%")
+                    if rate['level'] == "Cấp Huyện": col2.metric("Xác suất Cấp Huyện", f"{rate['probability']}%")
+                    if rate['level'] == "Cấp Tỉnh": col3.metric("Xác suất Cấp Tỉnh", f"{rate['probability']}%")
+                
+                st.success(f"**Điểm mạnh cấu trúc:** {pred_res.get('strengths')}")
+                st.error(f"**Điểm yếu thiếu sót:** {pred_res.get('weaknesses')}")
+                st.info(f"💬 **Nhận xét dự báo:** *{pred_res.get('advice')}*")
+                
+                st.write("**Biểu đồ phân tích chất lượng tiêu chí (Module 11):**")
+                chart_data = pd.DataFrame({
+                    'Tiêu chí': ['Cấu trúc', 'Nội dung', 'Minh chứng', 'Đổi mới'],
+                    'Hồ sơ của bạn': [85, 70, 45, 60],
+                    'Chuẩn Cấp Huyện': [80, 75, 70, 70]
+                })
+                st.bar_chart(chart_data, x='Tiêu chí')
 
         st.divider()
         
         # Module 12: Mô phỏng tranh biện phản biện hội đồng
         st.subheader("⚖️ Module 12: Góc Nhìn Phản Biện Hội Đồng Giả Lập")
         if st.button("Kích hoạt Hội đồng phản biện"):
-            debates = DashboardPanel.simulate_committee_debate(user_text, ai_engine)
-            for d in debates:
-                with st.chat_message("user"):
-                    st.write(f"**{d['reviewer']}** (Điểm chấm: {d['score']}/100)")
-                    st.write(f"*{d['opinion']}*")
+            with st.spinner("Đang giả lập hội đồng thảo luận kín..."):
+                debates = DashboardPanel.simulate_committee_debate(st.session_state.user_text_content, ai_engine)
+                for d in debates:
+                    with st.chat_message("user"):
+                        st.write(f"**{d['reviewer']}** (Điểm chấm: {d['score']}/100)")
+                        st.write(f"*{d['opinion']}*")
                     
         st.divider()
         
@@ -197,7 +206,6 @@ with tab6:
         st.subheader("🎯 Module 13: Cố Vấn Chiến Lược Hoàn Thiện")
         st.caption("AI hoạch định lộ trình chuyển đổi nâng hạng giải thưởng dựa trên các điểm nghẽn.")
         
-        # ĐÃ SỬA: Bỏ đoạn gán đè st.text_selectbox lỗi
         strat_query = st.selectbox(
             "Lựa chọn câu hỏi chiến lược:",
             [
@@ -207,16 +215,22 @@ with tab6:
             ]
         )
         if st.button("Xin lộ trình chiến lược"):
-            roadmap = DashboardPanel.get_strategic_roadmap(strat_query, ai_engine)
-            st.markdown(roadmap)
+            with st.spinner("AI đang vạch lộ trình hành động..."):
+                roadmap = DashboardPanel.get_strategic_roadmap(strat_query, ai_engine)
+                st.markdown(roadmap)
+    else:
+        st.info("Vui lòng cung cấp API Key và tải hồ sơ tại Tab 2.")
+
 # --- TAB 7: AI CỐ VẤN TƯƠNG TÁC ---
 with tab7:
     st.header("💬 Trợ Lý Cố Vấn Học Đường (Contextual Chat)")
     st.write("Đặt câu hỏi trực tiếp về tài liệu của bạn, AI sẽ trả lời dựa trên ngữ cảnh cấu trúc văn bản đang mở.")
     user_query = st.text_input("Ví dụ: Tôi nên viết lại phần lý do chọn đề tài như thế nào để thuyết phục?")
-    if user_query and ai_engine and uploaded_user_file:
-        user_text = DocumentProcessor.read_file(uploaded_user_file)
-        with st.spinner("AI đang tìm giải pháp tốt nhất..."):
-            ctx_prompt = f"Ngữ cảnh tài liệu hiện tại:\n{user_text[:2000]}\n\nCâu hỏi giáo viên: {user_query}\nHãy trả lời chuẩn hóa chuyên môn."
-            response = ai_engine.model.generate_content(ctx_prompt)
-            st.write(response.text)
+    if user_query and ai_engine:
+        if st.session_state.user_text_content:
+            with st.spinner("AI đang tìm giải pháp tốt nhất..."):
+                ctx_prompt = f"Ngữ cảnh tài liệu hiện tại:\n{st.session_state.user_text_content[:2000]}\n\nCâu hỏi giáo viên: {user_query}\nHãy trả lời chuẩn hóa chuyên môn."
+                response = ai_engine.model.generate_content(ctx_prompt)
+                st.write(response.text)
+        else:
+            st.warning("Vui lòng tải tài liệu tại Tab 2 trước khi đặt câu hỏi tương tác.")
