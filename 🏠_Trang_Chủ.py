@@ -111,14 +111,14 @@ with col10:
         st.markdown("### 🎓 10. Trợ lý giúp vẽ hình Hình học")
         st.write("Trợ lý AI giúp GV vẽ hình hình học theo đề bài ra để chèn vào KHBD hoặc lời giải trong đề bài.")
         if st.button("🚀 Mở ứng dụng Vẽ hình HH", key="btn_ve_hinh_hoc", use_container_width=True):
-            st.switch_page("pages/7_🎓_Viết_Sáng_kiến_kinh_nghiệm.py")
-with col8:
+            st.switch_page("pages/10_📐_Vẽ_Hình_học_và_Đồ_thị.py")
+with col11:
     with st.container(border=True):
         st.markdown("### 🎓 8. Gia sư AI - Hỗ trợ HS")
         st.write("Hỗ trợ HS và hướng dẫn các em làm bài tập Tất cả các môn học từ TH đến THPT.")
         if st.button("🚀 Mở ứng dụng Gia sư", key="btn_gia_su_ai", use_container_width=True):
             st.switch_page("pages/8_🎓_Gia_Sư_AI.py")
-with col9:
+with col12:
     with st.container(border=True):
         st.markdown("### 9_🔄_Chuyển đổi file .Pdf thành Word (.docx)")
         st.write("Ứng dụng trích xuất văn bản từ tài liệu hoặc hình ảnh và xuất bản thành file Word.")
