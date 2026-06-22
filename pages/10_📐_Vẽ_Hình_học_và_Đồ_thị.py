@@ -1,7 +1,7 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 from ai_math_drawer.ai_engine import AIEngine
-from ai_math_drawer.geometry_engine import GeometryEngine
+from geometry_engine import GeometryEngine
 from ai_math_drawer.docx_exporter import DocxExporter
 
 # Khởi tạo cấu hình trang
