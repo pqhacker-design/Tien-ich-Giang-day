@@ -10,7 +10,8 @@ st.set_page_config(
     page_icon="📐",
     layout="wide"
 )
-
+st.title("📐 AI Vẽ Hình Học và Đồ Thị Toán Học")
+st.caption("Trợ lý giúp vẽ hình hình học tự động và vẽ đồ thị từ đề bài")
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
