@@ -201,7 +201,7 @@ frontend_html = f"""
         <div class="flex items-center space-x-3">
             <div class="bg-indigo-600 text-white p-2 rounded-lg shadow-md"><i class="fas fa-dharmachakra text-lg"></i></div>
             <div>
-                <h1 class="text-lg font-bold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">Classroom Lucky Wheel</h1>
+                <h1 class="text-lg font-bold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">Classroom Lucky Wheel (Chú ý: Xem cấu hình bên slidebar)</h1>
                 <p class="text-[11px] text-slate-400">Đồng bộ đám mây Streamlit Hub</p>
             </div>
         </div>
