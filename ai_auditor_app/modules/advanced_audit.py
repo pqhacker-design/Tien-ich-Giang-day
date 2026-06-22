@@ -1,7 +1,7 @@
 import re
 import json
 import random
-from ai_auditor_app.core.ai_engine import AIEngine
+from core.ai_engine import AIEngine
 
 class AdvancedAuditor:
     @staticmethod
