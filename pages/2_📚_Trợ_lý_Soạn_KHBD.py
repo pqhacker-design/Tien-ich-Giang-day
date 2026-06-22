@@ -35,7 +35,7 @@ st.title("🚀 Hệ thống Tối ưu & Thiết kế KHBD tự động 5512")
 # Chỉ để duy nhất chuỗi URL sạch bên trong dấu nháy
 st.sidebar.image("https://img.icons8.com/fluent/96/000000/artificial-intelligence.png", width=80)
 st.sidebar.title("AI GIÁO ÁN THÔNG MINH")
-st.sidebar.caption("Hệ thống trợ lý số hóa Giáo dục thời đại 4.0")
+st.sidebar.caption("Hệ thống trợ lý số hóa Giáo dục thời đại 4.0 (Chú ý: Xem cấu hình bên slidebar)")
 st.sidebar.markdown("---")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
