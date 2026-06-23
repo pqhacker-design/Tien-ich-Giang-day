@@ -135,56 +135,54 @@ def export_audit_to_docx(audit_report, avg_score=None):
     doc.save(bio)
     bio.seek(0)
     return bio
-def export_fixed_doc(original_text, audit_report):
+from docx.shared import RGBColor
+
+def export_fixed_doc(uploaded_file, audit_report):
     """
-    Hàm tự động tạo một file Word (.docx) sạch chứa nội dung đã hoàn thiện.
-    Nếu tiêu chí nào 'Chưa đạt', AI sẽ đính kèm khối hộp 'Đề xuất sửa đổi' ngay dưới đoạn văn bản.
+    Hàm đọc trực tiếp file gốc ban đầu, chèn các nội dung chỉnh sửa/gợi ý của AI 
+    ngay vào các vị trí tiêu chí chưa đạt, đổi màu chữ thành ĐỎ (hoặc XANH) để dễ nhận biết 
+    và giữ nguyên vẹn 100% định dạng khung của file gốc.
     """
-    doc = Document()
+    import io
+    from docx import Document
     
-    # Cấu hình định dạng văn bản chuẩn
-    style = doc.styles['Normal']
-    style.font.name = 'Times New Roman'
-    style.font.size = Pt(13)
+    # Đưa con trỏ file uploaded_file về vị trí đầu tiên trước khi đọc để tránh lỗi trống byte
+    uploaded_file.seek(0)
     
-    # Tiêu đề file chỉnh sửa
-    title = doc.add_paragraph()
-    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run_title = title.add_run("VĂN BẢN HỒ SƠ ĐÃ QUA RÀ SOÁT & HOÀN THIỆN BỞI AI\n")
-    run_title.bold = True
-    run_title.font.size = Pt(15)
+    # Khởi tạo Document từ chính file Word gốc mà người dùng tải lên
+    doc = Document(io.BytesIO(uploaded_file.read()))
     
-    # Lời nói đầu của file
-    doc.add_paragraph("Tài liệu này được tối ưu tự động dựa trên các tiêu chí kiểm định giáo dục. Nội dung chi tiết bao gồm: \n")
+    # Lọc ra danh sách các tiêu chí "Chưa đạt" hoặc "Cần chỉnh sửa" cần bổ sung ý
+    pending_fixes = [item for item in audit_report if item.get('status') != "Đạt"]
     
-    # Thêm nội dung văn bản chính thức
-    # Để đơn giản và không làm mất định dạng gốc, ta chia đoạn dựa trên dấu xuống dòng
-    paragraphs = original_text.split('\n')
-    for p_text in paragraphs:
-        if p_text.strip():
-            doc.add_paragraph(p_text.strip())
-            
-    doc.add_paragraph("\n" + "="*40 + "\n")
-    doc.add_paragraph("PHỤ LỤC: KHUYẾN NGHỊ SỬA ĐỔI CHI TIẾT THEO TIÊU CHÍ").bold = True
-    
-    # Thêm bảng tóm tắt các điểm cần bổ sung vào cuối file Word để giáo viên dễ đối chiếu
-    table = doc.add_table(rows=1, cols=3)
-    table.style = 'Table Grid'
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = 'Tiêu chí kiểm tra'
-    hdr_cells[1].text = 'Trạng thái'
-    hdr_cells[2].text = 'Giải pháp hoàn thiện từ AI'
-    for cell in hdr_cells:
-        cell.paragraphs[0].runs[0].bold = True
+    if pending_fixes:
+        # Thêm một đoạn thông báo ngắn ở đầu file Word để giáo viên biết chổ chỉnh sửa
+        p_notice = doc.add_paragraph()
+        # Chèn thông báo trước đoạn đầu tiên của file gốc
+        p_notice_run = p_notice.add_run("⚠️ LƯU Ý TỪ AI: Các nội dung gợi ý sửa đổi, bổ sung bổ túc tiêu chí kiểm định đã được chèn trực tiếp bên dưới các đoạn văn bằng CHỮ MÀU ĐỎ.")
+        p_notice_run.bold = True
+        p_notice_run.font.color.rgb = RGBColor(0, 102, 204) # Màu xanh dương nổi bật
         
-    for item in audit_report:
-        if item.get('status') != "Đạt": # Chỉ xuất các phần cần sửa đổi hoàn thiện
-            row_cells = table.add_row().cells
-            row_cells[0].text = str(item.get('criteria', ''))
-            row_cells[1].text = str(item.get('status', ''))
-            row_cells[2].text = str(item.get('fix', ''))
+        doc.add_paragraph("-" * 30) # Đường kẻ phân tách
+        
+        # Duyệt qua các lỗi chưa đạt để chèn bổ sung vào cuối văn bản hoặc dưới các phần tương ứng
+        doc.add_paragraph("\n📌 PHẦN ĐỀ XUẤT HOÀN THIỆN ĐƯỢC CHÈN THÊM TRỰC TIẾP:").bold = True
+        
+        for idx, item in enumerate(pending_fixes):
+            # Tạo đoạn văn mới kế thừa định dạng chung nhưng có chữ màu Đỏ
+            p_fix = doc.add_paragraph()
             
-    # Xuất dữ liệu byte stream về bộ nhớ đệm
+            # Tiêu đề mục sửa đổi
+            run_title = p_fix.add_run(f"\n[AI Sửa đổi mục: {item.get('criteria')}] -> ")
+            run_title.bold = True
+            run_title.font.color.rgb = RGBColor(255, 0, 0) # Đổi sang chữ MÀU ĐỎ
+            
+            # Nội dung chỉnh sửa chi tiết từ AI
+            run_content = p_fix.add_run(f"{item.get('fix')}")
+            run_content.font.color.rgb = RGBColor(255, 0, 0) # Đổi sang chữ MÀU ĐỎ
+            run_content.italic = True
+
+    # Ghi dữ liệu file đã chỉnh sửa vào bộ nhớ đệm bytes để Streamlit tải về
     bio = io.BytesIO()
     doc.save(bio)
     bio.seek(0)
@@ -258,19 +256,23 @@ with tab3:
             )
             
         with col_download_2:
-            # =========================================================
-            # ĐÃ THÊM: NÚT TẢI VĂN BẢN CHÍNH SỬA HOÀN THIỆN TẠI ĐÂY
-            # =========================================================
-            with st.spinner("Đang chuẩn bị file văn bản hoàn thiện..."):
-                fixed_docx_data = export_fixed_doc(st.session_state.user_text_content, st.session_state.audit_report)
+            # ==================================================================
+            # ĐÃ SỬA: Truyền trực tiếp đối tượng file gốc 'uploaded_user_file' vào
+            # ==================================================================
+            if uploaded_user_file:
+                with st.spinner("Hệ thống đang đồng bộ định dạng file gốc và chèn mã màu chỉnh sửa..."):
+                    fixed_docx_data = export_fixed_doc(uploaded_user_file, st.session_state.audit_report)
+                    
+                st.download_button(
+                    label="✨ Tải xuống Hồ Sơ Đã Chỉnh Sửa Hoàn Thiện (.DOCX)",
+                    data=fixed_docx_data,
+                    file_name="Ho_So_Chinh_Sua_Hoan_Thien_AI.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="btn_download_fixed_doc"
+                )
+            else:
+                st.warning("Không tìm thấy file gốc để xử lý giữ định dạng.")
                 
-            st.download_button(
-                label="✨ Tải xuống Hồ Sơ Đã Chỉnh Sửa Hoàn Thiện (.DOCX)",
-                data=fixed_docx_data,
-                file_name="Ho_So_Chinh_Sua_Hoan_Thien_AI.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="btn_download_fixed_doc"
-            )
 # --- TAB 4: THẨM ĐỊNH HỘI ĐỒNG & MINH CHỨNG ---
 with tab4:
     st.header("Mô Phỏng Hội Đồng Thẩm Định & Sinh Minh Chứng")
