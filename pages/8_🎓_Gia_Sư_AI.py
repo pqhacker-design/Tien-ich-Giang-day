@@ -489,13 +489,12 @@ st.components.v1.html(
 )
 # ***************************************************************
 
-# ********** PHẦN FOOTER CỐ ĐỊNH Ở DƯỚI CÙNG **********
+# --- FOOTER CỐ ĐỊNH ---
 st.divider()
 st.markdown(
-    f"""
-    <div class="custom-footer-container">
-        <br>
-        Ứng dụng được phát triển bởi Ngô Thanh Hùng 
+    """
+    <div style="text-align: center; font-size: 0.8em; color: grey;">
+        Ứng dụng được phát triển bởi Ngo Thanh Hung © 2026
     </div>
     """,
     unsafe_allow_html=True
