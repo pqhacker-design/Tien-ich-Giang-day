@@ -203,3 +203,13 @@ with tabs[2]:
     * *Đồ thị hàm số THPT:* `"Vẽ đồ thị hàm số y = (2*x + 1) / (x - 1). Hiển thị các tiệm cận đứng và tiệm cận ngang bằng nét đứt."`
     * *Hình học tọa độ:* `"Trong mặt phẳng Oxy, vẽ đường tròn (C) tâm I(2, -3) bán kính R=4 và đường thẳng d: 3x - 4y + 5 = 0."`
     """)
+# --- FOOTER CỐ ĐỊNH ---
+st.divider()
+st.markdown(
+    """
+    <div style="text-align: center; font-size: 0.8em; color: grey;">
+        Ứng dụng được phát triển bởi Ngo Thanh Hung © 2026
+    </div>
+    """,
+    unsafe_allow_html=True
+)
