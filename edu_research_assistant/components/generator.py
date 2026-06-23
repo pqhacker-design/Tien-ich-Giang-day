@@ -43,6 +43,20 @@ def show_generator_module(api_key=None):
             Cuối cùng, tự động xây dựng 01 khung đề cương chi tiết chuẩn cấu trúc {doc_type} của Bộ GD&ĐT cho 01 đề tài xuất sắc nhất trong danh sách trên.
             """
             
-            # TRUYỀN api_key VÀO ĐÂY ĐỂ ĐỒNG BỘ VỚI TRANG CHỦ
-            result = call_ai_stream(prompt, "Bạn là Chuyên gia cao cấp thuộc Hội đồng Khoa học Giáo dục Việt Nam.", api_key=api_key)
-            st.markdown(result)
+            # CẢI TIẾN: Bọc khối gọi AI để bắt lỗi hết Quota / Limit của API Key
+            try:
+                result = call_ai_stream(prompt, "Bạn là Chuyên gia cao cấp thuộc Hội đồng Khoa học Giáo dục Việt Nam.", api_key=api_key)
+                
+                # Kiểm tra nếu kết quả trả về có chứa dấu hiệu hết quota (tùy thuộc vào logic của call_ai_stream trả về text hay raise error)
+                if result and any(k in str(result).lower() for k in ["quota", "insufficient_quota", "exceeded", "limit"]):
+                    st.error("⚠️ **Thông báo:** API Key của bạn đã **hết quota** hoặc **vượt quá giới hạn** lượt gọi (Rate Limit). Vui lòng kiểm tra lại tài khoản hoặc đổi API Key khác tại cấu hình hệ thống.")
+                else:
+                    st.markdown(result)
+                    
+            except Exception as e:
+                error_msg = str(e).lower()
+                # Kiểm tra các từ khóa phổ biến của lỗi hết dung lượng/quota từ các nhà cung cấp AI
+                if "quota" in error_msg or "limit" in error_msg or "429" in error_msg or "insufficient" in error_msg:
+                    st.error("⚠️ **Thông báo:** API Key của bạn đã **hết quota** sử dụng hoặc **vượt quá giới hạn** tần suất yêu cầu. Vui lòng kiểm tra lại số dư tài khoản AI hoặc thay thế API Key mới.")
+                else:
+                    st.error(f"❌ Đã xảy ra lỗi hệ thống khi gọi AI: {e}")
