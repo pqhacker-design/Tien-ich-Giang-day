@@ -201,7 +201,7 @@ frontend_html = f"""
         <div class="flex items-center space-x-3">
             <div class="bg-indigo-600 text-white p-2 rounded-lg shadow-md"><i class="fas fa-dharmachakra text-lg"></i></div>
             <div>
-                <h1 class="text-lg font-bold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">Classroom Lucky Wheel (Chú ý: Xem cấu hình bên slidebar)</h1>
+                <h1 class="text-lg font-bold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">Classroom Lucky Wheel</h1>
                 <p class="text-[11px] text-slate-400">Đồng bộ đám mây Streamlit Hub</p>
             </div>
         </div>
@@ -303,7 +303,7 @@ frontend_html = f"""
             for (let i = array.length - 1; i > 0; i--) {{
                 const j = Math.floor(Math.random() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
-            }
+            }}
             return array;
         }}
 
@@ -556,11 +556,11 @@ if students_list:
             st.rerun()
 else:
     st.info("Lớp học trống. Hãy thêm học sinh ở form trên.")
+
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
 st.markdown("---")
 
-# 5. Chân trang (Footer)
 col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
