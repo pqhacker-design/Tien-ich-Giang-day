@@ -59,4 +59,4 @@ def show_generator_module(api_key=None):
                 if "quota" in error_msg or "limit" in error_msg or "429" in error_msg or "insufficient" in error_msg:
                     st.error("⚠️ **Thông báo:** API Key của bạn đã **hết quota** sử dụng hoặc **vượt quá giới hạn** tần suất yêu cầu. Vui lòng kiểm tra lại số dư tài khoản AI hoặc thay thế API Key mới.")
                 else:
-                    st.error(f"❌ Đã xảy ra lỗi hệ thống khi gọi AI: {e}")
+                    st.error(f"❌ API hết thời hạn. Xin thử lại sau!")
