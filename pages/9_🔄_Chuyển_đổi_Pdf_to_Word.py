@@ -256,7 +256,7 @@ st.divider()
 st.markdown(
     """
     <div style="text-align: center; font-size: 0.8em; color: grey;">
-        Ứng dụng được phát triển bởi Ngô Thanh Hùng
+        Ứng dụng được phát triển bởi Ngo Thanh Hung © 2026
     </div>
     """,
     unsafe_allow_html=True
