@@ -115,13 +115,13 @@ with col10:
 with col11:
     with st.container(border=True):
         st.markdown("### 🎓 11. So sánh văn bản")
-        st.write("Hỗ trợ HS và hướng dẫn các em làm bài tập Tất cả các môn học từ TH đến THPT.")
-        if st.button("🚀 Mở ứng dụng Gia sư", key="btn_so_sanh_van_ban", use_container_width=True):
-            st.switch_page("pages/11_🎓_Gia_Sư_AI.py")
+        st.write("Giúp người dùng so sánh, đối chiếu, đánh giá chất lượng văn bản so với mẫu và áp dụng chỉnh sửa.")
+        if st.button("🚀 Mở ứng dụng So sánh VB", key="btn_so_sanh_van_ban", use_container_width=True):
+            st.switch_page("pages/11_🛡️_So_sánh_văn_bản.py")
 with col12:
     with st.container(border=True):
-        st.markdown("### 9_🔄_Chuyển đổi file .Pdf thành Word (.docx)")
-        st.write("Ứng dụng trích xuất văn bản từ tài liệu hoặc hình ảnh và xuất bản thành file Word.")
+        st.markdown("### Chưa biết làm gì")
+        st.write("Chưa có nội dung")
         if st.button("🚀 Mở ứng dụng Pdf to Word", key="btn_khong_biet", use_container_width=True):
             st.switch_page("pages/12_🔄_Chuyển_đổi_Pdf_to_Word.py")            
 st.markdown("---")
