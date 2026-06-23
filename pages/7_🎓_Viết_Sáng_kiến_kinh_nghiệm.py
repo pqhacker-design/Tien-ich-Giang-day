@@ -35,12 +35,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-# --- KHỞI TẠO BỘ NHỚ LƯU TRỮ TRẠNG THÁI GIỮA CÁC TAB ---
-if "generated_topic" not in st.session_state:
-    st.session_state["generated_topic"] = ""  # Lưu tên đề tài đã chọn/tạo
-if "generated_outline" not in st.session_state:
-    st.session_state["generated_outline"] = ""  # Lưu đề cương chi tiết đã tạo
-    
+
 st.title("📝 Viết SKKN và nghiên cứu Khoa học")
 st.write("Hỗ trợ, chỉnh sửa, đóng góp và gợi ý GV viết SKKN. (Xem DANH MỤC CHỨC NĂNG bên trái)")
 
