@@ -141,61 +141,71 @@ from docx.shared import RGBColor
 
 def export_fixed_doc(uploaded_file, audit_report):
     """
-    Hàm đọc file gốc, tự động can thiệp và sửa đổi/bổ sung nội dung hoàn thiện từ AI
-    vào trực tiếp cấu trúc thân văn bản, đổi màu chữ thành ĐỎ chổ can thiệp
+    Hàm đọc file gốc 1 lần duy nhất, can thiệp chỉnh sửa/bổ sung nội dung từ AI
+    vào trực tiếp cấu trúc thân văn bản, đổi màu chữ thành ĐỎ tại những nơi can thiệp
     và giữ nguyên vẹn 100% định dạng, layout cũ của file.
     """
     import io
     from docx import Document
+    from docx.shared import RGBColor
     
-    # Đưa con trỏ file uploaded_file về vị trí đầu tiên
+    # 1. Đưa con trỏ file về vị trí đầu tiên và đọc duy nhất 1 lần vào bộ nhớ
     uploaded_file.seek(0)
+    file_bytes = uploaded_file.read()
     
-    # Khởi tạo đối tượng Document từ file Word gốc
-    doc = Document(io.BytesIO(uploaded_file.read()))
+    if not file_bytes:
+        return io.BytesIO() # Tránh crash nếu file rỗng
+        
+    # 2. Khởi tạo đối tượng Document từ bộ nhớ đệm
+    doc = Document(io.BytesIO(file_bytes))
     
     # Lọc danh sách các phần được gợi ý chỉnh sửa từ AI
     pending_fixes = [item for item in audit_report if item.get('status') != "Đạt"]
     
     if pending_fixes:
-        # Cách 1: Quét và can thiệp trực tiếp vào các paragraph hiện có nếu khớp từ khóa tiêu chí
         for item in pending_fixes:
-            criteria_name = item.get('criteria', '').lower()
-            fix_content = item.get('fix', '')
+            criteria_name = item.get('criteria', '').lower().strip()
+            fix_content = item.get('fix', '').strip()
             
             matched = False
-            # Duyệt qua các đoạn văn trong file gốc để tìm vị trí thích hợp sửa đổi
+            
+            # Duyệt qua các đoạn văn trong file gốc để tìm vị trí thích hợp
             for paragraph in doc.paragraphs:
-                # Nếu tiêu đề đoạn văn gốc có chứa tên tiêu chí (Ví dụ: "Lý do chọn đề tài", "Mục tiêu"...)
-                if criteria_name in paragraph.text.lower() and len(paragraph.text) < 200:
-                    # Thêm nội dung hoàn thiện của AI ngay phía dưới đoạn văn này
-                    p_new = paragraph._element.addnext(doc.add_paragraph()._element)
-                    p_fixed = Document(io.BytesIO(uploaded_file.read())).add_paragraph(p_new) # Tạo thực thể paragraph
+                # Nếu tìm thấy đoạn văn (hoặc tiêu đề) chứa tên tiêu chí cần chỉnh sửa
+                if criteria_name in paragraph.text.lower() and len(paragraph.text) < 250:
+                    # Thêm một đoạn văn mới ngay phía sau đoạn văn này để chèn nội dung AI
+                    # Sử dụng helper function hoặc tạo đoạn văn kế thừa style của đoạn văn gốc
+                    p_fixed = doc.add_paragraph(style=paragraph.style)
                     
-                    # Định dạng chữ bổ sung trực tiếp của AI thành màu đỏ
-                    run_intro = paragraph.insert_paragraph_before().add_run(f"\n[AI Hoàn thiện]: ")
+                    # Di chuyển đoạn văn mới tạo về ngay sau vị trí paragraph tìm thấy trong cấu trúc XML
+                    paragraph._element.addnext(p_fixed._element)
+                    
+                    # Chèn tiêu đề thông báo AI chỉnh sửa bằng chữ MÀU ĐỎ
+                    run_intro = p_fixed.add_run(f"\n[AI Hoàn thiện mục {item.get('criteria')}]: ")
                     run_intro.bold = True
                     run_intro.font.color.rgb = RGBColor(255, 0, 0)
                     
-                    run_text = paragraph.insert_paragraph_before().add_run(f"{fix_content}\n")
-                    run_text.font.color.rgb = RGBColor(255, 0, 0)
-                    run_text.italic = True
+                    # Chèn nội dung vá lỗi bằng chữ MÀU ĐỎ + In nghiêng
+                    run_content = p_fixed.add_run(f"{fix_content}\n")
+                    run_content.italic = True
+                    run_content.font.color.rgb = RGBColor(255, 0, 0)
+                    
                     matched = True
-                    break
+                    break # Đã chèn xong tiêu chí này, chuyển sang tiêu chí tiếp theo
             
-            # Cách 2: Nếu không tìm thấy đoạn văn nào khớp tên tiêu chí, AI tự động tạo một mục mới 
-            # chèn vào cuối văn bản một cách tự nhiên (không dùng phụ lục chú thích)
+            # Nếu trong thân văn bản gốc hoàn toàn không có đề cập đến tiêu chí này (Mục thiếu hoàn toàn)
+            # AI sẽ tự động tạo một mục mới chèn xuống cuối văn bản
             if not matched:
                 p_sec = doc.add_paragraph()
-                r_title = p_sec.add_run(f"\n[AI Bổ sung mục thiếu: {item.get('criteria')}]\n")
+                r_title = p_sec.add_run(f"\n[AI Bổ sung mục thiếu hoàn toàn: {item.get('criteria')}]\n")
                 r_title.bold = True
                 r_title.font.color.rgb = RGBColor(255, 0, 0)
                 
                 r_content = p_sec.add_run(f"{fix_content}\n")
-                r_content.font.color.rgb = RGBColor(255, 0, 0)
                 r_content.italic = True
+                r_content.font.color.rgb = RGBColor(255, 0, 0)
 
-    # Ghi đè dữ liệu đã vá vào bộ nhớ đệm bytes
+    # 3. Ghi dữ liệu đã vá vào bộ nhớ đệm bytes để Streamlit tải về
     bio = io.BytesIO()
     doc.save(bio)
     bio.seek(0)
