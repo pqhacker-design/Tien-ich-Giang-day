@@ -135,6 +135,61 @@ def export_audit_to_docx(audit_report, avg_score=None):
     doc.save(bio)
     bio.seek(0)
     return bio
+def export_fixed_doc(original_text, audit_report):
+    """
+    Hàm tự động tạo một file Word (.docx) sạch chứa nội dung đã hoàn thiện.
+    Nếu tiêu chí nào 'Chưa đạt', AI sẽ đính kèm khối hộp 'Đề xuất sửa đổi' ngay dưới đoạn văn bản.
+    """
+    doc = Document()
+    
+    # Cấu hình định dạng văn bản chuẩn
+    style = doc.styles['Normal']
+    style.font.name = 'Times New Roman'
+    style.font.size = Pt(13)
+    
+    # Tiêu đề file chỉnh sửa
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run_title = title.add_run("VĂN BẢN HỒ SƠ ĐÃ QUA RÀ SOÁT & HOÀN THIỆN BỞI AI\n")
+    run_title.bold = True
+    run_title.font.size = Pt(15)
+    
+    # Lời nói đầu của file
+    doc.add_paragraph("Tài liệu này được tối ưu tự động dựa trên các tiêu chí kiểm định giáo dục. Nội dung chi tiết bao gồm: \n")
+    
+    # Thêm nội dung văn bản chính thức
+    # Để đơn giản và không làm mất định dạng gốc, ta chia đoạn dựa trên dấu xuống dòng
+    paragraphs = original_text.split('\n')
+    for p_text in paragraphs:
+        if p_text.strip():
+            doc.add_paragraph(p_text.strip())
+            
+    doc.add_paragraph("\n" + "="*40 + "\n")
+    doc.add_paragraph("PHỤ LỤC: KHUYẾN NGHỊ SỬA ĐỔI CHI TIẾT THEO TIÊU CHÍ").bold = True
+    
+    # Thêm bảng tóm tắt các điểm cần bổ sung vào cuối file Word để giáo viên dễ đối chiếu
+    table = doc.add_table(rows=1, cols=3)
+    table.style = 'Table Grid'
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = 'Tiêu chí kiểm tra'
+    hdr_cells[1].text = 'Trạng thái'
+    hdr_cells[2].text = 'Giải pháp hoàn thiện từ AI'
+    for cell in hdr_cells:
+        cell.paragraphs[0].runs[0].bold = True
+        
+    for item in audit_report:
+        if item.get('status') != "Đạt": # Chỉ xuất các phần cần sửa đổi hoàn thiện
+            row_cells = table.add_row().cells
+            row_cells[0].text = str(item.get('criteria', ''))
+            row_cells[1].text = str(item.get('status', ''))
+            row_cells[2].text = str(item.get('fix', ''))
+            
+    # Xuất dữ liệu byte stream về bộ nhớ đệm
+    bio = io.BytesIO()
+    doc.save(bio)
+    bio.seek(0)
+    return bio
+    
 # --- TAB 1: VĂN BẢN MẪU ---
 with tab1:
     st.header("Cung cấp Văn bản mẫu chỉ dẫn / Tiêu chí gốc")
@@ -183,21 +238,39 @@ with tab3:
                 if col_acc.button("☑️ Áp dụng Đề xuất này", key=f"acc_{idx}"):
                     st.success("Đã ghi nhận cấu trúc chỉnh sửa vào hàng đợi xuất file!")
                 col_rej.button("✖️ Bỏ qua lỗi", key=f"rej_{idx}")
+                pass
         st.divider()
-        st.subheader("💾 Tải về văn bản báo cáo")
-    # Tính điểm trung bình để truyền vào file
-        avg_score = sum([int(i.get('score', 70)) for i in st.session_state.audit_report]) / len(st.session_state.audit_report)
+        st.subheader("💾 Trung tâm Xuất & Tải File Hoàn Thiện")
         
-        # Gọi hàm tạo file Word từ bộ nhớ đệm
-        docx_data = export_audit_to_docx(st.session_state.audit_report, avg_score)
+        # Thiết kế 2 cột song song để thầy cô lựa chọn tải file biên bản hoặc file hồ sơ sạch
+        col_download_1, col_download_2 = st.columns(2)
         
-        # Hiển thị nút bấm tải về chính thức trên giao diện Streamlit
-        st.download_button(
-            label="📥 Tải xuống Biên Bản Thẩm Định Toàn Diện (.DOCX)",
-            data=docx_data,
-            file_name="Bien_Ban_Tham_Dinh_Ho_So_Giao_Duc.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
+        with col_download_1:
+            # LƯU Ý: Đây là nút xuất biên bản kiểm định cũ của anh
+            avg_score = sum([int(i.get('score', 70)) for i in st.session_state.audit_report]) / len(st.session_state.audit_report)
+            docx_report_data = export_audit_to_docx(st.session_state.audit_report, avg_score)
+            st.download_button(
+                label="📥 Tải xuống Biên Bản Thẩm Định (.DOCX)",
+                data=docx_report_data,
+                file_name="Bien_Ban_Tham_Dinh_AI.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key="btn_download_report"
+            )
+            
+        with col_download_2:
+            # =========================================================
+            # ĐÃ THÊM: NÚT TẢI VĂN BẢN CHÍNH SỬA HOÀN THIỆN TẠI ĐÂY
+            # =========================================================
+            with st.spinner("Đang chuẩn bị file văn bản hoàn thiện..."):
+                fixed_docx_data = export_fixed_doc(st.session_state.user_text_content, st.session_state.audit_report)
+                
+            st.download_button(
+                label="✨ Tải xuống Hồ Sơ Đã Chỉnh Sửa Hoàn Thiện (.DOCX)",
+                data=fixed_docx_data,
+                file_name="Ho_So_Chinh_Sua_Hoan_Thien_AI.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key="btn_download_fixed_doc"
+            )
 # --- TAB 4: THẨM ĐỊNH HỘI ĐỒNG & MINH CHỨNG ---
 with tab4:
     st.header("Mô Phỏng Hội Đồng Thẩm Định & Sinh Minh Chứng")
