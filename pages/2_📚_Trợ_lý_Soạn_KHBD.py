@@ -28,7 +28,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS history
 conn.commit()
 
 # --- Thân Giao Diện Chính Ứng Dụng ---
-st.title("🚀 Hệ thống Tối ưu & Thiết kế KHBD tự động 5512. (Chú ý: Xem cấu hình bên slidebar)")
+st.title("🚀 Soạn KHBD tự động theo 5512. (Chú ý: Xem cấu hình bên slidebar)")
 
 
 # --- Giao Diện Thanh Công Cụ Sidebar ---
