@@ -119,3 +119,13 @@ with col2:
         )
     else:
         st.info("Chưa có dữ liệu xử lý. Vui lòng hoàn thành các bước ở cột bên trái.")
+# --- FOOTER CỐ ĐỊNH ---
+st.divider()
+st.markdown(
+    """
+    <div style="text-align: center; font-size: 0.8em; color: grey;">
+        Ứng dụng được phát triển bởi Ngo Thanh Hung © 2026
+    </div>
+    """,
+    unsafe_allow_html=True
+)
