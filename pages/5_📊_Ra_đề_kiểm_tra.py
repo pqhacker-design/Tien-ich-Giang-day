@@ -658,3 +658,13 @@ with tab3:
             st.markdown("---")
             st.markdown("### 📊 Bảng đối chiếu hoán vị mã đề nội bộ tra cứu nhanh")
             st.dataframe(st.session_state.alignment_table, use_container_width=True)
+# --- FOOTER CỐ ĐỊNH ---
+st.divider()
+st.markdown(
+    """
+    <div style="text-align: center; font-size: 0.8em; color: grey;">
+        Ứng dụng được phát triển bởi Ngo Thanh Hung © 2026
+    </div>
+    """,
+    unsafe_allow_html=True
+)
