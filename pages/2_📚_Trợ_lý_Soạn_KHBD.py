@@ -28,8 +28,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS history
 conn.commit()
 
 # --- Thân Giao Diện Chính Ứng Dụng ---
-st.title("🚀 Soạn KHBD tự động theo 5512. (Chú ý: Xem cấu hình bên slidebar)")
-
+st.title("🚀 Soạn KHBD tự động theo 5512.")
+st.write("Giúp GV tích hợp Năng lực số theo Chương trình GDPT 2018 nhanh chóng và chuẩn xác (Chú ý: Xem cấu hình bên slidebar)")
 
 # --- Giao Diện Thanh Công Cụ Sidebar ---
 # Chỉ để duy nhất chuỗi URL sạch bên trong dấu nháy
