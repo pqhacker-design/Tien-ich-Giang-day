@@ -240,24 +240,34 @@ with tab3:
             
     if st.session_state.audit_report:
         st.subheader("Bảng chi tiết thiếu sót và khuyến nghị hành động:")
+        
+        # Khởi tạo danh sách lưu các tiêu chí được chọn áp dụng nếu chưa có
+        if "accepted_fixes" not in st.session_state:
+            st.session_state.accepted_fixes = []
+            
         for idx, item in enumerate(st.session_state.audit_report):
             with st.expander(f"📌 Tiêu chí: {item.get('criteria')} - Hiện trạng: {item.get('status')}"):
                 st.write(f"**Điểm thành phần:** {item.get('score')}/100")
                 st.info(f"💡 **Đề xuất hiệu đính từ Hội đồng AI:** {item.get('fix')}")
                 
                 col_acc, col_rej = st.columns(2)
+                
+                # Khi bấm nút áp dụng, lưu tiêu chí này vào danh sách hàng đợi sửa trực tiếp
                 if col_acc.button("☑️ Áp dụng Đề xuất này", key=f"acc_{idx}"):
-                    st.success("Đã ghi nhận cấu trúc chỉnh sửa vào hàng đợi xuất file!")
-                col_rej.button("✖️ Bỏ qua lỗi", key=f"rej_{idx}")
-                pass
+                    if item not in st.session_state.accepted_fixes:
+                        st.session_state.accepted_fixes.append(item)
+                    st.success(f"Đã duyệt chỉnh sửa trực tiếp cho mục: {item.get('criteria')}")
+                    
+                if col_rej.button("✖️ Bỏ qua lỗi", key=f"rej_{idx}"):
+                    if item in st.session_state.accepted_fixes:
+                        st.session_state.accepted_fixes.remove(item)
+                    st.toast("Đã bỏ qua gợi ý.")
+
         st.divider()
         st.subheader("💾 Trung tâm Xuất & Tải File Hoàn Thiện")
         
-        # Thiết kế 2 cột song song để thầy cô lựa chọn tải file biên bản hoặc file hồ sơ sạch
         col_download_1, col_download_2 = st.columns(2)
-        
         with col_download_1:
-            # LƯU Ý: Đây là nút xuất biên bản kiểm định cũ của anh
             avg_score = sum([int(i.get('score', 70)) for i in st.session_state.audit_report]) / len(st.session_state.audit_report)
             docx_report_data = export_audit_to_docx(st.session_state.audit_report, avg_score)
             st.download_button(
@@ -269,22 +279,19 @@ with tab3:
             )
             
         with col_download_2:
-            # ==================================================================
-            # ĐÃ SỬA: Truyền trực tiếp đối tượng file gốc 'uploaded_user_file' vào
-            # ==================================================================
             if uploaded_user_file:
-                with st.spinner("Hệ thống đang đồng bộ định dạng file gốc và chèn mã màu chỉnh sửa..."):
-                    fixed_docx_data = export_fixed_doc(uploaded_user_file, st.session_state.audit_report)
+                with st.spinner("Hệ thống đang tích hợp nội dung AI đã duyệt vào đúng vị trí file gốc..."):
+                    # CHỈ TRUYỀN NHỮNG LỖI MÀ GIÁO VIÊN ĐÃ BẤM CHẤP NHẬN ÁP DỤNG
+                    reports_to_fix = st.session_state.accepted_fixes if st.session_state.accepted_fixes else st.session_state.audit_report
+                    fixed_docx_data = export_fixed_doc(uploaded_user_file, reports_to_fix)
                     
                 st.download_button(
-                    label="✨ Tải xuống Hồ Sơ Đã Chỉnh Sửa Hoàn Thiện (.DOCX)",
+                    label="✨ Tải xuống Hồ Sơ Đã Vá Lỗi Trực Tiếp (.DOCX)",
                     data=fixed_docx_data,
-                    file_name="Ho_So_Chinh_Sua_Hoan_Thien_AI.docx",
+                    file_name="Ho_So_Vao_Form_Hoan_Thien.docx",
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     key="btn_download_fixed_doc"
                 )
-            else:
-                st.warning("Không tìm thấy file gốc để xử lý giữ định dạng.")
                 
 # --- TAB 4: THẨM ĐỊNH HỘI ĐỒNG & MINH CHỨNG ---
 with tab4:
