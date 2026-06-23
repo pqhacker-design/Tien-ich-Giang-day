@@ -195,3 +195,13 @@ if "processed_json" in st.session_state:
         use_container_width=True
     )
     st.caption("Ghi chú định dạng: File Word đầu ra tự động cấu hình Font chữ Times New Roman, Cỡ 13, Dãn dòng 1.15, Biên lề trang (2cm-2cm-3cm-2cm) đúng tuyệt đối quy định văn bản hành chính Việt Nam.")
+# --- FOOTER CỐ ĐỊNH ---
+st.divider()
+st.markdown(
+    """
+    <div style="text-align: center; font-size: 0.8em; color: grey;">
+        Ứng dụng được phát triển bởi Ngo Thanh Hung © 2026
+    </div>
+    """,
+    unsafe_allow_html=True
+)
