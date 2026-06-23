@@ -409,3 +409,13 @@ with tabs[4]:
             )
     else:
         st.info("Chưa có dữ liệu học liệu được tạo từ AI. Hãy hoàn tất tạo câu hỏi ở Tab 2 để tiến hành xuất bản trực tuyến.")
+# --- FOOTER CỐ ĐỊNH ---
+st.divider()
+st.markdown(
+    """
+    <div style="text-align: center; font-size: 0.8em; color: grey;">
+        Ứng dụng được phát triển bởi Ngo Thanh Hung © 2026
+    </div>
+    """,
+    unsafe_allow_html=True
+)
