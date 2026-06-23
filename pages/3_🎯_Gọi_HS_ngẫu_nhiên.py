@@ -293,7 +293,19 @@ frontend_html = f"""
         let isWheelSpinning = false;
         const colors = ["#4f46e5", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#3b82f6", "#ef4444", "#06b6d4"];
 
+        // Mảng lưu trạng thái danh sách học sinh hiển thị trên lưới lật thẻ
+        let gridStudents = [];
+
         function getCurrentStudents() {{ return database.classes[currentClassName] || []; }}
+
+        // Hàm xáo trộn mảng ngẫu nhiên (Fisher-Yates Shuffle)
+        function shuffleArray(array) {{
+            for (let i = array.length - 1; i > 0; i--) {{
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }}
 
         function switchTab(tabId) {{
             document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
@@ -302,7 +314,13 @@ frontend_html = f"""
             const activeBtn = Array.from(document.querySelectorAll(".tab-btn")).find(btn => btn.getAttribute("onclick").includes(tabId));
             if (activeBtn) activeBtn.classList.add("active");
             if (tabId === 'tab-wheel') initWheelCanvas();
-            if (tabId === 'tab-grid') renderInteractiveGrid();
+            if (tabId === 'tab-grid') {{
+                // Khi chuyển tab, nếu mảng hiển thị lưới chưa có thì mới nạp mặc định
+                if (gridStudents.length === 0) {{
+                    gridStudents = [...getCurrentStudents()];
+                }}
+                renderInteractiveGrid();
+            }}
             if (tabId === 'tab-leaderboard') renderLeaderboard();
         }}
 
@@ -406,9 +424,15 @@ frontend_html = f"""
         }}
 
         function renderInteractiveGrid() {{
-            const students = getCurrentStudents(); const grid = document.getElementById("interactiveGrid"); grid.innerHTML = "";
+            const grid = document.getElementById("interactiveGrid"); grid.innerHTML = "";
             const isSecret = document.getElementById("chkSecretMode").checked;
-            students.forEach(s => {{
+            
+            // Đảm bảo dữ liệu lưới luôn đồng bộ với dữ liệu gốc nếu có thay đổi
+            if (gridStudents.length === 0) {{
+                gridStudents = [...getCurrentStudents()];
+            }}
+
+            gridStudents.forEach(s => {{
                 const div = document.createElement("div"); div.className = `card-flip ${{isSecret ? '' : 'flipped'}}`;
                 div.innerHTML = `
                     <div class="card-inner">
@@ -426,7 +450,13 @@ frontend_html = f"""
             }});
         }}
         document.getElementById("chkSecretMode").addEventListener("change", renderInteractiveGrid);
-        document.getElementById("btnResetGrid").addEventListener("click", renderInteractiveGrid);
+        
+        // Khi bấm Khôi phục lưới: Thực hiện xáo trộn ngẫu nhiên vị trí học sinh trong mảng hiển thị lưới
+        document.getElementById("btnResetGrid").addEventListener("click", () => {{
+            gridStudents = shuffleArray([...getCurrentStudents()]);
+            renderInteractiveGrid();
+            playSound('tick');
+        }});
 
         document.getElementById("btnTriggerRandom").addEventListener("click", () => {{
             const students = getCurrentStudents(); if (students.length === 0) return;
@@ -483,6 +513,8 @@ frontend_html = f"""
             initWheelCanvas();
         }});
 
+        // Khởi tạo danh sách ban đầu cho lưới lật thẻ khi tải trang
+        gridStudents = [...getCurrentStudents()];
         setTimeout(initWheelCanvas, 350);
     </script>
 </body>
