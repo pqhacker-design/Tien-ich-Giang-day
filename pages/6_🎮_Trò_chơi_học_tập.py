@@ -38,7 +38,7 @@ else:
     st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
     st.stop()
 
-openai_key = st.session_state.get("openai_api_key", "").strip()
+# --- ĐÃ LOẠI BỎ OPENAI KEY TẠI ĐÂY ---
 
 with st.sidebar:
     st.image("https://img.icons8.com/fluent/96/000000/brainstorm-skill.png", width=80)
@@ -54,7 +54,8 @@ with st.sidebar:
     st.markdown("---")
     st.success("✔ Đã đồng bộ API Key thành công từ Trang chủ.")
 
-ai_engine = AIService(gemini_key=gemini_key, openai_key=openai_key)
+# Khởi tạo AIService chỉ với gemini_key
+ai_engine = AIService(gemini_key=gemini_key)
 
 tabs = st.tabs([
     "🎯 Trò chơi Khởi động", 
@@ -65,11 +66,9 @@ tabs = st.tabs([
 ])
 
 # --- TAB 1: KHỞI ĐỘNG ---
-# --- TAB 1: KHỞI ĐỘNG ---
 with tabs[0]:
     st.header("⚡ Tạo Hoạt Động Khởi Động Sinh Động")
     
-    # Khởi tạo session lưu dữ liệu game khởi động độc lập
     if "warmup_game_data" not in st.session_state:
         st.session_state.warmup_game_data = None
     if "warmup_game_topic" not in st.session_state:
@@ -95,7 +94,6 @@ with tabs[0]:
         if st.session_state.warmup_game_data:
             st.success("Tạo kịch bản trò chơi thành công!")
             
-            # 1. Hiển thị kịch bản sư phạm bằng chữ
             st.markdown("### 📋 Kịch bản chi tiết")
             st.write(st.session_state.warmup_game_data.get("kich_ban_chu", ""))
             
@@ -122,6 +120,7 @@ with tabs[0]:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     key="btn_warmup_kahoot"
                 )
+
 # --- TAB 2: THIẾT KẾ CÂU HỎI AI ---
 with tabs[1]:
     st.header("🧠 Hệ Thống Sinh Câu Hỏi Tương Tác Đa Dạng")
@@ -246,7 +245,7 @@ with tabs[2]:
             </script>
         </body>
         </html>
-        """.replace("DATA_PLACEHOLDER", js_crossword) # Sử dụng hàm .replace an toàn tuyệt đối cho Python 3.14
+        """.replace("DATA_PLACEHOLDER", js_crossword)
         
         components.html(crossword_html, height=480)
 
@@ -362,13 +361,11 @@ with tabs[3]:
                 st.markdown(script_res)
 
 # --- TAB 5: XUẤT BẢN TÀI LIỆU ---
-# --- TAB 5: XUẤT BẢN TÀI LIỆU ---
 with tabs[4]:
     st.header("💾 Xuất Bản Học Liệu Số")
     if st.session_state.generated_quiz:
         st.write(f"Học liệu hiện hành sẵn có cho bài học: **{st.session_state.current_topic}**")
         
-        # Khu vực xuất tài liệu giảng dạy truyền thống
         c_down1, c_down2 = st.columns(2)
         with c_down1:
             docx_file = DocumentExporter.export_to_docx(st.session_state.current_topic, st.session_state.generated_quiz)
