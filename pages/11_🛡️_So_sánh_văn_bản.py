@@ -1,6 +1,9 @@
 import streamlit as st
 import os
 import pandas as pd
+from docx import Document
+from docx.shared import Inches, Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from dotenv import load_dotenv
 from ai_auditor_app.core.document_proc import DocumentProcessor
 from ai_auditor_app.core.ai_engine import AIEngine
@@ -70,6 +73,67 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🤖 7. Chat Cố Vấn Tương Tác"
 ])
 
+def export_audit_to_docx(audit_report, avg_score=None):
+    """Hàm tự động khởi tạo và ghi dữ liệu báo cáo thẩm định ra file Word chuẩn bộ GD"""
+    doc = Document()
+    
+    # Cấu hình font chữ chuẩn và lề
+    style = doc.styles['Normal']
+    font = style.font
+    font.name = 'Times New Roman'
+    font.size = Pt(13)
+    
+    # Tiêu ngữ hành chính
+    p_header = doc.add_paragraph()
+    p_header.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run_header = p_header.add_run("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc\n" + "_"*15 + "\n")
+    run_header.bold = True
+    
+    # Tiêu đề biên bản
+    title = doc.add_heading(level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run_title = title.add_run("BIÊN BẢN THẨM ĐỊNH & KIỂM ĐỊNH HỒ SƠ GIÁO DỤC\n(Hệ thống AI Thư ký Hội đồng tự động xuất)")
+    run_title.font.size = Pt(16)
+    run_title.font.color.rgb = None  # Để màu đen mặc định
+    
+    if avg_score:
+        doc.add_paragraph(f"Điểm đánh giá tổng hợp toàn diện: {round(avg_score, 1)} / 100 điểm.")
+    
+    doc.add_paragraph("Chi tiết các tiêu chí rà soát và khuyến nghị hiệu đính:").bold = True
+    
+    # Tạo bảng danh sách lỗi và đề xuất sửa
+    table = doc.add_table(rows=1, cols=4)
+    table.style = 'Table Grid'
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = 'STT'
+    hdr_cells[1].text = 'Tiêu chí kiểm tra'
+    hdr_cells[2].text = 'Trạng thái / Điểm'
+    hdr_cells[3].text = 'Khuyến nghị giải pháp từ AI'
+    
+    # Định dạng chữ đậm cho tiêu đề bảng
+    for cell in hdr_cells:
+        for paragraph in cell.paragraphs:
+            for run in paragraph.runs:
+                run.bold = True
+
+    # Duyệt điền dữ liệu
+    for idx, item in enumerate(audit_report):
+        row_cells = table.add_row().cells
+        row_cells[0].text = str(idx + 1)
+        row_cells[1].text = str(item.get('criteria', ''))
+        row_cells[2].text = f"{item.get('status', '')} ({item.get('score', 70)}/100)"
+        row_cells[3].text = str(item.get('fix', ''))
+        
+    doc.add_paragraph("\n").alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p_footer = doc.add_paragraph()
+    p_footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p_footer.add_run("ỦY VIÊN THƯ KÝ HỘI ĐỒNG AI\n(Đã duyệt hệ thống)").italic = True
+    
+    # Lưu file vào bộ nhớ tạm dạng bytes để Streamlit download trực tiếp
+    bio = io.BytesIO()
+    doc.save(bio)
+    bio.seek(0)
+    return bio
 # --- TAB 1: VĂN BẢN MẪU ---
 with tab1:
     st.header("Cung cấp Văn bản mẫu chỉ dẫn / Tiêu chí gốc")
@@ -118,7 +182,21 @@ with tab3:
                 if col_acc.button("☑️ Áp dụng Đề xuất này", key=f"acc_{idx}"):
                     st.success("Đã ghi nhận cấu trúc chỉnh sửa vào hàng đợi xuất file!")
                 col_rej.button("✖️ Bỏ qua lỗi", key=f"rej_{idx}")
-
+        st.divider()
+        st.subheader("💾 Tải về văn bản báo cáo")
+    # Tính điểm trung bình để truyền vào file
+        avg_score = sum([int(i.get('score', 70)) for i in st.session_state.audit_report]) / len(st.session_state.audit_report)
+        
+        # Gọi hàm tạo file Word từ bộ nhớ đệm
+        docx_data = export_audit_to_docx(st.session_state.audit_report, avg_score)
+        
+        # Hiển thị nút bấm tải về chính thức trên giao diện Streamlit
+        st.download_button(
+            label="📥 Tải xuống Biên Bản Thẩm Định Toàn Diện (.DOCX)",
+            data=docx_data,
+            file_name="Bien_Ban_Tham_Dinh_Ho_So_Giao_Duc.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
 # --- TAB 4: THẨM ĐỊNH HỘI ĐỒNG & MINH CHỨNG ---
 with tab4:
     st.header("Mô Phỏng Hội Đồng Thẩm Định & Sinh Minh Chứng")
