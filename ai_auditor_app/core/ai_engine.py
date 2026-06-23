@@ -37,7 +37,7 @@ class AIEngine:
                     # Nếu thử lại cả 3 lần vẫn nghẽn, trả về chuỗi thông báo lỗi định dạng cụ thể
                     return "LỖI_QUOTA: API Key của bạn hiện tại đã cạn kiệt hạn mức miễn phí trong phút này. Vui lòng đợi 1 phút rồi nhấn thử lại."
             except Exception as e:
-                return f"LỖI_HỆ_THỐNG: {str(e)}"
+                return f"LỖI_HỆ_THỐNG: Hệ thống đang quá tải, xin thử lại sau!"
         return "LỖI_HỆ_THỐNG: Không thể kết nối tới Google Gemini API."
 
     def extract_template_requirements(self, text: str):
