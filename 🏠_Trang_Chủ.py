@@ -122,7 +122,7 @@ with col12:
     with st.container(border=True):
         st.markdown("### Chưa biết làm gì")
         st.write("Chưa có nội dung")
-        if st.button("🚀 Mở ứng dụng Pdf to Word", key="btn_khong_biet", use_container_width=True):
+        if st.button("🚀 Mở không được", key="btn_khong_biet", use_container_width=True):
             st.switch_page("pages/12_🔄_Chuyển_đổi_Pdf_to_Word.py")            
 st.markdown("---")
 
