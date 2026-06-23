@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import io
 import pandas as pd
 from docx import Document
 from docx.shared import Inches, Pt
