@@ -17,7 +17,7 @@ from ai_auditor_app.modules.dashboard_panel import DashboardPanel
 
 load_dotenv()
 
-st.set_page_config(page_title="AI Thư ký Hội đồng - Kiểm định Hồ sơ Giáo dục", layout="wide")
+st.set_page_config(page_title="AI So sánh - Kiểm định Hồ sơ Giáo dục", layout="wide")
 
 # Khởi tạo Session State lưu trữ dữ liệu liên tục và đồng bộ
 if "rag_manager" not in st.session_state:
@@ -29,8 +29,8 @@ if "audit_report" not in st.session_state:
 if "user_text_content" not in st.session_state:
     st.session_state.user_text_content = ""
 
-st.title("🛡️ AI Thư Ký Hội Đồng - Trợ Lý Kiểm Định & Hoàn Thiện Hồ Sơ Chuyên Nghiệp")
-st.caption("Giải pháp ứng dụng Trí tuệ nhân tạo chuyên biệt dành cho Sáng kiến kinh nghiệm, Kế hoạch bài dạy (KHBD), và Đánh giá chuẩn giáo dục.")
+st.title("🛡️ AI So sánh văn bản với mẫu hướng dẫn")
+st.caption("Giải pháp ứng dụng Trí tuệ nhân tạo So sánh và Đánh giá văn bản so với hướng dẫn mẫu.")
 
 # --- SIDEBAR: Cấu hình hệ thống ---
 # ==============================================================================
