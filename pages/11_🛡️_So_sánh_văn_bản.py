@@ -137,52 +137,65 @@ def export_audit_to_docx(audit_report, avg_score=None):
     return bio
 from docx.shared import RGBColor
 
+from docx.shared import RGBColor
+
 def export_fixed_doc(uploaded_file, audit_report):
     """
-    Hàm đọc trực tiếp file gốc ban đầu, chèn các nội dung chỉnh sửa/gợi ý của AI 
-    ngay vào các vị trí tiêu chí chưa đạt, đổi màu chữ thành ĐỎ (hoặc XANH) để dễ nhận biết 
-    và giữ nguyên vẹn 100% định dạng khung của file gốc.
+    Hàm đọc file gốc, tự động can thiệp và sửa đổi/bổ sung nội dung hoàn thiện từ AI
+    vào trực tiếp cấu trúc thân văn bản, đổi màu chữ thành ĐỎ chổ can thiệp
+    và giữ nguyên vẹn 100% định dạng, layout cũ của file.
     """
     import io
     from docx import Document
     
-    # Đưa con trỏ file uploaded_file về vị trí đầu tiên trước khi đọc để tránh lỗi trống byte
+    # Đưa con trỏ file uploaded_file về vị trí đầu tiên
     uploaded_file.seek(0)
     
-    # Khởi tạo Document từ chính file Word gốc mà người dùng tải lên
+    # Khởi tạo đối tượng Document từ file Word gốc
     doc = Document(io.BytesIO(uploaded_file.read()))
     
-    # Lọc ra danh sách các tiêu chí "Chưa đạt" hoặc "Cần chỉnh sửa" cần bổ sung ý
+    # Lọc danh sách các phần được gợi ý chỉnh sửa từ AI
     pending_fixes = [item for item in audit_report if item.get('status') != "Đạt"]
     
     if pending_fixes:
-        # Thêm một đoạn thông báo ngắn ở đầu file Word để giáo viên biết chổ chỉnh sửa
-        p_notice = doc.add_paragraph()
-        # Chèn thông báo trước đoạn đầu tiên của file gốc
-        p_notice_run = p_notice.add_run("⚠️ LƯU Ý TỪ AI: Các nội dung gợi ý sửa đổi, bổ sung bổ túc tiêu chí kiểm định đã được chèn trực tiếp bên dưới các đoạn văn bằng CHỮ MÀU ĐỎ.")
-        p_notice_run.bold = True
-        p_notice_run.font.color.rgb = RGBColor(0, 102, 204) # Màu xanh dương nổi bật
-        
-        doc.add_paragraph("-" * 30) # Đường kẻ phân tách
-        
-        # Duyệt qua các lỗi chưa đạt để chèn bổ sung vào cuối văn bản hoặc dưới các phần tương ứng
-        doc.add_paragraph("\n📌 PHẦN ĐỀ XUẤT HOÀN THIỆN ĐƯỢC CHÈN THÊM TRỰC TIẾP:").bold = True
-        
-        for idx, item in enumerate(pending_fixes):
-            # Tạo đoạn văn mới kế thừa định dạng chung nhưng có chữ màu Đỏ
-            p_fix = doc.add_paragraph()
+        # Cách 1: Quét và can thiệp trực tiếp vào các paragraph hiện có nếu khớp từ khóa tiêu chí
+        for item in pending_fixes:
+            criteria_name = item.get('criteria', '').lower()
+            fix_content = item.get('fix', '')
             
-            # Tiêu đề mục sửa đổi
-            run_title = p_fix.add_run(f"\n[AI Sửa đổi mục: {item.get('criteria')}] -> ")
-            run_title.bold = True
-            run_title.font.color.rgb = RGBColor(255, 0, 0) # Đổi sang chữ MÀU ĐỎ
+            matched = False
+            # Duyệt qua các đoạn văn trong file gốc để tìm vị trí thích hợp sửa đổi
+            for paragraph in doc.paragraphs:
+                # Nếu tiêu đề đoạn văn gốc có chứa tên tiêu chí (Ví dụ: "Lý do chọn đề tài", "Mục tiêu"...)
+                if criteria_name in paragraph.text.lower() and len(paragraph.text) < 200:
+                    # Thêm nội dung hoàn thiện của AI ngay phía dưới đoạn văn này
+                    p_new = paragraph._element.addnext(doc.add_paragraph()._element)
+                    p_fixed = Document(io.BytesIO(uploaded_file.read())).add_paragraph(p_new) # Tạo thực thể paragraph
+                    
+                    # Định dạng chữ bổ sung trực tiếp của AI thành màu đỏ
+                    run_intro = paragraph.insert_paragraph_before().add_run(f"\n[AI Hoàn thiện]: ")
+                    run_intro.bold = True
+                    run_intro.font.color.rgb = RGBColor(255, 0, 0)
+                    
+                    run_text = paragraph.insert_paragraph_before().add_run(f"{fix_content}\n")
+                    run_text.font.color.rgb = RGBColor(255, 0, 0)
+                    run_text.italic = True
+                    matched = True
+                    break
             
-            # Nội dung chỉnh sửa chi tiết từ AI
-            run_content = p_fix.add_run(f"{item.get('fix')}")
-            run_content.font.color.rgb = RGBColor(255, 0, 0) # Đổi sang chữ MÀU ĐỎ
-            run_content.italic = True
+            # Cách 2: Nếu không tìm thấy đoạn văn nào khớp tên tiêu chí, AI tự động tạo một mục mới 
+            # chèn vào cuối văn bản một cách tự nhiên (không dùng phụ lục chú thích)
+            if not matched:
+                p_sec = doc.add_paragraph()
+                r_title = p_sec.add_run(f"\n[AI Bổ sung mục thiếu: {item.get('criteria')}]\n")
+                r_title.bold = True
+                r_title.font.color.rgb = RGBColor(255, 0, 0)
+                
+                r_content = p_sec.add_run(f"{fix_content}\n")
+                r_content.font.color.rgb = RGBColor(255, 0, 0)
+                r_content.italic = True
 
-    # Ghi dữ liệu file đã chỉnh sửa vào bộ nhớ đệm bytes để Streamlit tải về
+    # Ghi đè dữ liệu đã vá vào bộ nhớ đệm bytes
     bio = io.BytesIO()
     doc.save(bio)
     bio.seek(0)
