@@ -179,6 +179,67 @@ def generate_shuffled_bundle(original_data, start_code, num_codes):
 # ==========================================
 # CÁC HÀM GỌI API GEMINI CHO TỪNG BƯỚC
 # ==========================================
+def generate_all_in_one(model, config, rule, content_text):
+    """
+    Gộp cả 3 bước: Ma trận, Đặc tả, Đề thi vào đúng 1 lượt gọi API duy nhất để tiết kiệm Quota.
+    """
+    prompt = f"""
+Bạn là một chuyên gia khảo thí và kiểm tra đánh giá giáo dục. 
+Nhiệm vụ của bạn là phân tích nội dung nguồn sau đây và thiết kế TRỌN GÓI gồm: Ma trận đề, Bản đặc tả và Toàn bộ câu hỏi đề thi + Đáp án chi tiết.
+
+[THÔNG TIN CẤU HÌNH ĐỀ]
+- Môn học: {config['subject']} (Khối {config['grade']})
+- Hình thức: {config['exam_type']} - Thời lượng: {config['duration']} phút. Năm học: {config['school_year']}
+- Số lượng câu hỏi:
+  + Phần I (Trắc nghiệm nhiều lựa chọn): {config['num_tn_4_lua_chon']} câu (Tổng {config['score_part1']} điểm)
+  + Phần II (Trắc nghiệm Đúng/Sai): {config['num_tn_dung_sai']} câu (Tổng {config['score_part2']} điểm)
+  + Phần III (Trắc nghiệm Trả lời ngắn): {config['num_tn_tra_loi_ngan']} câu (Tổng {config['score_part3']} điểm)
+  + Phần IV (Tự luận): {config['num_tl']} câu (Tổng {config['score_part4']} điểm)
+- Tỷ lệ ma trận tư duy mong muốn: Nhận biết {config['nb_ratio']}%, Thông hiểu {config['th_ratio']}%, Vận dụng {config['vd_ratio']}%, Vận dụng cao {config['vdc_ratio']}% (Điểm lẻ VDC đặt riêng là {config['score_vdc_custom']}).
+
+[QUY TẮC ĐẶC THÙ MÔN HỌC]
+{rule}
+
+[NỘI DUNG NGUỒN KIẾN THỨC]
+{content_text if isinstance(content_text, str) else "Dữ liệu tệp đính kèm tài liệu văn bản/hình ảnh"}
+
+[YÊU CẦU ĐẦU RA]
+Trả về cấu trúc định dạng JSON thuần túy, KHÔNG đặt trong dấu nháy khối ```json. Cấu trúc JSON phải chứa chính xác các khóa sau:
+{{
+  "ma_tran": [
+     {{"chu_de": "Tên chủ đề", "noi_dung": "Nội dung cụ thể", "nhieu_lua_chon": {{"nb": 0, "th": 0, "vd": 0}}, "dung_sai": {{"nb": 0, "th": 0, "vd": 0}}, "tra_loi_ngan": {{"nb": 0, "th": 0, "vd": 0}}, "tu_luan": {{"nb": 0, "th": 0, "vd": 0, "vdc": 0}}}}
+  ],
+  "bang_dac_ta": [
+     {{"chu_de": "Tên chủ đề", "noi_dung": "Nội dung", "muc_do": "Nhận biết/Thông hiểu/...", "chi_tiet": "Mô tả tiêu chí năng lực cần đạt"}}
+  ],
+  "de_kiem_tra": {{
+     "phan_1": [ {{"cau_so": 1, "noi_dung": "Câu hỏi...", "phuong_an": {{"A": "...", "B": "...", "C": "...", "D": "..."}}}} ],
+     "phan_2": [ {{"cau_so": 1, "noi_dung": "Câu hỏi dẫn...", "cac_y": {{"a": "Ý 1...", "b": "Ý 2...", "c": "Ý 3...", "d": "Ý 4..."}}}} ],
+     "phan_3": [ {{"cau_so": 1, "noi_dung": "Câu hỏi..."}} ],
+     "phan_4": [ {{"cau_so": 1, "noi_dung": "Câu hỏi tự luận..."}} ]
+  }},
+  "dap_an_chi_tiet": {{
+     "phan_1": [ {{"cau_so": 1, "dung": "A", "huong_dan": "Giải thích..."}} ],
+     "phan_2": [ {{"cau_so": 1, "huong_dan_y": {{"a": "Đúng. Giải thích...", "b": "Sai...", "c": "...", "d": "..."}}}} ],
+     "phan_3": [ {{"cau_so": 1, "dap_an": "...", "huong_dan": "..."}} ],
+     "phan_4": [ {{"cau_so": 1, "huong_dan_cham": "..."}} ]
+  }}
+}}
+"""
+    
+    # Gửi request (Nếu content_text là dạng đa phương tiện nén trong dict, gộp gửi cùng prompt)
+    if isinstance(content_text, dict) and "data" in content_text:
+        response = model.generate_content([prompt, content_text])
+    else:
+        response = model.generate_content(prompt)
+        
+    # Làm sạch chuỗi JSON kết quả
+    clean_text = response.text.strip()
+    if clean_text.startswith("```"):
+        clean_text = re.sub(r"^```[a-zA-Z]*\n", "", clean_text)
+        clean_text = re.sub(r"\n```$", "", clean_text)
+    
+    return json.loads(clean_text.strip())
 def generate_step1_matrix_only(model, config, raw_input_data):
     prompt_text = f"""
     Bạn là chuyên gia khảo thí. Hãy lập duy nhất bảng Ma trận phân bổ đề kiểm tra môn {config['subject']} - Khối Lớp {config['grade']}.
@@ -604,43 +665,30 @@ with tab3:
         st.warning("⚠️ Vui lòng nhập chủ đề hoặc upload tài liệu kiểm tra tại **Bước 1** trước.")
     else:
         # NÚT BẤM DUY NHẤT GỘP TRỌN GÓI 3 TRONG 1
+        # NÚT BẤM DUY NHẤT ĐÃ ĐƯỢC TỐI ƯU HÓA HOÀN TOÀN (CHỈ TỐN 1 REQUEST)
         if st.button("🔥 CHẠY QUY TRÌNH TRỌN GÓI: MA TRẬN ➔ ĐẶC TẢ ➔ SINH ĐỀ & ĐẢO ĐỀ"):
             try:
                 rule = SUBJECTS_CONFIG[subject]
                 
-                # --- PHẦN 1: KHỞI TẠO MA TRẬN ---
-                with st.spinner("⏳ [1/3] AI đang phân tích nội dung nguồn để lập bảng MA TRẬN..."):
-                    st.session_state.step1_matrix = generate_step1_matrix_only(model, config_pkg, st.session_state.current_document_content)
-                st.toast("✅ Hoàn thành Bước 1: Đã lập Ma trận!", icon="📊")
-                
-                # --- PHẦN 2: THIẾT KẾ BẢN ĐẶC TẢ ---
-                with st.spinner("⏳ [2/3] Bám sát Ma trận, AI đang xây dựng BẢN ĐẶC TẢ năng lực tiêu chí..."):
-                    st.session_state.step2_spec = generate_step2_spec_only(model, config_pkg, st.session_state.step1_matrix)
-                st.toast("✅ Hoàn thành Bước 2: Đã lập Bản đặc tả!", icon="📝")
-                
-                # --- PHẦN 3: SINH CÂU HỎI THI & ĐẢO ĐỀ ---
-                with st.spinner("⏳ [3/3] Đang tiến hành VIẾT CÂU HỎI CHI TIẾT và thực hiện ĐẢO MÃ ĐỀ..."):
-                    step3_data = generate_step3_questions(model, config_pkg, st.session_state.step1_matrix, st.session_state.step2_spec, rule, st.session_state.current_document_content)
+                with st.spinner("⏳ Hệ thống đang chạy quy trình trọn gói tất cả các bước (Ma trận + Đặc tả + Tạo câu hỏi)... Vui lòng đợi trong giây lát!"):
+                    # Gọi duy nhất 1 hàm xử lý gộp
+                    full_data = generate_all_in_one(model, config_pkg, rule, st.session_state.current_document_content)
                     
-                    # Hợp nhất cấu trúc dữ liệu tổng hợp
-                    full_data = {
-                        "ma_tran": st.session_state.step1_matrix["ma_tran"],
-                        "bang_dac_ta": st.session_state.step2_spec["bang_dac_ta"],
-                        "de_kiem_tra": step3_data["de_kiem_tra"],
-                        "dap_an_chi_tiet": step3_data["dap_an_chi_tiet"]
-                    }
+                    # Trích xuất dữ liệu lưu lại session để đồng bộ giao diện
+                    st.session_state.step1_matrix = {"ma_tran": full_data.get("ma_tran", [])}
+                    st.session_state.step2_spec = {"bang_dac_ta": full_data.get("bang_dac_ta", [])}
                     
                     try: s_code = int(code_prefix)
                     except: s_code = 101
                     
+                    # Tiến hành đảo đề từ dữ liệu gốc thu được
                     bundle, alignment_df = generate_shuffled_bundle(full_data, s_code, num_codes)
                     bundle["ĐỀ GỐC"] = full_data
                     
-                    # Lưu trữ kết quả vào session_state
                     st.session_state.multi_codes_data = bundle
                     st.session_state.alignment_table = alignment_df
                     
-                st.success(f"🎉 XUẤT SẮC! Quy trình tự động hoàn tất. Đã tạo thành công ĐỀ GỐC cùng {num_codes} mã đề đảo!")
+                st.success(f"🎉 XUẤT SẮC! Quy trình tự động hoàn tất chỉ với 1 lượt xử lý. Đã tạo thành công ĐỀ GỐC cùng {num_codes} mã đề đảo!")
             except Exception as e:
                 st.error(f"❌ Đã xảy ra lỗi trong tiến trình: {e}")
 
