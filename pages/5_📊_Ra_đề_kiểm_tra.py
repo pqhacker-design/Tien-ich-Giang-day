@@ -79,6 +79,27 @@ def add_math_run_to_paragraph(paragraph, text):
         if line.strip():
             paragraph.add_run(line)
 
+def clean_and_parse_json(raw_text):
+    """
+    Hàm xử lý chuỗi và bóc tách dữ liệu JSON sạch từ phản hồi của AI
+    """
+    raw_text = raw_text.strip()
+    # Tìm khối dữ liệu giữa cặp ```json ... ```
+    match = re.search(r'```json\s*(\{.*?\})\s*```', raw_text, re.DOTALL | re.IGNORECASE)
+    if match:
+        json_str = match.group(1)
+    else:
+        # Nếu không có thẻ markdown thì tìm khối ngoặc nhọn đầu tiên đến cuối cùng
+        match_brace = re.search(r'(\{.*?\})', raw_text, re.DOTALL)
+        if match_brace:
+            json_str = match_brace.group(1)
+        else:
+            json_str = raw_text
+            
+    # Loại bỏ ký tự xuống dòng ẩn bên trong giá trị chuỗi gây hỏng cấu trúc JSON
+    json_str = json_str.replace('\r', '')
+    return json.loads(json_str, strict=False)
+
 # ==========================================
 # KHỞI TẠO SESSION STATE
 # ==========================================
@@ -204,10 +225,11 @@ def generate_step1_matrix(model, config, raw_input_data):
         prompt_text += f"\nNGUỒN DỮ LIỆU KIẾN THỨC BẮT BUỘC:\n\"\"\"\n{raw_input_data}\n\"\"\""
         contents_to_send.append(prompt_text)
 
-    response = model.generate_content(contents_to_send)
-    raw = response.text.strip()
-    raw = re.sub(r'^```json\s*|```$', '', raw, flags=re.IGNORECASE).strip()
-    return json.loads(raw, strict=False)
+    response = model.generate_content(
+        contents_to_send,
+        generation_config={"response_mime_type": "application/json"}
+    )
+    return clean_and_parse_json(response.text)
 
 def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input_data):
     dac_ta_str = json.dumps(matrix_data.get('bang_dac_ta', []), ensure_ascii=False)
@@ -260,10 +282,11 @@ def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input
         prompt_text += f"\nNGUỒN KIẾN THỨC BẮT BUỘC ĐỂ SOẠN CÂU HỎI:\n\"\"\"\n{raw_input_data}\n\"\"\""
         contents_to_send.append(prompt_text)
 
-    response = model.generate_content(contents_to_send)
-    raw = response.text.strip()
-    raw = re.sub(r'^```json\s*|```$', '', raw, flags=re.IGNORECASE).strip()
-    return json.loads(raw, strict=False)
+    response = model.generate_content(
+        contents_to_send,
+        generation_config={"response_mime_type": "application/json"}
+    )
+    return clean_and_parse_json(response.text)
 
 def build_single_docx(config, data, code_label, include_matrix=True):
     doc = Document()
@@ -531,8 +554,6 @@ with tab2:
     with c1: nb_ratio = st.slider("Nhận biết (%)", 0, 100, target_ratios["nb"])
     with c2: th_ratio = st.slider("Thông hiểu (%)", 0, 100, target_ratios["th"])
     with c3: vd_ratio = st.slider("Vận dụng (%)", 0, 100, target_ratios["vd"])
-    
-    # Tự động đồng bộ thanh kéo VDC với ô lựa chọn điểm VDC nếu muốn, hoặc cho giáo viên kéo tay độc lập
     with c4: vdc_ratio = st.slider("Vận dụng cao (%)", 0, 100, target_ratios["vdc"])
     
     total_ratio = nb_ratio + th_ratio + vd_ratio + vdc_ratio
@@ -543,7 +564,6 @@ with tab2:
     col_btn1, col_btn2 = st.columns(2)
     
     with col_btn1:
-        # Khóa nút bấm nếu tổng điểm vượt quá 10 điểm (score_error == True)
         if st.button("📊 BƯỚC 1: KHỞI TẠO MA TRẬN & ĐẶC TẢ", disabled=score_error):
             if total_ratio != 100:
                 st.error("Tổng tỷ lệ phần trăm phân bổ điểm phải bằng 100% trước khi khởi tạo.")
@@ -562,6 +582,10 @@ with tab2:
                     try:
                         st.session_state.step1_data = generate_step1_matrix(model, config_pkg, st.session_state.current_document_content)
                         st.success("✅ Đã thiết lập xong Khung đặc tả bộ môn!")
+                    except json.JSONDecodeError as json_err:
+                        st.error("❌ Lỗi định dạng JSON dữ liệu từ AI. Phản hồi chưa đồng bộ cấu trúc.")
+                        with st.expander("Xem chi tiết phản hồi thô từ AI"):
+                            st.code(json_err.doc if hasattr(json_err, 'doc') else "Không tìm thấy dữ liệu")
                     except Exception as e:
                         st.error(f"Lỗi phân tích kết nối: {e}")
 
@@ -596,6 +620,10 @@ with tab2:
                         st.session_state.multi_codes_data = bundle
                         st.session_state.alignment_table = alignment_df
                         st.success(f"🎉 Đã tạo xong ĐỀ GỐC và {num_codes} mã đề đảo.")
+                    except json.JSONDecodeError as json_err:
+                        st.error("❌ Lỗi định dạng JSON khi tạo câu hỏi. Vui lòng thử bấm lại hoặc kiểm tra lại tài liệu nguồn.")
+                        with st.expander("Xem chi tiết phản hồi thô"):
+                            st.code(json_err.doc if hasattr(json_err, 'doc') else "Không tìm thấy dữ liệu")
                     except Exception as e:
                         st.error(f"Lỗi tạo câu hỏi: {e}")
                         
