@@ -501,7 +501,7 @@ with tab1:
     content_source = st.radio("Phương thức nhập nội dung:", ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức"], horizontal=True)
     
     if content_source == "Nhập tay danh sách chủ đề":
-        topics_list = st.text_area("Danh sách chủ đề kiến thức:", value="Chương 1: Khái niệm cơ bản\nChương 2: Bài toán vận dụng liên quan", height=100)
+        topics_list = st.text_area("Danh sách chủ đề kiến thức cần kiểm tra:", value="Chương 1: Khái niệm cơ bản\nChương 2: Bài toán vận dụng liên quan", height=100)
         st.session_state.current_document_content = topics_list
     else:
         uploaded_doc = st.file_uploader("Tải lên tài liệu giảng dạy:", type=["docx", "txt", "pdf", "png", "jpg", "jpeg"])
@@ -514,10 +514,10 @@ with tab1:
             elif file_ext in ["png", "jpg", "jpeg"]: st.session_state.current_document_content = {"mime_type": f"image/{file_ext}", "data": file_bytes}
 
     c_s1, c_s2, c_s3, c_s4, c_vdc = st.columns(5)
-    with c_s1: score_part1 = st.number_input("Điểm Phần I:", value=3.0)
-    with c_s2: score_part2 = st.number_input("Điểm Phần II:", value=4.0)
-    with c_s3: score_part3 = st.number_input("Điểm Phần III:", value=3.0)
-    with c_s4: score_part4 = st.number_input("Điểm Phần IV:", value=0.0)
+    with c_s1: score_part1 = st.number_input("Điểm Phần I (Nhiều LC):", value=3.0)
+    with c_s2: score_part2 = st.number_input("Điểm Phần II (Đúng/Sai):", value=2.0)
+    with c_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", value=2.0)
+    with c_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", value=3.0)
     with c_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", value=1.0)
     
     st.markdown('**Phân bổ Tỷ lệ Ma trận tư duy (%)**')
@@ -535,7 +535,7 @@ with tab1:
         "matrix_template": matrix_template, "exam_type": exam_type, "duration": duration, "school_year": school_year
     }
 
-    if st.button("📊 THỰC HIỆN BƯỚC 1: KHỞI TẠO MA TRẬN PHÂN BỔ"):
+    if st.button("📊 BƯỚC 1: KHỞI TẠO MA TRẬN PHÂN BỔ"):
         if not st.session_state.current_document_content:
             st.error("Vui lòng nhập chủ đề hoặc upload tài liệu trước.")
         else:
@@ -551,11 +551,11 @@ with tab1:
         st.json(st.session_state.step1_matrix)
 
 with tab2:
-    st.markdown('<div class="section-header">Thiết kế Bản đặc tả từ Ma trận Bước 1</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Thiết kế Bản đặc tả từ Ma trận</div>', unsafe_allow_html=True)
     if not st.session_state.step1_matrix:
         st.info("Trạng thái: Chờ dữ liệu từ Bước 1. Thầy cô vui lòng chạy Bước 1 ở tab bên cạnh trước.")
     else:
-        if st.button("📝 THỰC HIỆN BƯỚC 2: TỰ ĐỘNG LẬP BẢN ĐẶC TẢ CHI TIẾT"):
+        if st.button("📝 BƯỚC 2: TỰ ĐỘNG LẬP BẢN ĐẶC TẢ CHI TIẾT"):
             with st.spinner("AI đang xây dựng ma trận tiêu chí đánh giá và yêu cầu cần đạt..."):
                 try:
                     st.session_state.step2_spec = generate_step2_spec_only(model, config_pkg, st.session_state.step1_matrix)
@@ -568,7 +568,7 @@ with tab2:
         st.json(st.session_state.step2_spec)
 
 with tab3:
-    st.markdown('<div class="section-header">Sinh nội dung Câu hỏi & Đóng gói Đề thi</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Tạo Đề bài & Đóng gói Đề thi</div>', unsafe_allow_html=True)
     if not st.session_state.step2_spec:
         st.info("Trạng thái: Chờ dữ liệu Bản đặc tả từ Bước 2.")
     else:
