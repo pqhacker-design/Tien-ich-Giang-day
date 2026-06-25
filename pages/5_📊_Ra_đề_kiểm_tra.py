@@ -518,8 +518,20 @@ with tab1:
     with c_s2: score_part2 = st.number_input("Điểm Phần II (Đúng/Sai):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
     with c_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
     with c_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
-    with c_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=10.0, value=0.5, step=0.25)
+    with c_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=10.0, value=0.5, step=0.25, help="Chỉnh tăng lên cho lớp chọn hoặc giảm về 0 cho HS trung bình.)
+
+    total_score = score_part1 + score_part2 + score_part3 + score_part4
     
+    # Logic kiểm tra lỗi điểm số vượt quá hoặc không đạt 10 điểm
+    if total_score > 10.0:
+        st.error(f"❌ LỖI CẤU HÌNH ĐIỂM: Tổng số điểm hiện tại là **{total_score}** điểm, vượt quá giới hạn cho phép (Tối đa 10 điểm). Vui lòng điều chỉnh lại!")
+        score_error = True
+    elif total_score < 10.0:
+        st.warning(f"⚠️ Tổng số điểm hiện tại là **{total_score}** điểm. Đề kiểm tra chuẩn cần đạt chính xác **10.0** điểm.")
+        score_error = False
+    else:
+        st.success("✅ Cấu hình điểm số chính xác đạt 10/10 điểm chuẩn.")
+        score_error = False
     st.markdown('**Phân bổ Tỷ lệ Ma trận tư duy (%)**')
     cl1, cl2, cl3, cl4 = st.columns(4)
     with cl1: nb_ratio = st.slider("Nhận biết", 0, 100, 40)
