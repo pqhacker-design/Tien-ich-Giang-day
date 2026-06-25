@@ -497,7 +497,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     return bio
 
 # ==========================================
-# GIAO DIỆN STREAMLIT
+# GIAO DIỆN STREAMLIT (ĐÃ GỘP TIẾN TRÌNH TRỌN GÓI)
 # ==========================================
 st.markdown('<div class="main-title">Trợ Lý Ra Đề Kiểm Tra (Quy trình 3 Bước Chuẩn Giáo Dục)</div>', unsafe_allow_html=True)
 
@@ -509,7 +509,8 @@ else:
 
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-tab1, tab2, tab3 = st.tabs(["📋 Bước 1: Cấu hình & Lập Ma Trận", "📊 Bước 2: Thiết kế Bản Đặc Tả", "🔥 Bước 3: Tạo Đề Thi & Đảo Đề"])
+# Khởi tạo các Tabs
+tab1, tab2, tab3 = st.tabs(["📋 Bước 1: Cấu hình Chung", "📊 Bước 2: Xem kết quả Ma trận & Đặc tả", "🔥 Bước 3: Chạy Quy trình Trọn gói & Tải đề"])
 
 with tab1:
     col1, col2 = st.columns(2)
@@ -559,16 +560,13 @@ with tab1:
 
     total_score = score_part1 + score_part2 + score_part3 + score_part4
     
-    # Logic kiểm tra lỗi điểm số vượt quá hoặc không đạt 10 điểm
     if total_score > 10.0:
         st.error(f"❌ LỖI CẤU HÌNH ĐIỂM: Tổng số điểm hiện tại là **{total_score}** điểm, vượt quá giới hạn cho phép (Tối đa 10 điểm). Vui lòng điều chỉnh lại!")
-        score_error = True
     elif total_score < 10.0:
         st.warning(f"⚠️ Tổng số điểm hiện tại là **{total_score}** điểm. Đề kiểm tra chuẩn cần đạt chính xác **10.0** điểm.")
-        score_error = False
     else:
         st.success("✅ Cấu hình điểm số chính xác đạt 10/10 điểm chuẩn.")
-        score_error = False
+        
     st.markdown('**Phân bổ Tỷ lệ Ma trận tư duy (%)**')
     cl1, cl2, cl3, cl4 = st.columns(4)
     with cl1: nb_ratio = st.slider("Nhận biết", 0, 100, 40)
@@ -576,6 +574,7 @@ with tab1:
     with cl3: vd_ratio = st.slider("Vận dụng", 0, 100, 20)
     with cl4: vdc_ratio = st.slider("Vận dụng cao", 0, 100, 10)
 
+    # Đóng gói cấu hình chung
     config_pkg = {
         "subject": subject, "grade": grade, "num_tn_4_lua_chon": num_tn_4_lua_chon, 
         "num_tn_dung_sai": num_tn_dung_sai, "num_tn_tra_loi_ngan": num_tn_tra_loi_ngan, "num_tl": num_tl,
@@ -583,51 +582,47 @@ with tab1:
         "score_vdc_custom": score_vdc_custom, "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio,
         "matrix_template": matrix_template, "exam_type": exam_type, "duration": duration, "school_year": school_year
     }
-
-    if st.button("📊 BƯỚC 1: KHỞI TẠO MA TRẬN PHÂN BỔ"):
-        if not st.session_state.current_document_content:
-            st.error("Vui lòng nhập chủ đề hoặc upload tài liệu trước.")
-        else:
-            with st.spinner("Hệ thống đang lập bảng ma trận kiến thức định lượng..."):
-                try:
-                    st.session_state.step1_matrix = generate_step1_matrix_only(model, config_pkg, st.session_state.current_document_content)
-                    st.success("🎉 Đã tạo bảng Ma trận thành công! Vui lòng chuyển sang tab 'Bước 2'.")
-                except Exception as e:
-                    st.error(f"Lỗi khởi tạo ma trận: {e}")
-                    
-    if st.session_state.step1_matrix:
-        st.markdown('<div class="step-active">**Dữ liệu Ma trận đã nạp thành công!**</div>', unsafe_allow_html=True)
-        st.json(st.session_state.step1_matrix)
+    st.info("💡 Sau khi cấu hình xong các thông số trên, Thầy/Cô vui lòng chuyển sang **'Bước 3'** để bấm nút tạo đề trọn gói.")
 
 with tab2:
-    st.markdown('<div class="section-header">Thiết kế Bản đặc tả từ Ma trận</div>', unsafe_allow_html=True)
-    if not st.session_state.step1_matrix:
-        st.info("Trạng thái: Chờ dữ liệu từ Bước 1. Thầy cô vui lòng chạy Bước 1 ở tab bên cạnh trước.")
-    else:
-        if st.button("📝 BƯỚC 2: TỰ ĐỘNG LẬP BẢN ĐẶC TẢ CHI TIẾT"):
-            with st.spinner("AI đang xây dựng ma trận tiêu chí đánh giá và yêu cầu cần đạt..."):
-                try:
-                    st.session_state.step2_spec = generate_step2_spec_only(model, config_pkg, st.session_state.step1_matrix)
-                    st.success("🎉 Đã lập Bản đặc tả năng lực thành công! Vui lòng chuyển sang tab 'Bước 3'.")
-                except Exception as e:
-                    st.error(f"Lỗi khởi tạo bản đặc tả: {e}")
-                    
+    st.markdown('<div class="section-header">Xem dữ liệu cấu trúc đã khởi tạo</div>', unsafe_allow_html=True)
+    if not st.session_state.step1_matrix and not st.session_state.step2_spec:
+        st.info("Trạng thái: Chờ cấu trúc được sinh ra từ Bước 3.")
+    
+    if st.session_state.step1_matrix:
+        st.markdown('### 📊 1. Ma trận phân bổ cấu trúc')
+        st.json(st.session_state.step1_matrix)
+        
     if st.session_state.step2_spec:
-        st.markdown('<div class="step-active">**Dữ liệu Bản đặc tả đã nạp thành công!**</div>', unsafe_allow_html=True)
+        st.markdown('### 📝 2. Bản đặc tả chi tiết tiêu chí')
         st.json(st.session_state.step2_spec)
 
 with tab3:
-    st.markdown('<div class="section-header">Tạo Đề bài & Đóng gói Đề thi</div>', unsafe_allow_html=True)
-    if not st.session_state.step2_spec:
-        st.info("Trạng thái: Chờ dữ liệu Bản đặc tả từ Bước 2.")
+    st.markdown('<div class="section-header">Tạo Đề bài & Đóng gói Đề thi (Quy trình liên tục)</div>', unsafe_allow_html=True)
+    
+    if not st.session_state.current_document_content:
+        st.warning("⚠️ Vui lòng nhập chủ đề hoặc upload tài liệu kiểm tra tại **Bước 1** trước.")
     else:
-        if st.button("🔥 THỰC HIỆN BƯỚC 3: SINH CÂU HỎI THI & ĐẢO ĐỀ TỰ ĐỘNG"):
-            with st.spinner("Đang bám sát Ma trận và Đặc tả để viết câu hỏi (Hệ thống tự động lọc bỏ Latex)..."):
-                try:
-                    rule = SUBJECTS_CONFIG[subject]
+        # NÚT BẤM DUY NHẤT GỘP TRỌN GÓI 3 TRONG 1
+        if st.button("🔥 CHẠY QUY TRÌNH TRỌN GÓI: MA TRẬN ➔ ĐẶC TẢ ➔ SINH ĐỀ & ĐẢO ĐỀ"):
+            try:
+                rule = SUBJECTS_CONFIG[subject]
+                
+                # --- PHẦN 1: KHỞI TẠO MA TRẬN ---
+                with st.spinner("⏳ [1/3] AI đang phân tích nội dung nguồn để lập bảng MA TRẬN..."):
+                    st.session_state.step1_matrix = generate_step1_matrix_only(model, config_pkg, st.session_state.current_document_content)
+                st.toast("✅ Hoàn thành Bước 1: Đã lập Ma trận!", icon="📊")
+                
+                # --- PHẦN 2: THIẾT KẾ BẢN ĐẶC TẢ ---
+                with st.spinner("⏳ [2/3] Bám sát Ma trận, AI đang xây dựng BẢN ĐẶC TẢ năng lực tiêu chí..."):
+                    st.session_state.step2_spec = generate_step2_spec_only(model, config_pkg, st.session_state.step1_matrix)
+                st.toast("✅ Hoàn thành Bước 2: Đã lập Bản đặc tả!", icon="📝")
+                
+                # --- PHẦN 3: SINH CÂU HỎI THI & ĐẢO ĐỀ ---
+                with st.spinner("⏳ [3/3] Đang tiến hành VIẾT CÂU HỎI CHI TIẾT và thực hiện ĐẢO MÃ ĐỀ..."):
                     step3_data = generate_step3_questions(model, config_pkg, st.session_state.step1_matrix, st.session_state.step2_spec, rule, st.session_state.current_document_content)
                     
-                    # Hợp nhất toàn bộ dữ liệu cấu trúc
+                    # Hợp nhất cấu trúc dữ liệu tổng hợp
                     full_data = {
                         "ma_tran": st.session_state.step1_matrix["ma_tran"],
                         "bang_dac_ta": st.session_state.step2_spec["bang_dac_ta"],
@@ -640,16 +635,21 @@ with tab3:
                     
                     bundle, alignment_df = generate_shuffled_bundle(full_data, s_code, num_codes)
                     bundle["ĐỀ GỐC"] = full_data
+                    
+                    # Lưu trữ kết quả vào session_state
                     st.session_state.multi_codes_data = bundle
                     st.session_state.alignment_table = alignment_df
-                    st.success(f"🎉 Xuất sắc! Hệ thống đã tạo xong ĐỀ GỐC cùng {num_codes} mã đề đảo.")
-                except Exception as e:
-                    st.error(f"Lỗi sinh câu hỏi: {e}")
+                    
+                st.success(f"🎉 XUẤT SẮC! Quy trình tự động hoàn tất. Đã tạo thành công ĐỀ GỐC cùng {num_codes} mã đề đảo!")
+            except Exception as e:
+                st.error(f"❌ Đã xảy ra lỗi trong tiến trình: {e}")
 
+    # Giao diện tải file (chỉ hiển thị khi đã có dữ liệu đề thi được sinh ra)
     if st.session_state.multi_codes_data:
         st.markdown('---')
-        inc_mat = st.checkbox("Chèn bảng Ma trận & Đặc tả vào đầu tệp văn bản", value=True)
-        export_mode = st.radio("Định dạng tải tệp bộ đề:", ["Tải file bản đề đơn lẻ", "Nén toàn bộ mã đề vào file ZIP", "Gộp chung tất cả vào một file Word"])
+        st.markdown('### 📥 TẢI XUỐNG BỘ SẢN PHẨM ĐỀ KIỂM TRA')
+        inc_mat = st.checkbox("Chèn bảng Ma trận & Bản đặc tả vào đầu tệp văn bản Word", value=True)
+        export_mode = st.radio("Lựa chọn phương thức xuất bản:", ["Tải file bản đề đơn lẻ", "Nén toàn bộ mã đề vào file ZIP", "Gộp chung tất cả vào một file Word"], horizontal=True)
         
         if export_mode == "Tải file bản đề đơn lẻ":
             all_codes = list(st.session_state.multi_codes_data.keys())
@@ -688,7 +688,6 @@ with tab3:
 st.divider()
 st.markdown("---")
 
-# 5. Chân trang (Footer)
 col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
