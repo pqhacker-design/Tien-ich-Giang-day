@@ -372,7 +372,6 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 row_tn[1].text = "Trắc nghiệm (TN)"
                 row_tn[2].text = f"{tn_nb} câu" if tn_nb > 0 else "-"
                 row_tn[3].text = f"{tn_th} câu" if tn_th > 0 else "-"
-                row_tn[4].text = f"{tn_val} câu" if (tn_vd := tn_vd) > 0 else "-"  # Sửa hiển thị linh hoạt
                 row_tn[4].text = f"{tn_vd} câu" if tn_vd > 0 else "-"
                 row_tn[5].text = f"{tn_vdc} câu" if tn_vdc > 0 else "-"
                 
