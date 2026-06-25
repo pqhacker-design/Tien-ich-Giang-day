@@ -481,16 +481,16 @@ with tab1:
         subject = st.selectbox("Chọn môn học:", list(SUBJECTS_CONFIG.keys()))
         grade = st.selectbox("Khối lớp:", [str(i) for i in range(1, 13)], index=7)
         exam_type = st.selectbox("Hình thức thi:", ["15 phút", "45 phút", "Giữa học kỳ I", "Cuối học kỳ I", "Giữa học kỳ II", "Cuối học kỳ II"])
-        duration = st.number_input("Thời lượng (phút):", min_value=15, max_value=150, value=60, step=5)
+        duration = st.number_input("Thời lượng (phút):", min_value=15, max_value=150, value=15, step=5)
         school_year = st.text_input("Năm học:", value="2026-2027")
         matrix_template = st.radio("Mẫu khung ma trận hiển thị:", ["Mẫu đơn giản truyền thống", "Mẫu quy chuẩn Công văn 7991/BGDĐT-GDTrH"], index=0)
 
     with col2:
         st.markdown('<div class="section-header">Cấu hình số lượng câu hỏi</div>', unsafe_allow_html=True)
         num_tn_4_lua_chon = st.number_input("Trắc nghiệm nhiều lựa chọn (Phần I):", value=12)
-        num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", value=4)
-        num_tn_tra_loi_ngan = st.number_input("Trắc nghiệm Trả lời ngắn (Phần III):", value=6)
-        num_tl = st.number_input("Số câu hỏi Tự luận (Phần IV):", value=0)
+        num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", value=2, help="Mỗi câu có 4 ý")
+        num_tn_tra_loi_ngan = st.number_input("Trắc nghiệm Trả lời ngắn (Phần III):", value=4)
+        num_tl = st.number_input("Số câu hỏi Tự luận (Phần IV):", value=4)
         
         st.markdown('---')
         code_choice = st.selectbox("Số lượng mã đề đảo:", [1, 2, 4, 6, 8], index=2)
