@@ -337,24 +337,53 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 row[6].text = f"{tl.get('nb',0)}/{tl.get('th',0)}/{tl.get('vd',0)}/{tl.get('vdc',0)}"
                 row[7].text = f"{item.get('tong_diem_phan_tram', 10)}%"
         elif 'ma_tran' in data:
-            m_table = doc.add_table(rows=1, cols=5)
+            # Tách rõ TN và TL cho từng mức độ tư duy
+            m_table = doc.add_table(rows=1, cols=6)
             m_table.style = 'Table Grid'
-            m_hdrs = ['Nội dung kiến thức', 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao']
+            m_hdrs = ['Nội dung kiến thức', 'Hình thức', 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao']
+            
             for idx, h in enumerate(m_hdrs): 
                 m_table.rows[0].cells[idx].text = h
                 m_table.rows[0].cells[idx].paragraphs[0].runs[0].font.bold = True
+                
             for item in data['ma_tran']:
-                row = m_table.add_row().cells
-                row[0].text = f"{item.get('chu_de', '')} - {item.get('noi_dung', '')}"
-                nlc, ds, tln, tl = item.get('nhieu_lua_chon',{}), item.get('dung_sai',{}), item.get('tra_loi_ngan',{}), item.get('tu_luan',{})
-                nb_t = nlc.get('nb',0) + ds.get('nb',0) + tln.get('nb',0) + tl.get('nb',0)
-                th_t = nlc.get('th',0) + ds.get('th',0) + tln.get('th',0) + tl.get('th',0)
-                vd_t = nlc.get('vd',0) + ds.get('vd',0) + tl.get('vd',0)
-                vdc_t = tl.get('vdc',0)
-                row[1].text = f"{nb_t} câu" if nb_t > 0 else "-"
-                row[2].text = f"{th_t} câu" if th_t > 0 else "-"
-                row[3].text = f"{vd_t} câu" if vd_t > 0 else "-"
-                row[4].text = f"{vdc_t} câu" if vdc_t > 0 else "-"
+                chu_de_text = f"{item.get('chu_de', '')} - {item.get('noi_dung', '')}"
+                
+                nlc = item.get('nhieu_lua_chon', {})
+                ds = item.get('dung_sai', {})
+                tln = item.get('tra_loi_ngan', {})
+                tl = item.get('tu_luan', {})
+                
+                # 1. Tính tổng số câu Trắc nghiệm (gồm Nhiều lựa chọn + Đúng sai + Trả lời ngắn)
+                tn_nb = nlc.get('nb', 0) + ds.get('nb', 0) + tln.get('nb', 0)
+                tn_th = nlc.get('th', 0) + ds.get('th', 0) + tln.get('th', 0)
+                tn_vd = nlc.get('vd', 0) + ds.get('vd', 0)
+                tn_vdc = 0  # Trắc nghiệm thường không cấu hình VDC theo form của bạn
+                
+                # 2. Tính tổng số câu Tự luận
+                tl_nb = tl.get('nb', 0)
+                tl_th = tl.get('th', 0)
+                tl_vd = tl.get('vd', 0)
+                tl_vdc = tl.get('vdc', 0)
+                
+                # Hàng dành cho Trắc nghiệm (TN)
+                row_tn = m_table.add_row().cells
+                row_tn[0].text = chu_de_text
+                row_tn[1].text = "Trắc nghiệm (TN)"
+                row_tn[2].text = f"{tn_nb} câu" if tn_nb > 0 else "-"
+                row_tn[3].text = f"{tn_th} câu" if tn_th > 0 else "-"
+                row_tn[4].text = f"{tn_val} câu" if (tn_vd := tn_vd) > 0 else "-"  # Sửa hiển thị linh hoạt
+                row_tn[4].text = f"{tn_vd} câu" if tn_vd > 0 else "-"
+                row_tn[5].text = f"{tn_vdc} câu" if tn_vdc > 0 else "-"
+                
+                # Hàng dành cho Tự luận (TL)
+                row_tl = m_table.add_row().cells
+                row_tl[0].text = ""  # Để trống tên chủ đề để tránh lặp chữ, nhìn bảng sẽ gọn hơn
+                row_tl[1].text = "Tự luận (TL)"
+                row_tl[2].text = f"{tl_nb} câu" if tl_nb > 0 else "-"
+                row_tl[3].text = f"{tl_th} câu" if tl_th > 0 else "-"
+                row_tl[4].text = f"{tl_vd} câu" if tl_vd > 0 else "-"
+                row_tl[5].text = f"{tl_vdc} câu" if tl_vdc > 0 else "-"
 
         # Tầng 2: Vẽ Bản Đặc Tả (Cả hai dạng đề đều được chèn vào đây)
         if 'bang_dac_ta' in data and data['bang_dac_ta']:
