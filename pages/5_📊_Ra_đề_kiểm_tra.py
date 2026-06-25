@@ -472,7 +472,7 @@ else:
 
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-tab1, tab2, tab3 = st.tabs(["📋 Bước 1: Cấu hình & Lập Ma Trận", "📊 Bước 2: Thiết kế Bản Đặc Tả", "🔥 Bước 3: Đề Thi & Đảo Đề"])
+tab1, tab2, tab3 = st.tabs(["📋 Bước 1: Cấu hình & Lập Ma Trận", "📊 Bước 2: Thiết kế Bản Đặc Tả", "🔥 Bước 3: Tạo Đề Thi & Đảo Đề"])
 
 with tab1:
     col1, col2 = st.columns(2)
@@ -483,7 +483,7 @@ with tab1:
         exam_type = st.selectbox("Hình thức thi:", ["15 phút", "45 phút", "Giữa học kỳ I", "Cuối học kỳ I", "Giữa học kỳ II", "Cuối học kỳ II"])
         duration = st.number_input("Thời lượng (phút):", min_value=15, max_value=150, value=60, step=5)
         school_year = st.text_input("Năm học:", value="2026-2027")
-        matrix_template = st.radio("Mẫu khung ma trận hiển thị:", ["Mẫu đơn giản truyền thống", "Mẫu quy chuẩn Công văn 7991/BGDĐT-GDTrH"], index=1)
+        matrix_template = st.radio("Mẫu khung ma trận hiển thị:", ["Mẫu đơn giản truyền thống", "Mẫu quy chuẩn Công văn 7991/BGDĐT-GDTrH"], index=0)
 
     with col2:
         st.markdown('<div class="section-header">Cấu hình số lượng câu hỏi</div>', unsafe_allow_html=True)
