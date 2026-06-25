@@ -458,7 +458,7 @@ else:
     st.warning("⚠️ Vui lòng cấu hình Google Gemini API Key tại Trang chủ trước.")
     st.stop()
 
-model = genai.GenerativeModel('gemini-3.0-flash')
+model = genai.GenerativeModel('gemini-3.5-flash')
 
 tab1, tab2, tab3 = st.tabs(["📋 Bước 1: Cấu hình chung", "📊 Bước 2: Bản cấu trúc xem trước", "🔥 Bước 3: Chạy Quy Trình & Tải Bộ Đề"])
 
