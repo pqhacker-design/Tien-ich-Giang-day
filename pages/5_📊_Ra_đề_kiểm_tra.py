@@ -34,6 +34,7 @@ st.markdown("""
     .section-header { font-size: 1.3rem; font-weight: 600; color: #0F766E; margin-top: 1.5rem; margin-bottom: 1rem; border-left: 5px solid #0F766E; padding-left: 10px; }
     .stButton>button { width: 100%; background-color: #0F766E; color: white; border-radius: 8px; font-weight: 600; padding: 10px; }
     .stButton>button:hover { background-color: #0D9488; color: white; }
+    .score-box { background-color: #F0FDF4; padding: 15px; border-radius: 8px; border: 1px solid #BBF7D0; margin-bottom: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -54,10 +55,9 @@ SUBJECTS_CONFIG = {
 }
 
 # ==========================================
-# CÁC HÀM BỔ TRỢ XỬ LÝ VĂN BẢN & ĐỌC FILE
+# CẤU TRÚC PHẦN TRỢ GIÚP ĐỌC FILE WORD
 # ==========================================
 def extract_text_from_docx(file_bytes):
-    """Trích xuất chuỗi văn bản thuần sạch từ file .docx"""
     try:
         doc = Document(BytesIO(file_bytes))
         fullText = []
@@ -91,7 +91,7 @@ if 'alignment_table' not in st.session_state: st.session_state.alignment_table =
 if 'user_custom_req' not in st.session_state: st.session_state.user_custom_req = ""
 
 # ==========================================
-# THUẬT TOÁN ĐẢO ĐỀ MULTI-CODE CHO PHIÊN BẢN CẤU TRÚC MỚI
+# THUẬT TOÁN ĐẢO ĐỀ MULTI-CODE
 # ==========================================
 def generate_shuffled_bundle(original_data, start_code, num_codes):
     bundle = {}
@@ -153,7 +153,7 @@ def generate_shuffled_bundle(original_data, start_code, num_codes):
     return bundle, None
 
 # ==========================================
-# TRÍCH XUẤT VÀ KẾT NỐI GEMINI AI ĐA MÔN ĐỘNG
+# TRÍCH XUẤT VÀ KẾT NỐI GEMINI AI
 # ==========================================
 def init_gemini_client(api_key):
     try:
@@ -167,13 +167,17 @@ def generate_step1_matrix(model, config, raw_input_data):
     prompt_text = f"""
     Bạn là chuyên gia khảo thí cấp cao của Bộ Giáo dục. Hãy lập Ma trận và Bản đặc tả đề kiểm tra môn {config['subject']} - Khối Lớp {config['grade']}.
     Độ khó mục tiêu: {config['difficulty']}.
-    Số câu Trắc nghiệm 4 lựa chọn: {config['num_tn_4_lua_chon']}, Số câu Đúng/Sai: {config['num_tn_dung_sai']}, Số câu Trả lời ngắn: {config['num_tn_tra_loi_ngan']}, Số câu Tự luận: {config['num_tl']}. 
+    Số câu Trắc nghiệm 4 lựa chọn: {config['num_tn_4_lua_chon']} ({config['score_part1']} điểm), 
+    Số câu Đúng/Sai: {config['num_tn_dung_sai']} ({config['score_part2']} điểm), 
+    Số câu Trả lời ngắn: {config['num_tn_tra_loi_ngan']} ({config['score_part3']} điểm), 
+    Số câu Tự luận: {config['num_tl']} ({config['score_part4']} điểm). 
+    Tổng điểm của toàn đề bắt buộc là 10 điểm.
     Tỷ lệ nhận thức: Nhận biết {config['nb_ratio']}% , Thông hiểu {config['th_ratio']}%, Vận dụng {config['vd_ratio']}%, Vận dụng cao {config['vdc_ratio']}%.
     Mẫu thiết kế ma trận yêu cầu: "{config['matrix_template']}".
 
     YÊU CẦU BẮT BUỘC:
     - Hãy phân tích thật sâu tài liệu/hình ảnh/yêu cầu đính kèm đi cùng lệnh này để phân chia thành các "chu_de" và "noi_dung" tương ứng.
-    - Phân chia chi tiết số câu hỏi tương ứng cho từng hình thức câu hỏi (Nhiều lựa chọn, Đúng/Sai, Trả lời ngắn, Tự luận) theo các cấp độ nhận thức (nb: Nhận biết, th: Thông hiểu, vd: Vận dụng, vdc: Vận dụng cao).
+    - Phân chia chi tiết số câu hỏi tương ứng cho từng hình thức câu hỏi theo các cấp độ nhận thức.
     - Tuyệt đối bám sát nội dung từ nguồn dữ liệu được cung cấp, không tự ý bịa thêm kiến thức nằm ngoài phạm vi tài liệu.
 
     BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN CÓ CẤU TRÚC SAU:
@@ -221,20 +225,19 @@ def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input
     Hãy thiết lập chi tiết nội dung đề kiểm tra môn {config['subject']}, Khối {config['grade']}.
     Đặc thù môn học cần bám sát: {subject_rule}
 
-    Yêu cầu số lượng câu hỏi cần tạo:
-    - Phần I (Trắc nghiệm nhiều lựa chọn): {config['num_tn_4_lua_chon']} câu.
-    - Phần II (Trắc nghiệm Đúng/Sai): {config['num_tn_dung_sai']} câu (mỗi câu gồm 4 ý lựa chọn a, b, c, d).
-    - Phần III (Trắc nghiệm Trả lời ngắn): {config['num_tn_tra_loi_ngan']} câu.
-    - Phần IV (Tự luận): {config['num_tl']} câu.
+    Yêu cầu số lượng câu hỏi và cơ cấu điểm số:
+    - Phần I (Trắc nghiệm nhiều lựa chọn): {config['num_tn_4_lua_chon']} câu. Tổng điểm phần này: {config['score_part1']} điểm.
+    - Phần II (Trắc nghiệm Đúng/Sai): {config['num_tn_dung_sai']} câu (mỗi câu gồm 4 ý lựa chọn a, b, c, d). Tổng điểm phần này: {config['score_part2']} điểm.
+    - Phần III (Trắc nghiệm Trả lời ngắn): {config['num_tn_tra_loi_ngan']} câu. Tổng điểm phần này: {config['score_part3']} điểm.
+    - Phần IV (Tự luận): {config['num_tl']} câu. Tổng điểm phần này: {config['score_part4']} điểm.
     
     YÊU CẦU ĐỘ KHÓ VÀ TÍNH PHÂN HÓA (BẮT BUỘC):
     - Đề thi này đang được thiết lập ở mức độ: "{config['difficulty']}".
-    - Hãy phân phối độ sâu tư duy, độ phức tạp của ngữ cảnh và các bước tính toán của câu hỏi bám sát theo mức độ khó này. 
+    - Hãy phân phối độ sâu tư duy bám sát theo mức độ khó này. 
 
     QUY ĐỊNH ĐỊNH DẠNG TOÁN HỌC & KHTN (BẮT BUỘC KHÔNG DÙNG LATEX):
-    - TUYỆT ĐỐI KHÔNG sử dụng ký tự $, \, frac, neq, sim, triangle, cdot, circ hoặc ^.
+    - TUYỆT ĐỐI KHÔNG sử dụng ký tự $, \, frac, neq, sim, triangle, hoặc ^.
     - Sử dụng ký tự Unicode toán học trực tiếp trong văn bản trơn (Ví dụ: x², cm², ΔABC, ∽, ⊥, //, →, ⇌, ·, ≠, °).
-    - Xuống dòng các ý a), b), c) bằng cách gõ ký tự xuống dòng thực tế.
 
     BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN CÓ CẤU TRÚC SAU:
     {{
@@ -301,11 +304,9 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     
     if include_matrix and 'ma_tran' in data:
         doc.add_heading("I. MA TRẬN PHÂN BỔ ĐỀ KIỂM TRA", level=2)
-        
         is_cv7991 = "7991" in config.get("matrix_template", "")
         
         if is_cv7991:
-            # Render Mẫu Ma trận chuẩn Công văn 7991 với 8 cột phân rã theo dạng thức câu hỏi
             m_table = doc.add_table(rows=1, cols=8)
             m_table.style = 'Table Grid'
             m_hdrs = ['TT', 'Chủ đề Chương', 'Nội dung kiến thức', 'Nhiều lựa chọn (NB/TH/VD)', 'Đúng - Sai (NB/TH/VD)', 'Trả lời ngắn (NB/TH)', 'Tự luận (NB/TH/VD/VDC)', 'Tổng %']
@@ -330,7 +331,6 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 row[6].text = f"{tl.get('nb',0)}/{tl.get('th',0)}/{tl.get('vd',0)}/{tl.get('vdc',0)}"
                 row[7].text = f"{item.get('tong_diem_phan_tram', 10)}%"
         else:
-            # Render Mẫu đơn giản cũ phân chia theo mức độ tư duy
             m_table = doc.add_table(rows=1, cols=5)
             m_table.style = 'Table Grid'
             m_hdrs = ['Nội dung kiến thức', 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao']
@@ -341,7 +341,6 @@ def build_single_docx(config, data, code_label, include_matrix=True):
             for item in data['ma_tran']:
                 row = m_table.add_row().cells
                 row[0].text = f"{item.get('chu_de', '')} - {item.get('noi_dung', '')}"
-                
                 nlc = item.get('nhieu_lua_chon', {})
                 ds = item.get('dung_sai', {})
                 tln = item.get('tra_loi_ngan', {})
@@ -356,7 +355,6 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 row[2].text = f"{th_total} câu" if th_total > 0 else "-"
                 row[3].text = f"{vd_total} câu" if vd_total > 0 else "-"
                 row[4].text = f"{vdc_total} câu" if vdc_total > 0 else "-"
-
         doc.add_paragraph()
 
     if include_matrix and 'bang_dac_ta' in data:
@@ -381,14 +379,12 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     list_4lc = de.get("trac_nghiem_4_lua_chon", [])
     if list_4lc:
         p_hdr1 = doc.add_paragraph()
-        p_hdr1.add_run("PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn. ").bold = True
+        p_hdr1.add_run(f"PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn ({config.get('score_part1', 3.0)} điểm). ").bold = True
         p_hdr1.add_run("Thí sinh trả lời từ câu 1 đến câu hết phần này. Mỗi câu hỏi chỉ chọn một phương án.")
-        
         for q in list_4lc:
             p_q = doc.add_paragraph()
             p_q.add_run(f"Câu {q.get('id', '')}: ").bold = True
             add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''))
-            
             p_opts = doc.add_paragraph()
             p_opts.paragraph_format.left_indent = Inches(0.3)
             p_opts.add_run("A. ").bold = True
@@ -403,14 +399,12 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     list_ds = de.get("trac_nghiem_dung_sai", [])
     if list_ds:
         p_hdr2 = doc.add_paragraph()
-        p_hdr2.add_run("\nPHẦN II. Câu trắc nghiệm đúng sai. ").bold = True
-        p_hdr2.add_run("Thí sinh trả lời từ câu 1 đến câu hết phần này. Trong mỗi ý a), b), c), d) ở mỗi câu, thí sinh chọn đúng hoặc sai.")
-        
+        p_hdr2.add_run(f"\nPHẦN II. Câu trắc nghiệm đúng sai ({config.get('score_part2', 4.0)} điểm). ").bold = True
+        p_hdr2.add_run("Trong mỗi ý a), b), c), d) ở mỗi câu, thí sinh chọn đúng hoặc sai.")
         for q in list_ds:
             p_q = doc.add_paragraph()
             p_q.add_run(f"Câu {q.get('id', '')}: ").bold = True
             add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''))
-            
             cac_y = q.get("cac_y", {})
             for key in ['a', 'b', 'c', 'd']:
                 if key in cac_y:
@@ -422,9 +416,8 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     list_tln = de.get("trac_nghiem_tra_loi_ngan", [])
     if list_tln:
         p_hdr3 = doc.add_paragraph()
-        p_hdr3.add_run("\nPHẦN III. Câu trắc nghiệm trả lời ngắn. ").bold = True
-        p_hdr3.add_run("Thí sinh trả lời từ câu 1 đến câu hết phần này. Viết kết quả ngắn gọn vào ô trống tương ứng.")
-        
+        p_hdr3.add_run(f"\nPHẦN III. Câu trắc nghiệm trả lời ngắn ({config.get('score_part3', 3.0)} điểm). ").bold = True
+        p_hdr3.add_run("Thí sinh viết kết quả ngắn gọn vào ô trống tương ứng.")
         for q in list_tln:
             p_q = doc.add_paragraph()
             p_q.add_run(f"Câu {q.get('id', '')}: ").bold = True
@@ -433,9 +426,8 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     list_tl = de.get("tu_luan", [])
     if list_tl:
         p_hdr4 = doc.add_paragraph()
-        p_hdr4.add_run("\nPHẦN IV. Tự luận. ").bold = True
+        p_hdr4.add_run(f"\nPHẦN IV. Tự luận ({config.get('score_part4', 0.0)} điểm). ").bold = True
         p_hdr4.add_run("Thí sinh trình bày chi tiết các bước giải quyết bài toán vào tờ giấy thi.")
-        
         for q in list_tl:
             p_q = doc.add_paragraph()
             p_q.add_run(f"Câu {q.get('id', '')}: ").bold = True
@@ -446,7 +438,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     da = data.get('dap_an_chi_tiet', {})
     
     if da.get('trac_nghiem_4_lua_chon'):
-        doc.add_paragraph().add_run("Đáp án Phần I (Trắc nghiệm nhiều lựa chọn):").bold = True
+        doc.add_paragraph().add_run("Đáp án Phần I:").bold = True
         ans_table1 = doc.add_table(rows=1, cols=2)
         ans_table1.style = 'Table Grid'
         ans_table1.rows[0].cells[0].text = "Câu hỏi"
@@ -458,7 +450,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
         doc.add_paragraph()
 
     if da.get('trac_nghiem_dung_sai'):
-        doc.add_paragraph().add_run("Đáp án Phần II (Trắc nghiệm Đúng/Sai):").bold = True
+        doc.add_paragraph().add_run("Đáp án Phần II:").bold = True
         ans_table2 = doc.add_table(rows=1, cols=2)
         ans_table2.style = 'Table Grid'
         ans_table2.rows[0].cells[0].text = "Câu hỏi"
@@ -473,7 +465,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
         doc.add_paragraph()
 
     if da.get('trac_nghiem_tra_loi_ngan'):
-        doc.add_paragraph().add_run("Đáp án Phần III (Trắc nghiệm trả lời ngắn):").bold = True
+        doc.add_paragraph().add_run("Đáp án Phần III:").bold = True
         ans_table3 = doc.add_table(rows=1, cols=2)
         ans_table3.style = 'Table Grid'
         ans_table3.rows[0].cells[0].text = "Câu hỏi"
@@ -500,7 +492,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
 # GIAO DIỆN ĐIỀU KHIỂN STREAMLIT
 # ==========================================
 st.markdown('<div class="main-title">Trợ Lý Ra Đề Kiểm Tra</div>', unsafe_allow_html=True)
-st.caption("Hỗ trợ GV ra đề kiểm tra với ma trận và bảng đặc tả bám sát thông tư, hướng dẫn mới.")
+
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
 else:
@@ -513,7 +505,7 @@ model = init_gemini_client(api_key_input)
 if 'current_document_content' not in st.session_state: 
     st.session_state.current_document_content = ""
 
-tab1, tab2, tab3 = st.tabs(["📋 1. Chọn Môn học & Thiết lập số câu", "📊 2. Phân bổ Ma trận kiến thức", "📥 3. Đóng gói & Xuất các Mã đề"])
+tab1, tab2, tab3 = st.tabs(["📋 1. Chọn Môn học & Số câu", "📊 2. Phân bổ Ma trận & Điểm số", "📥 3. Đóng gói & Xuất Đề"])
 
 with tab1:
     col1, col2 = st.columns(2)
@@ -548,59 +540,51 @@ with tab1:
 
 with tab2:
     st.markdown('<div class="section-header">Nguồn nội dung kiến thức ra đề</div>', unsafe_allow_html=True)
-    
-    content_source = st.radio(
-        "Chọn phương thức cung cấp nội dung/chủ đề kiến thức:",
-        ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức (Word, TXT, PDF, Ảnh)"],
-        horizontal=True
-    )
+    content_source = st.radio("Chọn phương thức cung cấp nội dung/chủ đề kiến thức:", ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức (Word, TXT, PDF, Ảnh)"], horizontal=True)
     
     if content_source == "Nhập tay danh sách chủ đề":
-        topics_list = st.text_area(
-            "Danh sách các chủ đề kiến thức (Mỗi dòng một chủ đề):", 
-            value="Nội dung 1: Kiến thức trọng tâm chương học cũ\nNội dung 2: Kiến thức nâng cao bổ trợ",
-            height=120
-        )
+        topics_list = st.text_area("Danh sách các chủ đề kiến thức (Mỗi dòng một chủ đề):", value="Nội dung 1: Kiến thức trọng tâm chương học cũ\nNội dung 2: Kiến thức nâng cao bổ trợ", height=100)
         st.session_state.current_document_content = topics_list
     else:
-        uploaded_doc = st.file_uploader(
-            "Tải lên tài liệu, đề cương, ảnh chụp sách hoặc file PDF (.docx, .txt, .pdf, .png, .jpg, .jpeg):", 
-            type=["docx", "txt", "pdf", "png", "jpg", "jpeg"]
-        )
-        user_custom_req = st.text_input("Yêu cầu bổ sung khi đọc tài liệu (Ví dụ: 'Chỉ tập trung vào Chương 2', 'Bỏ qua các bài đọc hiểu'):", value="")
+        uploaded_doc = st.file_uploader("Tải lên tài liệu (.docx, .txt, .pdf, .png, .jpg):", type=["docx", "txt", "pdf", "png", "jpg", "jpeg"])
+        user_custom_req = st.text_input("Yêu cầu bổ sung khi đọc tài liệu:", value="")
         st.session_state.user_custom_req = user_custom_req.strip()
         
         if uploaded_doc is not None:
             file_bytes = uploaded_doc.read()
             file_ext = uploaded_doc.name.split('.')[-1].lower()
-            
-            if file_ext == "txt":
-                st.session_state.current_document_content = str(file_bytes, "utf-8")
-                st.info(f"✅ Đã trích xuất văn bản từ file TXT: {uploaded_doc.name}")
-            elif file_ext == "docx":
-                st.session_state.current_document_content = extract_text_from_docx(file_bytes)
-                st.info(f"✅ Đã trích xuất văn bản từ file Word: {uploaded_doc.name}")
-            elif file_ext == "pdf":
-                st.session_state.current_document_content = {
-                    "mime_type": "application/pdf",
-                    "data": file_bytes
-                }
-                st.info(f"📂 Đã đính kèm file PDF: {uploaded_doc.name} (Gemini sẽ quét toàn bộ tài liệu)")
-            elif file_ext in ["png", "jpg", "jpeg"]:
-                mime_type = "image/png" if file_ext == "png" else "image/jpeg"
-                st.session_state.current_document_content = {
-                    "mime_type": mime_type,
-                    "data": file_bytes
-                }
-                st.info(f"🖼️ Đã đính kèm file Ảnh: {uploaded_doc.name} (Gemini sẽ phân tích hình ảnh trực quan)")
+            if file_ext == "txt": st.session_state.current_document_content = str(file_bytes, "utf-8")
+            elif file_ext == "docx": st.session_state.current_document_content = extract_text_from_docx(file_bytes)
+            elif file_ext == "pdf": st.session_state.current_document_content = {"mime_type": "application/pdf", "data": file_bytes}
+            elif file_ext in ["png", "jpg", "jpeg"]: st.session_state.current_document_content = {"mime_type": "image/png" if file_ext == "png" else "image/jpeg", "data": file_bytes}
+            st.info(f"✅ Đã tải file: {uploaded_doc.name}")
+
+    # ==========================================
+    # PHẦN QUẢN LÝ PHÂN BỔ ĐIỂM SỐ (NÂNG CẤP)
+    # ==========================================
+    st.markdown('<div class="section-header">Phân bổ điểm số cho từng phần (Thang điểm 10)</div>', unsafe_allow_html=True)
+    
+    col_s1, col_s2, col_s3, col_s4 = st.columns(4)
+    with col_s1: score_part1 = st.number_input("Điểm Phần I (Trắc nghiệm 4 LC):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
+    with col_s2: score_part2 = st.number_input("Điểm Phần II (Đúng/Sai):", min_value=0.0, max_value=10.0, value=4.0, step=0.25)
+    with col_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
+    with col_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", min_value=0.0, max_value=10.0, value=0.0, step=0.25)
+    
+    total_score = score_part1 + score_part2 + score_part3 + score_part4
+    
+    # Logic kiểm tra lỗi điểm số vượt quá hoặc không đạt 10 điểm
+    if total_score > 10.0:
+        st.error(f"❌ LỖI CẤU HÌNH ĐIỂM: Tổng số điểm hiện tại là **{total_score}** điểm, vượt quá giới hạn cho phép (Tối đa 10 điểm). Vui lòng điều chỉnh lại!")
+        score_error = True
+    elif total_score < 10.0:
+        st.warning(f"⚠️ Tổng số điểm hiện tại là **{total_score}** điểm. Đề kiểm tra chuẩn cần đạt chính xác **10.0** điểm.")
+        score_error = False # Chỉ cảnh báo nếu chưa đủ, chặn tuyệt đối nếu vượt quá 10 theo yêu cầu.
+    else:
+        st.success("✅ Cấu hình điểm số chính xác đạt 10/10 điểm chuẩn.")
+        score_error = False
 
     st.markdown('<div class="section-header">Lựa chọn mẫu cấu trúc Ma trận hiển thị</div>', unsafe_allow_html=True)
-    matrix_template = st.radio(
-        "Chọn mẫu ma trận xuất bản:",
-        ["Mẫu đơn giản truyền thống (Theo cấp độ tư duy nhận thức)", "Mẫu quy chuẩn Công văn 7991/BGDĐT-GDTrH (Phân rã theo dạng thức câu hỏi)"],
-        index=1,
-        horizontal=True
-    )
+    matrix_template = st.radio("Chọn mẫu ma trận xuất bản:", ["Mẫu đơn giản truyền thống (Theo cấp độ tư duy nhận thức)", "Mẫu quy chuẩn Công văn 7991/BGDĐT-GDTrH (Phân rã theo dạng thức câu hỏi)"], index=1, horizontal=True)
 
     st.markdown('<div class="section-header">Phân bổ Tỷ lệ Ma trận tư duy</div>', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
@@ -617,7 +601,8 @@ with tab2:
     col_btn1, col_btn2 = st.columns(2)
     
     with col_btn1:
-        if st.button("📊 BƯỚC 1: KHỞI TẠO MA TRẬN & ĐẶC TẢ"):
+        # Thêm biến điều kiện chặn không cho bấm nút nếu điểm số vượt quá 10
+        if st.button("📊 BƯỚC 1: KHỞI TẠO MA TRẬN & ĐẶC TẢ", disabled=score_error):
             if total_ratio != 100:
                 st.error("Tổng tỷ lệ phần trăm phân bổ điểm phải bằng 100% trước khi khởi tạo.")
             elif not st.session_state.current_document_content:
@@ -626,6 +611,7 @@ with tab2:
                 config_pkg = {
                     "subject": subject, "grade": grade, "num_tn_4_lua_chon": num_tn_4_lua_chon, 
                     "num_tn_dung_sai": num_tn_dung_sai, "num_tn_tra_loi_ngan": num_tn_tra_loi_ngan, "num_tl": num_tl,
+                    "score_part1": score_part1, "score_part2": score_part2, "score_part3": score_part3, "score_part4": score_part4,
                     "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio,
                     "difficulty": level_choice, "matrix_template": matrix_template
                 }
@@ -641,10 +627,11 @@ with tab2:
             st.json(st.session_state.step1_data)
             
         with col_btn2:
-            if st.button("🔥 BƯỚC 2: SINH CÂU HỎI & ĐẢO MÃ ĐỀ"):
+            if st.button("🔥 BƯỚC 2: SINH CÂU HỎI & ĐẢO MÃ ĐỀ", disabled=score_error):
                 config_pkg = {
                     "subject": subject, "grade": grade, "num_tn_4_lua_chon": num_tn_4_lua_chon, 
                     "num_tn_dung_sai": num_tn_dung_sai, "num_tn_tra_loi_ngan": num_tn_tra_loi_ngan, "num_tl": num_tl,
+                    "score_part1": score_part1, "score_part2": score_part2, "score_part3": score_part3, "score_part4": score_part4,
                     "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio,
                     "difficulty": level_choice, "matrix_template": matrix_template
                 }
@@ -679,32 +666,21 @@ with tab3:
     else:
         config_pkg = { 
             "subject": subject, "grade": grade, "exam_type": exam_type, "duration": duration, "school_year": school_year,
+            "score_part1": score_part1, "score_part2": score_part2, "score_part3": score_part3, "score_part4": score_part4,
             "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio,
             "matrix_template": matrix_template
         }
         inc_mat = st.checkbox("Chèn bảng Ma trận phân bổ vào đầu tài liệu", value=True)
-        
-        export_mode = st.radio("Hình thức xuất bản bộ đề:", 
-                               ["Tải file đơn lẻ (Tùy chọn tải Đề gốc hoặc Mã đề đảo)", 
-                                "Nén tất cả mã đề (Bao gồm cả Đề gốc) vào file ZIP", 
-                                "Gộp chung tất cả mã đề vào 1 file Word duy nhất"])
+        export_mode = st.radio("Hình thức xuất bản bộ đề:", ["Tải file đơn lẻ (Tùy chọn tải Đề gốc hoặc Mã đề đảo)", "Nén tất cả mã đề (Bao gồm cả Đề gốc) vào file ZIP", "Gộp chung tất cả mã đề vào 1 file Word duy nhất"])
         
         if export_mode == "Tải file đơn lẻ (Tùy chọn tải Đề gốc hoặc Mã đề đảo)":
             all_available_codes = list(st.session_state.multi_codes_data.keys())
-            
             if "ĐỀ GỐC" in all_available_codes:
                 all_available_codes.remove("ĐỀ GỐC")
                 all_available_codes = ["ĐỀ GỐC"] + all_available_codes
-                
             sel_code = st.selectbox("Chọn bản đề cần xuất bản:", all_available_codes)
             docx_buf = build_single_docx(config_pkg, st.session_state.multi_codes_data[sel_code], sel_code, include_matrix=inc_mat)
-            
-            st.download_button(
-                label=f"📥 TẢI FILE WORD [{sel_code}]", 
-                data=docx_buf, 
-                file_name=f"De_{subject}_{sel_code}.docx", 
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            )
+            st.download_button(label=f"📥 TẢI FILE WORD [{sel_code}]", data=docx_buf, file_name=f"De_{subject}_{sel_code}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
             
         elif export_mode == "Nén tất cả mã đề (Bao gồm cả Đề gốc) vào file ZIP":
             zip_buffer = BytesIO()
@@ -722,7 +698,6 @@ with tab3:
             if "ĐỀ GỐC" in all_codes:
                 all_codes.remove("ĐỀ GỐC")
                 all_codes = ["ĐỀ GỐC"] + all_codes
-                
             for idx, c_code in enumerate(all_codes):
                 c_data = st.session_state.multi_codes_data[c_code]
                 temp_buf = build_single_docx(config_pkg, c_data, c_code, include_matrix=inc_mat)
@@ -742,11 +717,4 @@ with tab3:
 
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
-st.markdown(
-    """
-    <div style="text-align: center; font-size: 0.8em; color: grey;">
-        Ứng dụng được phát triển bởi Ngo Thanh Hung © 2026
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""<div style="text-align: center; font-size: 0.8em; color: grey;">Ứng dụng được phát triển bởi Ngo Thanh Hung © 2026</div>""", unsafe_allow_html=True)
