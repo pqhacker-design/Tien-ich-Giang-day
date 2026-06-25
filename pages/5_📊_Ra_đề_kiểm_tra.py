@@ -182,16 +182,25 @@ def generate_shuffled_bundle(original_data, start_code, num_codes):
 def generate_step1_matrix_only(model, config, raw_input_data):
     prompt_text = f"""
     Bạn là chuyên gia khảo thí. Hãy lập duy nhất bảng Ma trận phân bổ đề kiểm tra môn {config['subject']} - Khối Lớp {config['grade']}.
-    Số câu Trắc nghiệm Phần I: {config['num_tn_4_lua_chon']}, Đúng/Sai Phần II: {config['num_tn_dung_sai']}, Trả lời ngắn Phần III: {config['num_tn_tra_loi_ngan']}, Tự luận Phần IV: {config['num_tl']}.
-    Tổng điểm đề bắt buộc là 10. Tỷ lệ nhận thức mục tiêu: Nhận biết {config['nb_ratio']}%, Thông hiểu {config['th_ratio']}%, Vận dụng {config['vd_ratio']}%, Vận dụng cao {config['vdc_ratio']}%.
+    Số câu Trắc nghiệm 4 lựa chọn: {config['num_tn_4_lua_chon']} ({config['score_part1']} điểm), 
+    Số câu Đúng/Sai: {config['num_tn_dung_sai']} ({config['score_part2']} điểm), 
+    Số câu Trả lời ngắn: {config['num_tn_tra_loi_ngan']} ({config['score_part3']} điểm), 
+    Số câu Tự luận: {config['num_tl']} ({config['score_part4']} điểm).
+    Đặc biệt, lưu ý phân phối điểm số riêng cho câu hỏi Vận dụng cao (VDC) trong đề là: {config['score_vdc_custom']} điểm.
+    Tổng điểm của toàn đề bắt buộc là 10 điểm.
+    Tỷ lệ nhận thức: Nhận biết {config['nb_ratio']}% , Thông hiểu {config['th_ratio']}%, Vận dụng {config['vd_ratio']}%, Vận dụng cao {config['vdc_ratio']}%.
     Dựa trên tài liệu nguồn, hãy phân tích và chia nhỏ thành các hàng tương ứng với các chủ đề kiến thức.
-
+    
+    YÊU CẦU BẮT BUỘC:
+    - Phân tích thật sâu tài liệu/hình ảnh/yêu cầu đính kèm đi cùng lệnh này để phân chia thành các "chu_de" và "noi_dung".
+    - Phân chia chi tiết số câu hỏi tương ứng dựa trên tổng điểm và số câu của từng phần đã định cấu hình.
+    
     BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN (KHÔNG CHỨA LỜI THOẠI):
     {{
       "ma_tran": [
         {{
           "tt": 1,
-          "chu_de": "Tên chủ đề hoặc chương lớn",
+          "chu_de": "Tên chủ đề/Chương lớn",
           "noi_dung": "Nội dung kiến thức cụ thể",
           "nhieu_lua_chon": {{"nb": 2, "th": 1, "vd": 0}},
           "dung_sai": {{"nb": 0, "th": 1, "vd": 0}},
