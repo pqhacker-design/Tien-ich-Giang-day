@@ -81,25 +81,58 @@ def add_math_run_to_paragraph(paragraph, text):
 
 def clean_and_parse_json(raw_text):
     """
-    Hàm xử lý chuỗi và bóc tách dữ liệu JSON sạch từ phản hồi của AI
+    Hàm xử lý chuỗi nâng cao: Trích xuất JSON và tự động sửa lỗi 
+    nếu cấu trúc JSON bị cắt ngang giữa chừng (thiếu ngoặc đóng).
     """
     raw_text = raw_text.strip()
-    # Tìm khối dữ liệu giữa cặp ```json ... ```
+    
+    # 1. Tìm khối dữ liệu giữa cặp ```json ... ``` hoặc khối ngoặc { ... }
     match = re.search(r'```json\s*(\{.*?\})\s*```', raw_text, re.DOTALL | re.IGNORECASE)
     if match:
         json_str = match.group(1)
     else:
-        # Nếu không có thẻ markdown thì tìm khối ngoặc nhọn đầu tiên đến cuối cùng
-        match_brace = re.search(r'(\{.*?\})', raw_text, re.DOTALL)
+        match_brace = re.search(r'(\{.*)', raw_text, re.DOTALL)
         if match_brace:
             json_str = match_brace.group(1)
         else:
             json_str = raw_text
-            
-    # Loại bỏ ký tự xuống dòng ẩn bên trong giá trị chuỗi gây hỏng cấu trúc JSON
-    json_str = json_str.replace('\r', '')
-    return json.loads(json_str, strict=False)
 
+    # 2. Thuật toán tự động bù ngoặc đóng nếu JSON bị cắt ngang (Fix lỗi đứt chuỗi)
+    # Đếm số lượng dấu mở và đóng để cân bằng lại chuỗi
+    open_braces = json_str.count('{')
+    close_braces = json_str.count('}')
+    open_brackets = json_str.count('[')
+    close_brackets = json_str.count(']')
+    
+    # Nếu đang dở dang ở một thuộc tính (như cấu trúc bị cắt ở dấu phẩy hoặc dấu hai chấm)
+    json_str = json_str.strip()
+    if json_str.endswith(','):
+        json_str = json_str[:-1]
+        
+    # Bù dấu ngoặc nhọn cho các object con
+    if open_braces > close_braces:
+        # Nếu dòng cuối cùng đang dừng ở một object chưa đóng dạng {"key":
+        if json_str.endswith(':'):
+            json_str += ' {}'
+        # Bổ sung dần các dấu ngoặc nhọn còn thiếu
+        json_str += '}' * (open_braces - close_braces)
+        
+    # Bù dấu ngoặc vuông cho mảng (array)
+    if open_brackets > close_brackets:
+        json_str += ']' * (open_brackets - close_brackets)
+
+    # Loại bỏ ký tự xuống dòng ẩn gây hỏng cấu trúc
+    json_str = json_str.replace('\r', '').replace('\n', ' ')
+    
+    # 3. Tiến hành phân tích cú pháp
+    try:
+        return json.loads(json_str, strict=False)
+    except json.JSONDecodeError:
+        # Nếu vẫn lỗi, thử bọc thêm một tầng đóng tổng quát cuối cùng phòng hờ
+        try:
+            return json.loads(json_str + "]}", strict=False)
+        except:
+            raise  # Nếu chịu thua thì đẩy lỗi ra ngoài cho khối try-except lớn bắt lấy
 # ==========================================
 # KHỞI TẠO SESSION STATE
 # ==========================================
@@ -190,7 +223,8 @@ def generate_step1_matrix(model, config, raw_input_data):
     Tổng điểm của toàn đề bắt buộc là 10 điểm.
     Tỷ lệ nhận thức: Nhận biết {config['nb_ratio']}% , Thông hiểu {config['th_ratio']}%, Vận dụng {config['vd_ratio']}%, Vận dụng cao {config['vdc_ratio']}%.
     Mẫu thiết kế ma trận yêu cầu: "{config['matrix_template']}".
-
+    # Thêm dòng này vào cuối prompt_text trong hàm generate_step1_matrix:
+    prompt_text += "\nLƯU Ý QUYẾT ĐỊNH: Chỉ trả về chuỗi JSON, không giải thích, không viết lời thoại đầu/cuối. Hãy viết ngắn gọn, súc tích phần 'yeu_cau_can_dat' để tránh vượt quá giới hạn chữ của hệ thống."
     YÊU CẦU BẮT BUỘC:
     - Phân tích thật sâu tài liệu/hình ảnh/yêu cầu đính kèm đi cùng lệnh này để phân chia thành các "chu_de" và "noi_dung".
     - Phân chia chi tiết số câu hỏi tương ứng dựa trên tổng điểm và số câu của từng phần đã định cấu hình.
