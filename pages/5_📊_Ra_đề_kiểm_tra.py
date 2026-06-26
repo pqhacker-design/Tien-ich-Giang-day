@@ -204,9 +204,12 @@ def generate_step1_matrix(model, config, raw_input_data):
         prompt_text += f"\nNGUỒN DỮ LIỆU KIẾN THỨC BẮT BUỘC:\n\"\"\"\n{raw_input_data}\n\"\"\""
         contents_to_send.append(prompt_text)
 
-    response = model.generate_content(contents_to_send)
+    # Sửa lại đoạn cuối hàm generate_step1_matrix:
+    response = model.generate_content(
+        contents_to_send,
+        generation_config={"response_mime_type": "application/json"}
+    )
     raw = response.text.strip()
-    raw = re.sub(r'^```json\s*|```$', '', raw, flags=re.IGNORECASE).strip()
     return json.loads(raw, strict=False)
 
 def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input_data):
