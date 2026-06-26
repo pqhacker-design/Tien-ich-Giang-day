@@ -298,43 +298,57 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 row[6].text = f"{tl.get('nb',0)}/{tl.get('th',0)}/{tl.get('vd',0)}/{tl.get('vdc',0)}"
                 row[7].text = f"{item.get('tong_diem_phan_tram', 10)}%"
         elif 'ma_tran' in data:
-            m_table = doc.add_table(rows=1, cols=6)
-            m_table.style = 'Table Grid'
-            m_hdrs = ['Nội dung kiến thức', 'Hình thức', 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao']
+            m_table = doc.add_table(rows=1, cols=5)
+        m_table.style = 'Table Grid'
+        m_hdrs = ['Nội dung kiến thức', 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao']
+        for idx, h in enumerate(m_hdrs): m_table.rows[0].cells[idx].text = h
+        
+        t_nb_tn, t_nb_tl = 0, 0
+        t_th_tn, t_th_tl = 0, 0
+        t_vd_tn, t_vd_tl = 0, 0
+        t_vdc_tn, t_vdc_tl = 0, 0
+        
+        for item in data['ma_tran']:
+            row = m_table.add_row().cells
+            row[0].text = str(item.get('chu_de', ''))
             
-            for idx, h in enumerate(m_hdrs): 
-                m_table.rows[0].cells[idx].text = h
-                m_table.rows[0].cells[idx].paragraphs[0].runs[0].font.bold = True
-                
-            for item in data['ma_tran']:
-                chu_de_text = f"{item.get('chu_de', '')} - {item.get('noi_dung', '')}"
-                nlc, ds, tln, tl = item.get('nhieu_lua_chon', {}), item.get('dung_sai', {}), item.get('tra_loi_ngan', {}), item.get('tu_luan', {})
-                
-                tn_nb = nlc.get('nb', 0) + ds.get('nb', 0) + tln.get('nb', 0)
-                tn_th = nlc.get('th', 0) + ds.get('th', 0) + tln.get('th', 0)
-                tn_vd = nlc.get('vd', 0) + ds.get('vd', 0)
-                tn_vdc = 0
-                
-                tl_nb = tl.get('nb', 0)
-                tl_th = tl.get('th', 0)
-                tl_vd = tl.get('vd', 0)
-                tl_vdc = tl.get('vdc', 0)
-                
-                row_tn = m_table.add_row().cells
-                row_tn[0].text = chu_de_text
-                row_tn[1].text = "Trắc nghiệm (TN)"
-                row_tn[2].text = f"{tn_nb} câu" if tn_nb > 0 else "-"
-                row_tn[3].text = f"{tn_th} câu" if tn_th > 0 else "-"
-                row_tn[4].text = f"{tn_vd} câu" if tn_vd > 0 else "-"
-                row_tn[5].text = f"{tn_vdc} câu" if tn_vdc > 0 else "-"
-                
-                row_tl = m_table.add_row().cells
-                row_tl[0].text = ""
-                row_tl[1].text = "Tự luận (TL)"
-                row_tl[2].text = f"{tl_nb} câu" if tl_nb > 0 else "-"
-                row_tl[3].text = f"{tl_th} câu" if tl_th > 0 else "-"
-                row_tl[4].text = f"{tl_vd} câu" if tl_vd > 0 else "-"
-                row_tl[5].text = f"{tl_vdc} câu" if tl_vdc > 0 else "-"
+            nb_tn, nb_tl = item.get('nb_tn', 0), item.get('nb_tl', 0)
+            th_tn, th_tl = item.get('th_tn', 0), item.get('th_tl', 0)
+            vd_tn, vd_tl = item.get('vd_tn', 0), item.get('vd_tl', 0)
+            vdc_tn, vdc_tl = item.get('vdc_tn', 0), item.get('vdc_tl', 0)
+            
+            row[1].text = f"TN:{nb_tn}|TL:{nb_tl}"
+            row[2].text = f"TN:{th_tn}|TL:{th_tl}"
+            row[3].text = f"TN:{vd_tn}|TL:{vd_tl}"
+            row[4].text = f"TN:{vdc_tn}|TL:{vdc_tl}"
+            
+            t_nb_tn += nb_tn; t_nb_tl += nb_tl
+            t_th_tn += th_tn; t_th_tl += th_tl
+            t_vd_tn += vd_tn; t_vd_tl += vd_tl
+            t_vdc_tn += vdc_tn; t_vdc_tl += vdc_tl
+
+        # Hàng bổ sung 1: Tổng số câu
+        r_q = m_table.add_row().cells
+        r_q[0].text = "Tổng số câu"
+        r_q[0].paragraphs[0].runs[0].font.bold = True
+        r_q[1].text = f"TN:{t_nb_tn}|TL:{t_nb_tl}"
+        r_q[2].text = f"TN:{t_th_tn}|TL:{t_th_tl}"
+        r_q[3].text = f"TN:{t_vd_tn}|TL:{t_vd_tl}"
+        r_q[4].text = f"TN:{t_vdc_tn}|TL:{t_vdc_tl}"
+        
+        # Hàng bổ sung 2: Tổng số điểm
+        r_p = m_table.add_row().cells
+        r_p[0].text = "Tổng số điểm"
+        r_p[0].paragraphs[0].runs[0].font.bold = True
+        r_p[1].text = f"{config.get('nb_ratio', 40) / 10} điểm"
+        r_p[2].text = f"{config.get('th_ratio', 30) / 10} điểm"
+        r_p[3].text = f"{config.get('vd_ratio', 20) / 10} điểm"
+        r_p[4].text = f"{config.get('vdc_ratio', 10) / 10} điểm"
+        
+        for i in range(1, 5):
+            r_q[i].paragraphs[0].runs[0].font.bold = True
+            r_p[i].paragraphs[0].runs[0].font.bold = True
+        doc.add_paragraph()
 
         if 'bang_dac_ta' in data and data['bang_dac_ta']:
             doc.add_paragraph()
