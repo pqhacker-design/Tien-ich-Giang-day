@@ -400,7 +400,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     list_ds = de.get("trac_nghiem_dung_sai", [])
     if list_ds:
         p_hdr2 = doc.add_paragraph()
-        p_hdr2.add_run(f"\nPHẦN II. Câu trắc nghiệm đúng sai ({config.get('score_part2', 4.0)} điểm).").bold = True
+        p_hdr2.add_run(f"\nPHẦN II. Câu trắc nghiệm đúng sai ({config.get('score_part2', 2.0)} điểm).").bold = True
         for q in list_ds:
             p_q = doc.add_paragraph()
             p_q.add_run(f"Câu {q.get('id', '')}: ").bold = True
@@ -416,7 +416,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     list_tln = de.get("trac_nghiem_tra_loi_ngan", [])
     if list_tln:
         p_hdr3 = doc.add_paragraph()
-        p_hdr3.add_run(f"\nPHẦN III. Câu trắc nghiệm trả lời ngắn ({config.get('score_part3', 3.0)} điểm).").bold = True
+        p_hdr3.add_run(f"\nPHẦN III. Câu trắc nghiệm trả lời ngắn ({config.get('score_part3', 2.0)} điểm).").bold = True
         for q in list_tln:
             p_q = doc.add_paragraph()
             p_q.add_run(f"Câu {q.get('id', '')}: ").bold = True
@@ -425,7 +425,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
     list_tl = de.get("tu_luan", [])
     if list_tl:
         p_hdr4 = doc.add_paragraph()
-        p_hdr4.add_run(f"\nPHẦN IV. Tự luận ({config.get('score_part4', 0.0)} điểm).").bold = True
+        p_hdr4.add_run(f"\nPHẦN IV. Tự luận ({config.get('score_part4', 3.0)} điểm).").bold = True
         for q in list_tl:
             p_q = doc.add_paragraph()
             p_q.add_run(f"Câu {q.get('id', '')}: ").bold = True
@@ -483,7 +483,7 @@ with tab1:
         subject = st.selectbox("Chọn môn học cần thiết lập đề thi:", list(SUBJECTS_CONFIG.keys()))
         grade = st.selectbox("Khối lớp học:", [str(i) for i in range(1, 13)], index=7)
         exam_type = st.selectbox("Hình thức kiểm tra:", ["15 phút", "45 phút", "Giữa học kỳ I", "Cuối học kỳ I", "Giữa học kỳ II", "Cuối học kỳ II"])
-        duration = st.number_input("Thời lượng làm bài (phút):", min_value=15, max_value=150, value=60, step=5)
+        duration = st.number_input("Thời lượng làm bài (phút):", min_value=15, max_value=150, value=15, step=5)
         school_year = st.text_input("Năm học:", value="2026-2027")
         
         difficulty_levels = {
@@ -498,9 +498,9 @@ with tab1:
     with col2:
         st.markdown('<div class="section-header">Cấu hình số lượng câu hỏi</div>', unsafe_allow_html=True)
         num_tn_4_lua_chon = st.number_input("Trắc nghiệm nhiều lựa chọn (Phần I):", min_value=0, max_value=40, value=12)
-        num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", min_value=0, max_value=10, value=4)
-        num_tn_tra_loi_ngan = st.number_input("Trắc nghiệm Trả lời ngắn (Phần III):", min_value=0, max_value=15, value=6)
-        num_tl = st.number_input("Số câu hỏi Tự luận (Phần IV):", min_value=0, max_value=10, value=0)
+        num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", min_value=0, max_value=10, value=2, help="Mỗi câu 4 ý Đúng / Sai")
+        num_tn_tra_loi_ngan = st.number_input("Trắc nghiệm Trả lời ngắn (Phần III):", min_value=0, max_value=15, value=4)
+        num_tl = st.number_input("Số câu hỏi Tự luận (Phần IV):", min_value=0, max_value=10, value=3)
         
         st.markdown('---')
         code_choice = st.selectbox("Số lượng mã đề đảo tự động:", [1, 2, 4, 6, 8], index=2)
@@ -534,9 +534,9 @@ with tab2:
     
     col_s1, col_s2, col_s3, col_s4, col_vdc = st.columns(5)
     with col_s1: score_part1 = st.number_input("Điểm Phần I (Trắc nghiệm):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
-    with col_s2: score_part2 = st.number_input("Điểm Phần II (Đúng/Sai):", min_value=0.0, max_value=10.0, value=4.0, step=0.25)
-    with col_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
-    with col_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", min_value=0.0, max_value=10.0, value=0.0, step=0.25)
+    with col_s2: score_part2 = st.number_input("Điểm Phần II (Đúng/Sai):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
+    with col_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
+    with col_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
     
     # Ô nhập tùy chọn điểm dành riêng cho Vận dụng cao (VDC)
     with col_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=5.0, value=1.0, step=0.25, help="Chỉnh tăng lên cho lớp chọn hoặc giảm về 0 cho HS trung bình.")
@@ -607,7 +607,7 @@ with tab2:
                     "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio,
                     "difficulty": level_choice, "matrix_template": matrix_template
                 }
-                with st.spinner("AI đang bám sát Khung đặc tả để soạn nội dung câu hỏi thi..."):
+                with st.spinner("AI đang bám sát Khung đặc tả để soạn nội dung câu hỏi kiểm tra..."):
                     try:
                         rule = SUBJECTS_CONFIG[subject]
                         step2_data = generate_step2_questions(model, config_pkg, st.session_state.step1_data, rule, st.session_state.current_document_content)
