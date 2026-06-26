@@ -318,65 +318,57 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 row[6].text = f"{tl.get('nb',0)}/{tl.get('th',0)}/{tl.get('vd',0)}/{tl.get('vdc',0)}"
                 row[7].text = f"{item.get('tong_diem_phan_tram', 10)}%"
         else:
+            # Mẫu đơn giản: Gộp tổng số câu theo mức độ nhận thức
             m_table = doc.add_table(rows=1, cols=5)
-        m_table.style = 'Table Grid'
-        m_hdrs = ['Nội dung kiến thức', 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao']
-        for idx, h in enumerate(m_hdrs): m_table.rows[0].cells[idx].text = h
-        
-        # Khởi tạo các biến tích lũy tổng số câu và tổng điểm cho từng cột
-        total_nb_tn, total_nb_tl = 0, 0
-        total_th_tn, total_th_tl = 0, 0
-        total_vd_tn, total_vd_tl = 0, 0
-        total_vdc_tn, total_vdc_tl = 0, 0
-        
-        for item in data['ma_tran']:
-            row = m_table.add_row().cells
-            row[0].text = str(item.get('chu_de', ''))
+            m_table.style = 'Table Grid'
+            m_hdrs = ['Nội dung kiến thức', 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao']
+            for idx, h in enumerate(m_hdrs): 
+                m_table.rows[0].cells[idx].text = h
+                m_table.rows[0].cells[idx].paragraphs[0].runs[0].font.bold = True
             
-            # Đọc giá trị
-            nb_tn, nb_tl = item.get('nb_tn', 0), item.get('nb_tl', 0)
-            th_tn, th_tl = item.get('th_tn', 0), item.get('th_tl', 0)
-            vd_tn, vd_tl = item.get('vd_tn', 0), item.get('vd_tl', 0)
-            vdc_tn, vdc_tl = item.get('vdc_tn', 0), item.get('vdc_tl', 0)
+            total_nb, total_th, total_vd, total_vdc = 0, 0, 0, 0
             
-            # Ghi vào bảng
-            row[1].text = f"TN:{nb_tn}|TL:{nb_tl}"
-            row[2].text = f"TN:{th_tn}|TL:{th_tl}"
-            row[3].text = f"TN:{vd_tn}|TL:{vd_tl}"
-            row[4].text = f"TN:{vdc_tn}|TL:{vdc_tl}"
-            
-            # Cộng dồn số lượng
-            total_nb_tn += nb_tn; total_nb_tl += nb_tl
-            total_th_tn += th_tn; total_th_tl += th_tl
-            total_vd_tn += vd_tn; total_vd_tl += vd_tl
-            total_vdc_tn += vdc_tn; total_vdc_tl += vdc_tl
+            for item in data['ma_tran']:
+                row = m_table.add_row().cells
+                row[0].text = str(item.get('chu_de', '')) + " - " + str(item.get('noi_dung', ''))
+                
+                nlc = item.get('nhieu_lua_chon', {})
+                ds = item.get('dung_sai', {})
+                tln = item.get('tra_loi_ngan', {})
+                tl = item.get('tu_luan', {})
+                
+                # Tính tổng số câu theo từng mức độ
+                nb_q = nlc.get('nb', 0) + ds.get('nb', 0) + tln.get('nb', 0) + tl.get('nb', 0)
+                th_q = nlc.get('th', 0) + ds.get('th', 0) + tln.get('th', 0) + tl.get('th', 0)
+                vd_q = nlc.get('vd', 0) + ds.get('vd', 0) + tl.get('vd', 0)
+                vdc_q = tl.get('vdc', 0)
+                
+                row[1].text = f"{nb_q} câu" if nb_q > 0 else "-"
+                row[2].text = f"{th_q} câu" if th_q > 0 else "-"
+                row[3].text = f"{vd_q} câu" if vd_q > 0 else "-"
+                row[4].text = f"{vdc_q} câu" if vdc_q > 0 else "-"
+                
+                total_nb += nb_q; total_th += th_q; total_vd += vd_q; total_vdc += vdc_q
 
-        # --- HÀNG 1 BỔ SUNG: TỔNG SỐ CÂU THEO CẤU TRÚC MỨC ĐỘ ---
-        row_total_q = m_table.add_row().cells
-        row_total_q[0].text = "Tổng số câu"
-        row_total_q[0].paragraphs[0].runs[0].font.bold = True # In đậm chữ tiêu đề tổng
-        
-        row_total_q[1].text = f"TN: {total_nb_tn} | TL: {total_nb_tl}"
-        row_total_q[2].text = f"TN: {total_th_tn} | TL: {total_th_tl}"
-        row_total_q[3].text = f"TN: {total_vd_tn} | TL: {total_vd_tl}"
-        row_total_q[4].text = f"TN: {total_vdc_tn} | TL: {total_vdc_tl}"
-        
-        # --- HÀNG 2 BỔ SUNG: TỔNG SỐ ĐIỂM THEO TỶ LỆ CẤU HÌNH ---
-        # Tính toán điểm động dựa trên phân bổ số lượng câu thực tế (Ví dụ: 10 điểm chia theo tỷ lệ %)
-        # Hoặc lấy trực tiếp từ cấu hình tỉ lệ phần trăm ban đầu của thầy:
-        row_total_p = m_table.add_row().cells
-        row_total_p[0].text = "Tổng số điểm"
-        row_total_p[0].paragraphs[0].runs[0].font.bold = True
-        
-        row_total_p[1].text = f"{config.get('nb_ratio', 40) / 10} điểm"
-        row_total_p[2].text = f"{config.get('th_ratio', 30) / 10} điểm"
-        row_total_p[3].text = f"{config.get('vd_ratio', 20) / 10} điểm"
-        row_total_p[4].text = f"{config.get('vdc_ratio', 10) / 10} điểm"
-        
-        # Đặt font chữ đậm cho các ô giá trị tổng để bảng Word nhìn tường minh, đẹp mắt
-        for i in range(1, 5):
-            row_total_q[i].paragraphs[0].runs[0].font.bold = True
-            row_total_p[i].paragraphs[0].runs[0].font.bold = True
+            # Hàng tổng số câu
+            row_total_q = m_table.add_row().cells
+            row_total_q[0].text = "Tổng số câu"
+            row_total_q[0].paragraphs[0].runs[0].font.bold = True
+            row_total_q[1].text = f"{total_nb} câu"; row_total_q[2].text = f"{total_th} câu"
+            row_total_q[3].text = f"{total_vd} câu"; row_total_q[4].text = f"{total_vdc} câu"
+            
+            # Hàng tổng số điểm
+            row_total_p = m_table.add_row().cells
+            row_total_p[0].text = "Tổng số điểm"
+            row_total_p[0].paragraphs[0].runs[0].font.bold = True
+            row_total_p[1].text = f"{config.get('nb_ratio', 40) / 10} điểm"
+            row_total_p[2].text = f"{config.get('th_ratio', 30) / 10} điểm"
+            row_total_p[3].text = f"{config.get('vd_ratio', 20) / 10} điểm"
+            row_total_p[4].text = f"{config.get('vdc_ratio', 10) / 10} điểm"
+            
+            for i in range(1, 5):
+                row_total_q[i].paragraphs[0].runs[0].font.bold = True
+                row_total_p[i].paragraphs[0].runs[0].font.bold = True
 
         doc.add_paragraph()
 
