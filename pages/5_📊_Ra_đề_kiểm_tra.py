@@ -66,10 +66,11 @@ def extract_text_from_docx(file_bytes):
         return f"Lỗi đọc file Word: {str(e)}"
 
 # ==========================================
-# HÀM XỬ LÝ CHÈN CHỮ VÀ BIỂU THỨC LATEX VÀO WORD AN TOÀN
+# HÀM XỬ LÝ CHÈN VĂN BẢN VÀ BIỂU THỨC TOÁN HỌC AN TOÀN
 # ==========================================
 def add_math_run_to_paragraph(paragraph, text):
-    if not text: return
+    if not text: 
+        return
     text = str(text).replace('\\n', '\n').strip()
     
     # Tìm các đoạn công thức LaTeX nằm giữa cặp dấu $...$
@@ -89,8 +90,7 @@ def add_math_run_to_paragraph(paragraph, text):
                 
             latex_content = match.group(1).strip()
             
-            # Để hiển thị đẹp mắt và tránh crash cấu trúc file Word xml, 
-            # chúng ta format chữ nghiêng với font Cambria Math chuẩn toán học
+            # Đưa công thức LaTeX hiển thị dạng chữ nghiêng toán học Cambria Math chuyên nghiệp
             run_math = paragraph.add_run(f" {latex_content} ")
             run_math.font.italic = True
             run_math.font.name = 'Cambria Math'
@@ -110,7 +110,7 @@ if 'alignment_table' not in st.session_state: st.session_state.alignment_table =
 if 'user_custom_req' not in st.session_state: st.session_state.user_custom_req = ""
 
 # ==========================================
-# THUẬT TOÁN ĐẢO ĐỀ MULTI-CODE
+# THUẬT TOÁN ĐẢO ĐỀ MULTI-CODE TỰ ĐỘNG AN TOÀN
 # ==========================================
 def generate_shuffled_bundle(original_data, start_code, num_codes):
     bundle = {}
@@ -147,6 +147,7 @@ def generate_shuffled_bundle(original_data, start_code, num_codes):
                 opt_values = list(opts.values())
                 random.shuffle(opt_values)
                 
+                new_correct_key = "A"
                 for o_idx, char in enumerate(['A', 'B', 'C', 'D']):
                     q[char] = opt_values[o_idx]
                     if opt_values[o_idx] == old_correct_value:
@@ -486,10 +487,16 @@ def build_single_docx(config, data, code_label, include_matrix=True):
 
     if da.get('tu_luan'):
         doc.add_paragraph().add_run("\nHướng dẫn giải chi tiết Phần IV (Tự luận):").bold = True
-        for q_id, detail in da['tu_luan'].items() if isinstance(da['tu_luan'], dict) else enumerate(da['tu_luan']):
-            p_tl = doc.add_paragraph()
-            p_tl.add_run(f"Câu {q_id}: ").bold = True
-            add_math_run_to_paragraph(p_tl, str(detail))
+        if isinstance(da['tu_luan'], dict):
+            for q_id, detail in da['tu_luan'].items():
+                p_tl = doc.add_paragraph()
+                p_tl.add_run(f"Câu {q_id}: ").bold = True
+                add_math_run_to_paragraph(p_tl, str(detail))
+        else:
+            for idx, detail in enumerate(da['tu_luan']):
+                p_tl = doc.add_paragraph()
+                p_tl.add_run(f"Câu {idx + 1}: ").bold = True
+                add_math_run_to_paragraph(p_tl, str(detail))
             
     bio = BytesIO()
     doc.save(bio)
