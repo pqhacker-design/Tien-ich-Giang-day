@@ -210,11 +210,7 @@ def generate_step1_matrix(model, config, raw_input_data):
     Tổng điểm của toàn đề bắt buộc là 10 điểm.
     Tỷ lệ nhận thức: Nhận biết {config['nb_ratio']}% , Thông hiểu {config['th_ratio']}%, Vận dụng {config['vd_ratio']}%, Vận dụng cao {config['vdc_ratio']}%.
     Mẫu thiết kế ma trận yêu cầu: "{config['matrix_template']}".
-    QUY ĐỊNH ĐỊNH DẠNG TOÁN HỌC & KHTN (BẮT BUỘC):
-        - TUYỆT ĐỐI KHÔNG sử dụng ký tự $, \, frac, neq, sim, triangle, hoặc ^.
-        - Tất cả các phân số, phân thức hoặc biểu thức toán học có dạng phân số BẮT BUỘC phải viết theo định dạng: (tử số)/(mẫu số). 
-          Ví dụ: Viết (x + 1)/(x - 3) thay vì viết dạng chia ngang thông thường; viết (2)/(3) thay vì 2/3.
-        - Các ký hiệu mũ dùng ký tự mũ Unicode trực tiếp (x², y³).
+    
     YÊU CẦU BẮT BUỘC:
     - Phân tích thật sâu tài liệu/hình ảnh/yêu cầu đính kèm đi cùng lệnh này để phân chia thành các "chu_de" và "noi_dung".
     - Phân chia chi tiết số câu hỏi tương ứng dựa trên tổng điểm và số câu của từng phần đã định cấu hình.
