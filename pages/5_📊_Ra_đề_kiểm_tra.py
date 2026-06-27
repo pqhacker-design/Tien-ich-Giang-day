@@ -163,6 +163,14 @@ def generate_step1_matrix(model, config, raw_input_data):
     prompt_text = f"""
     Bạn là chuyên gia khảo thí cấp cao của Bộ Giáo dục. Hãy lập Ma trận và Bản đặc tả đề kiểm tra môn {config['subject']} - Khối Lớp {config['grade']}.
     Độ khó mục tiêu: {config['difficulty']}.
+    
+    ĐẶC BIỆT LƯU Ý VỀ THỜI GIAN LÀM BÀI VÀ ĐỐI TƯỢNG:
+    - Thời lượng làm bài: {config['duration']} phút.
+    - Độ khó mục tiêu: {config['difficulty']}.
+    
+    YÊU CẦU ĐIỀU CHỈNH ĐỘ KHÓ THEO THỜI LƯỢNG:
+    - Nếu thời lượng NGẮN (≤ 15-20 phút): Các câu hỏi thuộc mức độ Thông hiểu và Vận dụng phải là các bài toán/tình huống xử lý NHANH (tối đa 1-2 bước tính), tránh các câu hỏi cần đọc hiểu ngữ liệu quá dài hoặc tính toán phức tạp để học sinh kịp làm bài.
+    - Nếu thời lượng DÀI (≥ 45 phút): Bản đặc tả được phép mở rộng các tiêu chí đánh giá, yêu cầu các câu hỏi Vận dụng và Vận dụng cao có độ sâu tư duy, bài toán nhiều bước giải, hoặc đoạn văn/ngữ liệu phân tích dài để phân hóa tốt đối tượng học sinh tương ứng với mức độ ({config['difficulty']}).
     Số câu Trắc nghiệm 4 lựa chọn: {config['num_tn_4_lua_chon']} ({config['score_part1']} điểm), 
     Số câu Đúng/Sai: {config['num_tn_dung_sai']} ({config['score_part2']} điểm), 
     Số câu Trả lời ngắn: {config['num_tn_tra_loi_ngan']} ({config['score_part3']} điểm), 
@@ -220,6 +228,10 @@ def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input
     Hãy thiết lập chi tiết nội dung đề kiểm tra môn {config['subject']}, Khối {config['grade']}.
     Đặc thù môn học: {subject_rule}
 
+    THÔNG TIN THỜI GIAN LÀM BÀI BẮT BUỘC TUÂN THỦ:
+    - Tổng thời gian làm bài: {config['duration']} phút cho tổng số {config['num_tn_4_lua_chon'] + config['num_tn_dung_sai'] + config['num_tn_tra_loi_ngan'] + config['num_tl']} câu hỏi.
+    - Do đó, bạn phải tự cân đối và khống chế "độ dài" và "độ phức tạp" của từng câu hỏi sao cho một học sinh thuộc nhóm đối tượng ({config['difficulty']}) có thể hoàn thành bài thi một cách hợp lý trong đúng {config['duration']} phút.
+    - VÍ DỤ: Đề {config['duration']} phút mà ngắn (ví dụ 15 phút) thì câu hỏi trắc nghiệm phải ngắn gọn, hỏi thẳng vào bản chất, công thức tính nhanh, phần tự luận (nếu có) phải là bài toán cơ bản. Không được ra câu hỏi tốn quá nhiều thời gian đọc hay tính toán.
     Yêu cầu số lượng câu hỏi và cơ cấu điểm số:
     - Phần I (Trắc nghiệm nhiều lựa chọn): {config['num_tn_4_lua_chon']} câu. Tổng điểm phần này: {config['score_part1']} điểm.
     - Phần II (Trắc nghiệm Đúng/Sai): {config['num_tn_dung_sai']} câu. Tổng điểm phần này: {config['score_part2']} điểm.
@@ -625,7 +637,7 @@ with tab2:
                 st.error("Vui lòng cung cấp danh sách chủ đề hoặc tải file tài liệu đính kèm lên trước.")
             else:
                 config_pkg = {
-                    "subject": subject, "grade": grade, "num_tn_4_lua_chon": num_tn_4_lua_chon, 
+                    "subject": subject, "grade": grade, "duration": duration, "num_tn_4_lua_chon": num_tn_4_lua_chon, 
                     "num_tn_dung_sai": num_tn_dung_sai, "num_tn_tra_loi_ngan": num_tn_tra_loi_ngan, "num_tl": num_tl,
                     "score_part1": score_part1, "score_part2": score_part2, "score_part3": score_part3, "score_part4": score_part4,
                     "score_vdc_custom": score_vdc_custom,
@@ -643,7 +655,7 @@ with tab2:
         with col_btn2:
             if st.button("🔥 BƯỚC 2: SINH CÂU HỎI & ĐẢO MÃ ĐỀ", disabled=score_error):
                 config_pkg = {
-                    "subject": subject, "grade": grade, "num_tn_4_lua_chon": num_tn_4_lua_chon, 
+                    "subject": subject, "grade": grade, "duration": duration, "num_tn_4_lua_chon": num_tn_4_lua_chon, 
                     "num_tn_dung_sai": num_tn_dung_sai, "num_tn_tra_loi_ngan": num_tn_tra_loi_ngan, "num_tl": num_tl,
                     "score_part1": score_part1, "score_part2": score_part2, "score_part3": score_part3, "score_part4": score_part4,
                     "score_vdc_custom": score_vdc_custom,
