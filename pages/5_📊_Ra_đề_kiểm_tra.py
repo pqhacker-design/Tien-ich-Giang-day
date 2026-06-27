@@ -18,13 +18,6 @@ from docx.oxml.ns import nsdecls, qn
 
 import google.generativeai as genai
 
-# THƯ VIỆN CHUYỂN ĐỔI LATEX SANG MATHML
-try:
-    import latex2mathml.commands
-    from latex2mathml.converter import convert as convert_latex_to_mathml
-except ImportError:
-    st.error("⚠️ Vui lòng cài đặt thư viện latex2mathml bằng lệnh: `pip install latex2mathml` để hiển thị công thức toán học.")
-
 # ==========================================
 # CẤU HÌNH TRANG & GIAO DIỆN
 # ==========================================
@@ -73,13 +66,13 @@ def extract_text_from_docx(file_bytes):
         return f"Lỗi đọc file Word: {str(e)}"
 
 # ==========================================
-# BỘ CHUYỂN ĐỔI LATEX (OVERLEAF) SANG WORD MATH NGUYÊN BẢN
+# HÀM XỬ LÝ CHÈN CHỮ VÀ BIỂU THỨC LATEX VÀO WORD AN TOÀN
 # ==========================================
 def add_math_run_to_paragraph(paragraph, text):
     if not text: return
     text = str(text).replace('\\n', '\n').strip()
     
-    # Tìm tất cả các đoạn công thức LaTeX dạng $...$
+    # Tìm các đoạn công thức LaTeX nằm giữa cặp dấu $...$
     latex_pattern = re.compile(r'\$([^$]+)\$')
     
     lines = text.split('\n')
@@ -90,39 +83,17 @@ def add_math_run_to_paragraph(paragraph, text):
         last_end = 0
         for match in latex_pattern.finditer(line):
             start, end = match.span()
-            # Thêm đoạn văn bản thường trước công thức
+            # Thêm đoạn văn bản thường đứng trước công thức
             if start > last_end:
                 paragraph.add_run(line[last_end:start])
                 
             latex_content = match.group(1).strip()
-            try:
-                # Bước 1: Dịch LaTeX sang MathML String
-                mathml_output = convert_latex_to_mathml(latex_content)
-                
-                # Bước 2: Dịch MathML sang cấu trúc XSLT/OMML tương thích Microsoft Word
-                # Dùng một thủ thuật cấu trúc XML để Word nhận dạng đây là Office Math
-                xslt_string = (
-                    f'<m:oMathPara xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">'
-                    f'  <m:oMath>'
-                    f'    <m:r><m:t>{latex_content}</m:t></m:r>'
-                    f'  </m:oMath>'
-                    f'</m:oMathPara>'
-                )
-                
-                # Biến đổi thực tế: Chuyển đổi mã MathML thô thành phần tử XML của Word
-                # Để tương thích tối ưu và tránh crash khi parse chuỗi XML phức tạp, ta nhúng chuỗi toán học an toàn
-                # Nếu muốn công thức hiển thị cấu trúc đứng hoàn hảo, Word tự động parse thông qua thẻ MathML
-                # Ở đây chúng ta tạo phần tử toán học nguyên bản
-                try:
-                    # Chuyển đổi ký tự LaTeX thông dụng sang Unicode toán học để an toàn tuyệt đối
-                    clean_math = latex_content.replace('\\frac', '').replace('{', '(').replace('}', ')').replace('^', '²')
-                    run_math = paragraph.add_run(clean_math)
-                    run_math.font.italic = True
-                    run_math.font.name = 'Cambria Math'
-                except:
-                    paragraph.add_run(f" {latex_content} ")
-            except Exception as math_err:
-                paragraph.add_run(f" {latex_content} ")
+            
+            # Để hiển thị đẹp mắt và tránh crash cấu trúc file Word xml, 
+            # chúng ta format chữ nghiêng với font Cambria Math chuẩn toán học
+            run_math = paragraph.add_run(f" {latex_content} ")
+            run_math.font.italic = True
+            run_math.font.name = 'Cambria Math'
                 
             last_end = end
             
@@ -270,7 +241,7 @@ def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input
     Đặc thù môn học: {subject_rule}
 
     Yêu cầu số lượng câu hỏi và cơ cấu điểm số:
-    - Phân I (Trắc nghiệm nhiều lựa chọn): {config['num_tn_4_lua_chon']} câu. Tổng điểm phần này: {config['score_part1']} điểm.
+    - Phần I (Trắc nghiệm nhiều lựa chọn): {config['num_tn_4_lua_chon']} câu. Tổng điểm phần này: {config['score_part1']} điểm.
     - Phần II (Trắc nghiệm Đúng/Sai): {config['num_tn_dung_sai']} câu. Tổng điểm phần này: {config['score_part2']} điểm.
     - Phần III (Trắc nghiệm Trả lời ngắn): {config['num_tn_tra_loi_ngan']} câu. Tổng điểm phần này: {config['score_part3']} điểm.
     - Phần IV (Tự luận): {config['num_tl']} câu. Tổng điểm phần này: {config['score_part4']} điểm.
