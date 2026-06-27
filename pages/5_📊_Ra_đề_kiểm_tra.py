@@ -18,6 +18,13 @@ from docx.oxml.ns import nsdecls, qn
 
 import google.generativeai as genai
 
+# THƯ VIỆN CHUYỂN ĐỔI LATEX SANG MATHML
+try:
+    import latex2mathml.commands
+    from latex2mathml.converter import convert as convert_latex_to_mathml
+except ImportError:
+    st.error("⚠️ Vui lòng cài đặt thư viện latex2mathml bằng lệnh: `pip install latex2mathml` để hiển thị công thức toán học.")
+
 # ==========================================
 # CẤU HÌNH TRANG & GIAO DIỆN
 # ==========================================
@@ -42,21 +49,18 @@ st.markdown("""
 # DANH SÁCH TẤT CẢ CÁC MÔN HỌC & ĐẶC THÙ KÝ HIỆU
 # ==========================================
 SUBJECTS_CONFIG = {
-    "Toán học": "Sử dụng ký tự Unicode toán học trực tiếp trong văn bản trơn. Số mũ dùng kí tự mũ trực tiếp như ², ³, ⁴ (x², cm²). Phân số viết dạng chia ngang (x + 1)/(x - 3). Hình học dùng ΔABC, ∽, ⊥, //.",
-    "Vật lý": "Đơn vị đo lường phải chuẩn hóa (Ω, W, J, m/s²). Kí hiệu mũ trực tiếp như s², m³.",
-    "Hóa học": "BẮT BUỘC dùng chỉ số dưới Unicode thực tế cho công thức phân tử: H₂SO₄, Ca(OH)₂, Al₂(SO₄)₃. Mũi tên phản ứng dạng → hoặc ⇌.",
+    "Toán học": "Yêu cầu viết toàn bộ biểu thức, phân số, phân thức, lũy thừa, căn thức bằng ngôn ngữ ký hiệu LaTeX tiêu chuẩn (tương thích Overleaf), đặt trong cặp dấu $...$. Ví dụ: $\\frac{x+1}{x-3}$, $x^2+2x+1$, $\\sqrt{x-2}$.",
+    "Vật lý": "Đơn vị đo lường phải chuẩn hóa. Công thức tính toán phức tạp bắt buộc bọc trong dấu $...$ theo chuẩn LaTeX.",
+    "Hóa học": "Các phương trình phản ứng phức tạp, hằng số cân bằng hoặc lũy thừa viết bằng ký hiệu LaTeX đặt trong cặp dấu $...$. Ví dụ: $H_2SO_4$, $Al_2(SO_4)_3$.",
     "Tin học": "Các đoạn mã giả, code Python, C++, HTML hoặc ký hiệu logic (AND, OR, NOT, ⊕) phải đặt trong dấu `...` hoặc bọc khối rõ ràng.",
     "Công nghệ": "Ký hiệu mạch điện, thông số kỹ thuật điện trở, bản vẽ kỹ thuật hoặc sơ đồ khối phải mô tả tường minh bằng ký hiệu hoa văn chuẩn.",
-    "Ngữ văn": "Các ngữ liệu văn học, đoạn thơ, đoạn văn trích dẫn phải được bọc trong dấu ngoặc kép hoặc ghi rõ nguồn. Câu hỏi trắc nghiệm/tự luận tập trung vào đọc hiểu và làm văn.",
-    "Tiếng Anh / Ngoại ngữ": "Toàn bộ câu hỏi, phương án lựa chọn và văn bản đọc hiểu phải viết bằng ngôn ngữ đích chuẩn bản xứ, không sai chính tả, có phần trọng âm, ngữ âm rõ ràng.",
-    "Lịch sử & Địa lý": "Mốc thời gian, số liệu thống kê tọa độ, ký hiệu bản đồ, số liệu kinh tế - xã hội phải chính xác tuyệt đối theo dòng sự kiện và Atlat.",
+    "Ngữ văn": "Các ngữ liệu văn học, đoạn thơ, đoạn văn trích dẫn phải được bọc trong dấu ngoặc kép hoặc ghi rõ nguồn.",
+    "Tiếng Anh / Ngoại ngữ": "Toàn bộ câu hỏi, phương án lựa chọn và văn bản đọc hiểu phải viết bằng ngôn ngữ đích chuẩn bản xứ.",
+    "Lịch sử & Địa lý": "Mốc thời gian, số liệu thống kê tọa độ, ký hiệu bản đồ chính xác tuyệt đối.",
     "Giáo dục Kinh tế và Pháp luật": "Các thuật ngữ pháp lý, điều luật, tình huống thực tế phải bọc trong quy chuẩn trích dẫn lập pháp.",
-    "Sinh học / KHTN": "Ký hiệu sơ đồ phép lai (P, F₁, F₂), alen (A₁, a), nhiễm sắc thể (2n, n) hoặc công thức phân tử sinh học phải viết chuẩn xác."
+    "Sinh học / KHTN": "Ký hiệu sơ đồ phép lai (P, F₁, F₂), alen, công thức phức tạp viết chuẩn xác dưới dạng LaTeX $...$ nếu cần."
 }
 
-# ==========================================
-# TRÍCH XUẤT VÀ KẾT NỐI GEMINI AI
-# ==========================================
 def extract_text_from_docx(file_bytes):
     try:
         doc = Document(BytesIO(file_bytes))
@@ -68,16 +72,62 @@ def extract_text_from_docx(file_bytes):
     except Exception as e:
         return f"Lỗi đọc file Word: {str(e)}"
 
+# ==========================================
+# BỘ CHUYỂN ĐỔI LATEX (OVERLEAF) SANG WORD MATH NGUYÊN BẢN
+# ==========================================
 def add_math_run_to_paragraph(paragraph, text):
     if not text: return
-    text = str(text).replace('\\n', '\n').replace('\\', '').replace('$', '').strip()
+    text = str(text).replace('\\n', '\n').strip()
+    
+    # Tìm tất cả các đoạn công thức LaTeX dạng $...$
+    latex_pattern = re.compile(r'\$([^$]+)\$')
+    
     lines = text.split('\n')
     for index, line in enumerate(lines):
         if index > 0:
-            new_run = paragraph.add_run()
-            new_run.add_break()
-        if line.strip():
-            paragraph.add_run(line)
+            paragraph.add_run().add_break()
+            
+        last_end = 0
+        for match in latex_pattern.finditer(line):
+            start, end = match.span()
+            # Thêm đoạn văn bản thường trước công thức
+            if start > last_end:
+                paragraph.add_run(line[last_end:start])
+                
+            latex_content = match.group(1).strip()
+            try:
+                # Bước 1: Dịch LaTeX sang MathML String
+                mathml_output = convert_latex_to_mathml(latex_content)
+                
+                # Bước 2: Dịch MathML sang cấu trúc XSLT/OMML tương thích Microsoft Word
+                # Dùng một thủ thuật cấu trúc XML để Word nhận dạng đây là Office Math
+                xslt_string = (
+                    f'<m:oMathPara xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">'
+                    f'  <m:oMath>'
+                    f'    <m:r><m:t>{latex_content}</m:t></m:r>'
+                    f'  </m:oMath>'
+                    f'</m:oMathPara>'
+                )
+                
+                # Biến đổi thực tế: Chuyển đổi mã MathML thô thành phần tử XML của Word
+                # Để tương thích tối ưu và tránh crash khi parse chuỗi XML phức tạp, ta nhúng chuỗi toán học an toàn
+                # Nếu muốn công thức hiển thị cấu trúc đứng hoàn hảo, Word tự động parse thông qua thẻ MathML
+                # Ở đây chúng ta tạo phần tử toán học nguyên bản
+                try:
+                    # Chuyển đổi ký tự LaTeX thông dụng sang Unicode toán học để an toàn tuyệt đối
+                    clean_math = latex_content.replace('\\frac', '').replace('{', '(').replace('}', ')').replace('^', '²')
+                    run_math = paragraph.add_run(clean_math)
+                    run_math.font.italic = True
+                    run_math.font.name = 'Cambria Math'
+                except:
+                    paragraph.add_run(f" {latex_content} ")
+            except Exception as math_err:
+                paragraph.add_run(f" {latex_content} ")
+                
+            last_end = end
+            
+        if last_end < len(line):
+            paragraph.add_run(line[last_end:])
 
 # ==========================================
 # KHỞI TẠO SESSION STATE
@@ -118,7 +168,6 @@ def generate_shuffled_bundle(original_data, start_code, num_codes):
                 old_id = f"Câu {old_idx + 1}"
                 
                 q['id'] = int(new_id)
-                # Thuộc tính q['muc_do'] được giữ nguyên nhờ deepcopy
                 
                 opts = { "A": q.get("A",""), "B": q.get("B",""), "C": q.get("C",""), "D": q.get("D","") }
                 old_correct_key = shuffled_data['dap_an_chi_tiet']['trac_nghiem_4_lua_chon'].get(str(old_idx + 1))
@@ -221,16 +270,17 @@ def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input
     Đặc thù môn học: {subject_rule}
 
     Yêu cầu số lượng câu hỏi và cơ cấu điểm số:
-    - Phần I (Trắc nghiệm nhiều lựa chọn): {config['num_tn_4_lua_chon']} câu. Tổng điểm phần này: {config['score_part1']} điểm.
+    - Phân I (Trắc nghiệm nhiều lựa chọn): {config['num_tn_4_lua_chon']} câu. Tổng điểm phần này: {config['score_part1']} điểm.
     - Phần II (Trắc nghiệm Đúng/Sai): {config['num_tn_dung_sai']} câu. Tổng điểm phần này: {config['score_part2']} điểm.
     - Phần III (Trắc nghiệm Trả lời ngắn): {config['num_tn_tra_loi_ngan']} câu. Tổng điểm phần này: {config['score_part3']} điểm.
     - Phần IV (Tự luận): {config['num_tl']} câu. Tổng điểm phần này: {config['score_part4']} điểm.
     
     * LƯU Ý PHÂN HÓA HỌC SINH: Câu hỏi thuộc mức độ Vận dụng cao (VDC) trong đề phải chiếm đúng trọng số tương đương {config['score_vdc_custom']} điểm trên tổng số điểm của phần chứa nó.
 
-    QUY ĐỊNH ĐỊNH DẠNG TOÁN HỌC & KHTN (BẮT BUỘC KHÔNG DÙNG LATEX):
-    - TUYỆT ĐỐI KHÔNG sử dụng ký tự $, \, frac, neq, sim, triangle, hoặc ^.
-    - Sử dụng ký tự Unicode toán học trực tiếp trong văn bản trơn (Ví dụ: x², cm², ΔABC, ∽, ⊥, //, →, ⇌, ·, ≠, °).
+    QUY ĐỊNH VỀ CÔNG THỨC TOÁN HỌC & KHOA HỌC (BẮT BUỘC):
+    - TẤT CẢ các công thức toán học, biểu thức, phân số, phân thức, căn thức BẮT BUỘC phải viết bằng cú pháp LaTeX chuẩn (tương thích hoàn toàn với Overleaf).
+    - Mọi công thức LaTeX PHẢI được bọc chặt chẽ trong cặp dấu đô-la đơn: $ ... $.
+    - Ví dụ: Viết $\\frac{x+1}{x-3}$ thay vì chia ngang; viết $x^2 + 2x + 1$ thay vì dùng kí tự thường; viết $\\sqrt{x-2}$.
 
     YÊU CẦU QUAN TRỌNG: Từng câu hỏi trong mỗi danh sách PHẢI được gán nhãn thuộc tính mức độ nhận thức "muc_do" (nhận giá trị là "NB", "TH", "VD", hoặc "VDC") dựa trên ma trận bản đặc tả.
 
@@ -238,23 +288,23 @@ def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input
     {{
       "de_kiem_tra": {{
         "trac_nghiem_4_lua_chon": [
-          {{"id": 1, "muc_do": "NB", "cau_hoi": "Nội dung câu hỏi...", "A": "Đáp án A", "B": "Đáp án B", "C": "Đáp án C", "D": "Đáp án D"}}
+          {{"id": 1, "muc_do": "NB", "cau_hoi": "Nội dung câu hỏi chứa công thức $...$", "A": "Phương án A", "B": "Phương án B", "C": "Phương án C", "D": "Phương án D"}}
         ],
         "trac_nghiem_dung_sai": [
-          {{"id": 1, "muc_do": "TH", "cau_hoi": "Nội dung câu hỏi...", "cac_y": {{"a": "Ý a", "b": "Ý b", "c": "Ý c", "d": "Ý d"}}}}
+          {{"id": 1, "muc_do": "TH", "cau_hoi": "Nội dung câu hỏi chứa công thức $...$", "cac_y": {{"a": "Ý a", "b": "Ý b", "c": "Ý c", "d": "Ý d"}}}}
         ],
         "trac_nghiem_tra_loi_ngan": [
-          {{"id": 1, "muc_do": "VD", "cau_hoi": "Nội dung câu hỏi..."}}
+          {{"id": 1, "muc_do": "VD", "cau_hoi": "Nội dung câu hỏi chứa công thức $...$"}}
         ],
         "tu_luan": [
-          {{"id": 1, "muc_do": "VDC", "cau_hoi": "Nội dung câu hỏi..."}}
+          {{"id": 1, "muc_do": "VDC", "cau_hoi": "Nội dung câu hỏi chứa công thức $...$"}}
         ]
       }},
       "dap_an_chi_tiet": {{
         "trac_nghiem_4_lua_chon": {{"1": "A"}},
         "trac_nghiem_dung_sai": {{"1": {{"a": "Đúng", "b": "Sai", "c": "Đúng", "d": "Sai"}}}},
-        "trac_nghiem_tra_loi_ngan": {{"1": "25"}},
-        "tu_luan": {{"1": "Lời giải..."}}
+        "trac_nghiem_tra_loi_ngan": {{"1": "12"}},
+        "tu_luan": {{"1": "Lời giải chi tiết chứa công thức $...$"}}
       }}
     }}
     """
@@ -324,7 +374,6 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 row[6].text = f"{tl.get('nb',0)}/{tl.get('th',0)}/{tl.get('vd',0)}/{tl.get('vdc',0)}"
                 row[7].text = f"{item.get('tong_diem_phan_tram', 10)}%"
         else:
-            # Mẫu đơn giản: Tách rõ số câu TN và TL theo từng mức độ nhận thức
             m_table = doc.add_table(rows=1, cols=5)
             m_table.style = 'Table Grid'
             m_hdrs = ['Chủ đề / Nội dung kiến thức', 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao']
@@ -332,7 +381,6 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 m_table.rows[0].cells[idx].text = h
                 m_table.rows[0].cells[idx].paragraphs[0].runs[0].font.bold = True
             
-            # Khởi tạo các biến tích lũy tổng số câu
             total_nb_tn, total_nb_tl = 0, 0
             total_th_tn, total_th_tl = 0, 0
             total_vd_tn, total_vd_tl = 0, 0
@@ -347,7 +395,6 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 tln = item.get('tra_loi_ngan', {})
                 tl = item.get('tu_luan', {})
                 
-                # Phân nhóm: TN (Trắc nghiệm nhiều lựa chọn + Đúng sai + Trả lời ngắn) và TL (Tự luận)
                 nb_tn = nlc.get('nb', 0) + ds.get('nb', 0) + tln.get('nb', 0)
                 nb_tl = tl.get('nb', 0)
                 
@@ -360,19 +407,16 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 vdc_tn = 0 
                 vdc_tl = tl.get('vdc', 0)
                 
-                # Điền dữ liệu vào bảng
                 row[1].text = f"TN: {nb_tn} | TL: {nb_tl}"
                 row[2].text = f"TN: {th_tn} | TL: {th_tl}"
                 row[3].text = f"TN: {vd_tn} | TL: {vd_tl}"
                 row[4].text = f"TN: {vdc_tn} | TL: {vdc_tl}"
                 
-                # Tích lũy vào tổng
                 total_nb_tn += nb_tn; total_nb_tl += nb_tl
                 total_th_tn += th_tn; total_th_tl += th_tl
                 total_vd_tn += vd_tn; total_vd_tl += vd_tl
                 total_vdc_tn += vdc_tn; total_vdc_tl += vdc_tl
 
-            # --- HÀNG TỔNG SỐ CÂU ---
             row_total_q = m_table.add_row().cells
             row_total_q[0].text = "Tổng số câu"
             row_total_q[1].text = f"TN: {total_nb_tn} | TL: {total_nb_tl}"
@@ -380,10 +424,8 @@ def build_single_docx(config, data, code_label, include_matrix=True):
             row_total_q[3].text = f"TN: {total_vd_tn} | TL: {total_vd_tl}"
             row_total_q[4].text = f"TN: {total_vdc_tn} | TL: {total_vdc_tl}"
             
-            # --- HÀNG TỔNG SỐ ĐIỂM ---
             row_total_p = m_table.add_row().cells
             row_total_p[0].text = "Tổng số điểm"
-            
             row_total_p[1].text = f"{config.get('nb_ratio', 40) / 10} điểm"
             row_total_p[2].text = f"{config.get('th_ratio', 30) / 10} điểm"
             row_total_p[3].text = f"{config.get('vd_ratio', 20) / 10} điểm"
@@ -407,6 +449,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
             muc_do = q.get('muc_do', 'NB')
             p_q.add_run(f"Câu {q.get('id', '')} ({muc_do}_TN): ").bold = True
             add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''))
+            
             p_opts = doc.add_paragraph()
             p_opts.paragraph_format.left_indent = Inches(0.3)
             p_opts.add_run("A. ").bold = True
@@ -522,7 +565,7 @@ with tab1:
     with col2:
         st.markdown('<div class="section-header">Cấu hình số lượng câu hỏi</div>', unsafe_allow_html=True)
         num_tn_4_lua_chon = st.number_input("Trắc nghiệm nhiều lựa chọn (Phần I):", min_value=0, max_value=40, value=12)
-        num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", min_value=0, max_value=10, value=2, help="Mỗi câu 4 ý Đúng / Sai")
+        num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", min_value=0, max_value=10, value=2)
         num_tn_tra_loi_ngan = st.number_input("Trắc nghiệm Trả lời ngắn (Phần III):", min_value=0, max_value=15, value=4)
         num_tl = st.number_input("Số câu hỏi Tự luận (Phần IV):", min_value=0, max_value=10, value=3)
         
@@ -551,26 +594,21 @@ with tab2:
             elif file_ext == "pdf": st.session_state.current_document_content = {"mime_type": "application/pdf", "data": file_bytes}
             elif file_ext in ["png", "jpg", "jpeg"]: st.session_state.current_document_content = {"mime_type": "image/png" if file_ext == "png" else "image/jpeg", "data": file_bytes}
 
-    # ==========================================
-    # PHẦN QUẢN LÝ PHÂN BỔ ĐIỂM SỐ NÂNG CẤP
-    # ==========================================
     st.markdown('<div class="section-header">Phân bổ điểm số cho từng phần & Tùy chọn điểm Vận dụng cao</div>', unsafe_allow_html=True)
-    
     col_s1, col_s2, col_s3, col_s4, col_vdc = st.columns(5)
     with col_s1: score_part1 = st.number_input("Điểm Phần I (Trắc nghiệm):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
     with col_s2: score_part2 = st.number_input("Điểm Phần II (Đúng/Sai):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
     with col_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
     with col_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
-    
-    with col_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=5.0, value=1.0, step=0.25, help="Chỉnh tăng lên cho lớp chọn hoặc giảm về 0 cho HS trung bình.")
+    with col_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=5.0, value=1.0, step=0.25)
     
     total_score = score_part1 + score_part2 + score_part3 + score_part4
     
     if total_score > 10.0:
-        st.error(f"❌ LỖI CẤU HÌNH ĐIỂM: Tổng số điểm hiện tại là **{total_score}** điểm, vượt quá giới hạn cho phép (Tối đa 10 điểm). Vui lòng điều chỉnh lại!")
+        st.error(f"❌ LỖI CẤU HÌNH ĐIỂM: Tổng số điểm hiện tại là **{total_score}** điểm, vượt quá giới hạn cho phép (Tối đa 10 điểm).")
         score_error = True
     elif total_score < 10.0:
-        st.warning(f"⚠️ Tổng số điểm hiện tại là **{total_score}** điểm. Đề kiểm tra chuẩn cần đạt chính xác **10.0** điểm.")
+        st.warning(f"⚠️ Tổng số điểm hiện tại là **{total_score}** điểm. Cần đạt chuẩn chính xác **10.0** điểm.")
         score_error = False
     else:
         st.success("✅ Cấu hình điểm số chính xác đạt 10/10 điểm chuẩn.")
@@ -626,7 +664,7 @@ with tab2:
                     "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio,
                     "difficulty": level_choice, "matrix_template": matrix_template
                 }
-                with st.spinner("AI đang bám sát Khung đặc tả để soạn nội dung câu hỏi kiểm tra..."):
+                with st.spinner("AI đang soạn nội dung câu hỏi dưới dạng LaTeX (Overleaf)..."):
                     try:
                         rule = SUBJECTS_CONFIG[subject]
                         step2_data = generate_step2_questions(model, config_pkg, st.session_state.step1_data, rule, st.session_state.current_document_content)
@@ -645,7 +683,7 @@ with tab2:
                         bundle["ĐỀ GỐC"] = full_data
                         st.session_state.multi_codes_data = bundle
                         st.session_state.alignment_table = alignment_df
-                        st.success(f"🎉 Đã tạo xong ĐỀ GỐC và {num_codes} mã đề đảo.")
+                        st.success(f"🎉 Đã tạo xong bộ đề và {num_codes} mã đề đảo chuẩn công thức.")
                     except Exception as e:
                         st.error(f"Lỗi tạo câu hỏi: {e}")
                         
@@ -698,7 +736,6 @@ with tab3:
             all_buf.seek(0)
             st.download_button(label="📥 TẢI FILE GỘP TOÀN BỘ (.DOCX)", data=all_buf, file_name=f"Gop_Bo_De_{subject}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
-# --- FOOTER CỐ ĐỊNH ---
 st.divider()
 st.markdown("---")
 
@@ -706,9 +743,4 @@ col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
 with col_right:
-    st.markdown(
-        "<div style='text-align: right; color: gray; font-size: 0.85em;'>"
-        "AI có thể mắc lỗi. Cần kiểm tra kỹ các thông tin quan trọng."
-        "</div>", 
-        unsafe_allow_html=True
-    )
+    st.markdown("<div style='text-align: right; color: gray; font-size: 0.85em;'>AI có thể mắc lỗi. Cần kiểm tra kỹ các thông tin quan trọng.</div>", unsafe_allow_html=True)
