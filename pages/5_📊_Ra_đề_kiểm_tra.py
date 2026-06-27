@@ -569,7 +569,7 @@ with tab1:
 
 with tab2:
     st.markdown('<div class="section-header">Nguồn nội dung kiến thức ra đề</div>', unsafe_allow_html=True)
-    content_source = st.radio("Chọn phương thức cung cấp nội dung:", ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức"], horizontal=True)
+    content_source = st.radio("Chọn phương thức cung cấp nội dung:", ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức"], horizontal=True, help="Bạn nên chọn Upload nội dung cần kiểm tra để đề ra chính xác hơn.")
     
     if content_source == "Nhập tay danh sách chủ đề":
         topics_list = st.text_area("Danh sách các chủ đề kiến thức:", value="Chương 1: Khái niệm cơ bản\nChương 2: Bài toán vận dụng liên quan", height=100)
