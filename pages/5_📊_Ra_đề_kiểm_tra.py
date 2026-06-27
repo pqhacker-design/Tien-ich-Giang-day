@@ -118,6 +118,8 @@ def generate_shuffled_bundle(original_data, start_code, num_codes):
                 old_id = f"Câu {old_idx + 1}"
                 
                 q['id'] = int(new_id)
+                # Thuộc tính q['muc_do'] được giữ nguyên nhờ deepcopy
+                
                 opts = { "A": q.get("A",""), "B": q.get("B",""), "C": q.get("C",""), "D": q.get("D","") }
                 old_correct_key = shuffled_data['dap_an_chi_tiet']['trac_nghiem_4_lua_chon'].get(str(old_idx + 1))
                 old_correct_value = opts.get(old_correct_key)
@@ -204,7 +206,6 @@ def generate_step1_matrix(model, config, raw_input_data):
         prompt_text += f"\nNGUỒN DỮ LIỆU KIẾN THỨC BẮT BUỘC:\n\"\"\"\n{raw_input_data}\n\"\"\""
         contents_to_send.append(prompt_text)
 
-    # Sửa lại đoạn cuối hàm generate_step1_matrix:
     response = model.generate_content(
         contents_to_send,
         generation_config={"response_mime_type": "application/json"}
@@ -231,20 +232,22 @@ def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input
     - TUYỆT ĐỐI KHÔNG sử dụng ký tự $, \, frac, neq, sim, triangle, hoặc ^.
     - Sử dụng ký tự Unicode toán học trực tiếp trong văn bản trơn (Ví dụ: x², cm², ΔABC, ∽, ⊥, //, →, ⇌, ·, ≠, °).
 
+    YÊU CẦU QUAN TRỌNG: Từng câu hỏi trong mỗi danh sách PHẢI được gán nhãn thuộc tính mức độ nhận thức "muc_do" (nhận giá trị là "NB", "TH", "VD", hoặc "VDC") dựa trên ma trận bản đặc tả.
+
     BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN CÓ CẤU TRÚC SAU:
     {{
       "de_kiem_tra": {{
         "trac_nghiem_4_lua_chon": [
-          {{"id": 1, "cau_hoi": "Nội dung câu hỏi...", "A": "Đáp án A", "B": "Đáp án B", "C": "Đáp án C", "D": "Đáp án D"}}
+          {{"id": 1, "muc_do": "NB", "cau_hoi": "Nội dung câu hỏi...", "A": "Đáp án A", "B": "Đáp án B", "C": "Đáp án C", "D": "Đáp án D"}}
         ],
         "trac_nghiem_dung_sai": [
-          {{"id": 1, "cau_hoi": "Nội dung câu hỏi...", "cac_y": {{"a": "Ý a", "b": "Ý b", "c": "Ý c", "d": "Ý d"}}}}
+          {{"id": 1, "muc_do": "TH", "cau_hoi": "Nội dung câu hỏi...", "cac_y": {{"a": "Ý a", "b": "Ý b", "c": "Ý c", "d": "Ý d"}}}}
         ],
         "trac_nghiem_tra_loi_ngan": [
-          {{"id": 1, "cau_hoi": "Nội dung câu hỏi..."}}
+          {{"id": 1, "muc_do": "VD", "cau_hoi": "Nội dung câu hỏi..."}}
         ],
         "tu_luan": [
-          {{"id": 1, "cau_hoi": "Nội dung câu hỏi..."}}
+          {{"id": 1, "muc_do": "VDC", "cau_hoi": "Nội dung câu hỏi..."}}
         ]
       }},
       "dap_an_chi_tiet": {{
@@ -339,7 +342,6 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 row = m_table.add_row().cells
                 row[0].text = f"{item.get('chu_de', '')} - {item.get('noi_dung', '')}"
                 
-                # Trích xuất dữ liệu từ JSON gốc của AI
                 nlc = item.get('nhieu_lua_chon', {})
                 ds = item.get('dung_sai', {})
                 tln = item.get('tra_loi_ngan', {})
@@ -355,7 +357,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 vd_tn = nlc.get('vd', 0) + ds.get('vd', 0)
                 vd_tl = tl.get('vd', 0)
                 
-                vdc_tn = 0 # Thường trắc nghiệm không có VDC theo cấu trúc mới, nhưng vẫn giữ để phòng hờ
+                vdc_tn = 0 
                 vdc_tl = tl.get('vdc', 0)
                 
                 # Điền dữ liệu vào bảng
@@ -379,17 +381,14 @@ def build_single_docx(config, data, code_label, include_matrix=True):
             row_total_q[4].text = f"TN: {total_vdc_tn} | TL: {total_vdc_tl}"
             
             # --- HÀNG TỔNG SỐ ĐIỂM ---
-            # Tính toán phân bổ điểm tương đối bám sát theo tỷ lệ cấu hình cấu trúc ma trận tư duy của giáo viên
             row_total_p = m_table.add_row().cells
             row_total_p[0].text = "Tổng số điểm"
             
-            # Tính điểm dựa trên tỷ lệ phần trăm cấu hình (chia cho 10 để ra thang điểm 10)
             row_total_p[1].text = f"{config.get('nb_ratio', 40) / 10} điểm"
             row_total_p[2].text = f"{config.get('th_ratio', 30) / 10} điểm"
             row_total_p[3].text = f"{config.get('vd_ratio', 20) / 10} điểm"
             row_total_p[4].text = f"{config.get('vdc_ratio', 10) / 10} điểm"
             
-            # Bôi đậm text cho các dòng tổng số câu và tổng điểm
             for i in range(5):
                 row_total_q[i].paragraphs[0].runs[0].font.bold = True
                 row_total_p[i].paragraphs[0].runs[0].font.bold = True
@@ -405,7 +404,8 @@ def build_single_docx(config, data, code_label, include_matrix=True):
         p_hdr1.add_run(f"PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn ({config.get('score_part1', 3.0)} điểm).").bold = True
         for q in list_4lc:
             p_q = doc.add_paragraph()
-            p_q.add_run(f"Câu {q.get('id', '')}: ").bold = True
+            muc_do = q.get('muc_do', 'NB')
+            p_q.add_run(f"Câu {q.get('id', '')} ({muc_do}_TN): ").bold = True
             add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''))
             p_opts = doc.add_paragraph()
             p_opts.paragraph_format.left_indent = Inches(0.3)
@@ -424,7 +424,8 @@ def build_single_docx(config, data, code_label, include_matrix=True):
         p_hdr2.add_run(f"\nPHẦN II. Câu trắc nghiệm đúng sai ({config.get('score_part2', 2.0)} điểm).").bold = True
         for q in list_ds:
             p_q = doc.add_paragraph()
-            p_q.add_run(f"Câu {q.get('id', '')}: ").bold = True
+            muc_do = q.get('muc_do', 'TH')
+            p_q.add_run(f"Câu {q.get('id', '')} ({muc_do}_TN): ").bold = True
             add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''))
             cac_y = q.get("cac_y", {})
             for key in ['a', 'b', 'c', 'd']:
@@ -440,7 +441,8 @@ def build_single_docx(config, data, code_label, include_matrix=True):
         p_hdr3.add_run(f"\nPHẦN III. Câu trắc nghiệm trả lời ngắn ({config.get('score_part3', 2.0)} điểm).").bold = True
         for q in list_tln:
             p_q = doc.add_paragraph()
-            p_q.add_run(f"Câu {q.get('id', '')}: ").bold = True
+            muc_do = q.get('muc_do', 'VD')
+            p_q.add_run(f"Câu {q.get('id', '')} ({muc_do}_TN): ").bold = True
             add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''))
 
     list_tl = de.get("tu_luan", [])
@@ -449,7 +451,8 @@ def build_single_docx(config, data, code_label, include_matrix=True):
         p_hdr4.add_run(f"\nPHẦN IV. Tự luận ({config.get('score_part4', 3.0)} điểm).").bold = True
         for q in list_tl:
             p_q = doc.add_paragraph()
-            p_q.add_run(f"Câu {q.get('id', '')}: ").bold = True
+            muc_do = q.get('muc_do', 'VDC')
+            p_q.add_run(f"Câu {q.get('id', '')} ({muc_do}_TL): ").bold = True
             add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''))
 
     doc.add_page_break()
@@ -549,7 +552,7 @@ with tab2:
             elif file_ext in ["png", "jpg", "jpeg"]: st.session_state.current_document_content = {"mime_type": "image/png" if file_ext == "png" else "image/jpeg", "data": file_bytes}
 
     # ==========================================
-    # PHẦN QUẢN LÝ PHÂN BỔ ĐIỂM SỐ NÂNG CẤP (CÓ ĐIỂM VDC)
+    # PHẦN QUẢN LÝ PHÂN BỔ ĐIỂM SỐ NÂNG CẤP
     # ==========================================
     st.markdown('<div class="section-header">Phân bổ điểm số cho từng phần & Tùy chọn điểm Vận dụng cao</div>', unsafe_allow_html=True)
     
@@ -559,12 +562,10 @@ with tab2:
     with col_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
     with col_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
     
-    # Ô nhập tùy chọn điểm dành riêng cho Vận dụng cao (VDC)
     with col_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=5.0, value=1.0, step=0.25, help="Chỉnh tăng lên cho lớp chọn hoặc giảm về 0 cho HS trung bình.")
     
     total_score = score_part1 + score_part2 + score_part3 + score_part4
     
-    # Logic kiểm tra lỗi điểm số vượt quá hoặc không đạt 10 điểm
     if total_score > 10.0:
         st.error(f"❌ LỖI CẤU HÌNH ĐIỂM: Tổng số điểm hiện tại là **{total_score}** điểm, vượt quá giới hạn cho phép (Tối đa 10 điểm). Vui lòng điều chỉnh lại!")
         score_error = True
@@ -576,15 +577,13 @@ with tab2:
         score_error = False
 
     st.markdown('<div class="section-header">Lựa chọn mẫu cấu trúc Ma trận hiển thị</div>', unsafe_allow_html=True)
-    matrix_template = st.radio("Chọn mẫu ma trận xuất bản:", ["Mẫu đơn giản truyền thống", "Mẫu quy chuẩn Công văn 7991/BGDĐT-GDTrH"], index=1, horizontal=True)
+    matrix_template = st.radio("Chọn mẫu ma trận xuất bản:", ["Mẫu đơn giản truyền thống", "Mẫu quy chuẩn Công văn 7991/BGDĐT-GDTrH"], index=0, horizontal=True)
 
     st.markdown('<div class="section-header">Phân bổ Tỷ lệ Ma trận tư duy</div>', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     with c1: nb_ratio = st.slider("Nhận biết (%)", 0, 100, target_ratios["nb"])
     with c2: th_ratio = st.slider("Thông hiểu (%)", 0, 100, target_ratios["th"])
     with c3: vd_ratio = st.slider("Vận dụng (%)", 0, 100, target_ratios["vd"])
-    
-    # Tự động đồng bộ thanh kéo VDC với ô lựa chọn điểm VDC nếu muốn, hoặc cho giáo viên kéo tay độc lập
     with c4: vdc_ratio = st.slider("Vận dụng cao (%)", 0, 100, target_ratios["vdc"])
     
     total_ratio = nb_ratio + th_ratio + vd_ratio + vdc_ratio
@@ -595,7 +594,6 @@ with tab2:
     col_btn1, col_btn2 = st.columns(2)
     
     with col_btn1:
-        # Khóa nút bấm nếu tổng điểm vượt quá 10 điểm (score_error == True)
         if st.button("📊 BƯỚC 1: KHỞI TẠO MA TRẬN & ĐẶC TẢ", disabled=score_error):
             if total_ratio != 100:
                 st.error("Tổng tỷ lệ phần trăm phân bổ điểm phải bằng 100% trước khi khởi tạo.")
@@ -658,7 +656,7 @@ with tab3:
         config_pkg = { 
             "subject": subject, "grade": grade, "exam_type": exam_type, "duration": duration, "school_year": school_year,
             "score_part1": score_part1, "score_part2": score_part2, "score_part3": score_part3, "score_part4": score_part4,
-            "matrix_template": matrix_template
+            "matrix_template": matrix_template, "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio
         }
         inc_mat = st.checkbox("Chèn bảng Ma trận phân bổ vào đầu tài liệu", value=True)
         export_mode = st.radio("Hình thức xuất bản bộ đề:", ["Tải file đơn lẻ", "Nén tất cả mã đề vào file ZIP", "Gộp chung vào 1 file Word"])
@@ -704,7 +702,6 @@ with tab3:
 st.divider()
 st.markdown("---")
 
-# 5. Chân trang (Footer)
 col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
