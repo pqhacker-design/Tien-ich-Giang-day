@@ -68,16 +68,55 @@ def extract_text_from_docx(file_bytes):
     except Exception as e:
         return f"Lỗi đọc file Word: {str(e)}"
 
+def create_omml_fraction(numerator_text, denominator_text):
+    """
+    Tạo cấu trúc XML phân số (OMML) chuẩn Microsoft Word
+    """
+    # Khai báo namespace toán học của Word
+    m_ns = 'xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"'
+    
+    omml_str = (
+        f'<m:f {m_ns}>'
+        f'  <m:num><m:r><m:t>{numerator_text}</m:t></m:r></m:num>'
+        f'  <m:den><m:r><m:t>{denominator_text}</m:t></m:r></m:den>'
+        f'</m:f>'
+    )
+    return parse_xml(omml_str)
+
 def add_math_run_to_paragraph(paragraph, text):
     if not text: return
     text = str(text).replace('\\n', '\n').replace('\\', '').replace('$', '').strip()
+    
+    # Biểu thức chính quy tìm các chuỗi có dạng (tử_số)/(mẫu_số)
+    # Ví dụ: (x + 1)/(x - 3) hoặc (2)/(3) hoặc (x² - 4)/(2x)
+    fraction_pattern = re.compile(r'\(([^)]+)\)/\(([^)]+)\)')
+    
     lines = text.split('\n')
     for index, line in enumerate(lines):
         if index > 0:
-            new_run = paragraph.add_run()
-            new_run.add_break()
-        if line.strip():
-            paragraph.add_run(line)
+            paragraph.add_run().add_break()
+            
+        last_end = 0
+        # Tìm tất cả các phân số trong dòng hiện tại
+        for match in fraction_pattern.finditer(line):
+            start, end = match.span()
+            # Ghi phần văn bản chữ trơn trước phân số
+            if start > last_end:
+                paragraph.add_run(line[last_end:start])
+                
+            num = match.group(1)   # Tử số
+            den = match.group(2)   # Mẫu số
+            
+            # Chèn phân số toán học trực tiếp vào cấu trúc Word XML
+            p_obj = paragraph._p
+            f_element = create_omml_fraction(num, den)
+            p_obj.append(f_element)
+            
+            last_end = end
+            
+        # Ghi phần văn bản chữ trơn còn lại sau phân số cuối cùng
+        if last_end < len(line):
+            paragraph.add_run(line[last_end:])
 
 # ==========================================
 # KHỞI TẠO SESSION STATE
@@ -171,7 +210,11 @@ def generate_step1_matrix(model, config, raw_input_data):
     Tổng điểm của toàn đề bắt buộc là 10 điểm.
     Tỷ lệ nhận thức: Nhận biết {config['nb_ratio']}% , Thông hiểu {config['th_ratio']}%, Vận dụng {config['vd_ratio']}%, Vận dụng cao {config['vdc_ratio']}%.
     Mẫu thiết kế ma trận yêu cầu: "{config['matrix_template']}".
-
+    QUY ĐỊNH ĐỊNH DẠNG TOÁN HỌC & KHTN (BẮT BUỘC):
+        - TUYỆT ĐỐI KHÔNG sử dụng ký tự $, \, frac, neq, sim, triangle, hoặc ^.
+        - Tất cả các phân số, phân thức hoặc biểu thức toán học có dạng phân số BẮT BUỘC phải viết theo định dạng: (tử số)/(mẫu số). 
+          Ví dụ: Viết (x + 1)/(x - 3) thay vì viết dạng chia ngang thông thường; viết (2)/(3) thay vì 2/3.
+        - Các ký hiệu mũ dùng ký tự mũ Unicode trực tiếp (x², y³).
     YÊU CẦU BẮT BUỘC:
     - Phân tích thật sâu tài liệu/hình ảnh/yêu cầu đính kèm đi cùng lệnh này để phân chia thành các "chu_de" và "noi_dung".
     - Phân chia chi tiết số câu hỏi tương ứng dựa trên tổng điểm và số câu của từng phần đã định cấu hình.
@@ -228,9 +271,11 @@ def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input
     
     * LƯU Ý PHÂN HÓA HỌC SINH: Câu hỏi thuộc mức độ Vận dụng cao (VDC) trong đề phải chiếm đúng trọng số tương đương {config['score_vdc_custom']} điểm trên tổng số điểm của phần chứa nó.
 
-    QUY ĐỊNH ĐỊNH DẠNG TOÁN HỌC & KHTN (BẮT BUỘC KHÔNG DÙNG LATEX):
+    QUY ĐỊNH ĐỊNH DẠNG TOÁN HỌC & KHTN (BẮT BUỘC):
     - TUYỆT ĐỐI KHÔNG sử dụng ký tự $, \, frac, neq, sim, triangle, hoặc ^.
-    - Sử dụng ký tự Unicode toán học trực tiếp trong văn bản trơn (Ví dụ: x², cm², ΔABC, ∽, ⊥, //, →, ⇌, ·, ≠, °).
+    - Tất cả các phân số, phân thức hoặc biểu thức toán học có dạng phân số BẮT BUỘC phải viết theo định dạng: (tử số)/(mẫu số). 
+      Ví dụ: Viết (x + 1)/(x - 3) thay vì viết dạng chia ngang thông thường; viết (2)/(3) thay vì 2/3.
+    - Các ký hiệu mũ dùng ký tự mũ Unicode trực tiếp (x², y³).
 
     YÊU CẦU QUAN TRỌNG: Từng câu hỏi trong mỗi danh sách PHẢI được gán nhãn thuộc tính mức độ nhận thức "muc_do" (nhận giá trị là "NB", "TH", "VD", hoặc "VDC") dựa trên ma trận bản đặc tả.
 
