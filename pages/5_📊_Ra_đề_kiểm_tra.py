@@ -394,8 +394,32 @@ def build_single_docx(config, data, code_label, include_matrix=True):
                 row_total_p[i].paragraphs[0].runs[0].font.bold = True
 
         doc.add_paragraph()
-
-    doc.add_heading("II. NỘI DUNG CÂU HỎI", level=2)
+    # --- BỔ SUNG: VẼ BẢNG BẢN ĐẶC TẢ ---
+        if 'bang_dac_ta' in data and data['bang_dac_ta']:
+            doc.add_heading("II. BẢN ĐẶC TẢ PHƯƠNG ÁN RA ĐỀ", level=2)
+            dt_table = doc.add_table(rows=1, cols=7)
+            dt_table.style = 'Table Grid'
+            dt_hdrs = ['Mã ĐT', 'Chủ đề', 'Nội dung', 'Mức độ', 'Yêu cầu cần đạt', 'Số câu', 'Điểm']
+            
+            # Ghi tiêu đề bảng
+            for idx, h in enumerate(dt_hdrs):
+                dt_table.rows[0].cells[idx].text = h
+                dt_table.rows[0].cells[idx].paragraphs[0].runs[0].font.bold = True
+                
+            # Đổ dữ liệu từ JSON vào bảng Word
+            for item in data['bang_dac_ta']:
+                row = dt_table.add_row().cells
+                row[0].text = str(item.get('id_dac_ta', ''))
+                row[1].text = str(item.get('chu_de', ''))
+                row[2].text = str(item.get('noi_dung', ''))
+                row[3].text = str(item.get('muc_do', ''))
+                row[4].text = str(item.get('yeu_cau_can_dat', ''))
+                row[5].text = str(item.get('so_cau', ''))
+                row[6].text = str(item.get('diem', ''))
+            
+            doc.add_paragraph() # Dòng trống giãn cách
+            
+    doc.add_heading("III. NỘI DUNG CÂU HỎI", level=2)
     de = data.get('de_kiem_tra', {})
     
     list_4lc = de.get("trac_nghiem_4_lua_chon", [])
