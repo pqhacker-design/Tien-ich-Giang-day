@@ -25,3 +25,4 @@ shapely
 pillow
 google-genai
 openai
+latex2mathml
