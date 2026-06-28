@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
+import matplotlib.pyplot as plt
 from quiz_builder_app.database import init_db, get_questions, insert_question
 from quiz_builder_app.core_engines import SUBJECT_CONFIGS, shuffle_exam, generate_math_graph
 from quiz_builder_app.ai_helper import generate_ai_question
