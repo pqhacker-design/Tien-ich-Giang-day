@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import json
-from database import init_db, get_questions, insert_question
-from core_engines import SUBJECT_CONFIGS, shuffle_exam, generate_math_graph
-from ai_helper import generate_ai_question
-from exporters import export_to_word, export_matrix_to_excel
+from quiz_builder_app.database import init_db, get_questions, insert_question
+from quiz_builder_app.core_engines import SUBJECT_CONFIGS, shuffle_exam, generate_math_graph
+from quiz_builder_app.ai_helper import generate_ai_question
+from quiz_builder_app.exporters import export_to_word, export_matrix_to_excel
 
 # Cấu hình Layout rộng rãi hiện đại của Streamlit
 st.set_page_config(page_title="Hệ thống Khảo thí Quy chuẩn GDPT 2018", layout="wide")
