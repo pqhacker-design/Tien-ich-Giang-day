@@ -557,10 +557,33 @@ with tab1:
 
     with col2:
         st.markdown('<div class="section-header">Cấu hình số lượng câu hỏi</div>', unsafe_allow_html=True)
-        num_tn_4_lua_chon = st.number_input("Trắc nghiệm nhiều lựa chọn (Phần I):", min_value=0, max_value=40, value=12)
-        num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", min_value=0, max_value=10, value=2, help="Mỗi câu dạng này có 4 ý Đúng / Sai")
-        num_tn_tra_loi_ngan = st.number_input("Trắc nghiệm Trả lời ngắn (Phần III):", min_value=0, max_value=15, value=4)
-        num_tl = st.number_input("Số câu hỏi Tự luận (Phần IV):", min_value=0, max_value=10, value=3)
+        
+        # Lựa chọn cấu trúc đề thi chính
+        exam_format = st.selectbox(
+            "Chọn cấu trúc / dạng đề kiểm tra:",
+            ["Trắc nghiệm + Tự luận", "Trắc nghiệm 100%", "Tự luận 100%"]
+        )
+        
+        # Xử lý logic số lượng câu hỏi theo dạng đề
+        if exam_format == "Trắc nghiệm 100%":
+            num_tn_4_lua_chon = st.number_input("Trắc nghiệm nhiều lựa chọn (Phần I):", min_value=0, max_value=40, value=12)
+            num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", min_value=0, max_value=10, value=2, help="Mỗi câu dạng này có 4 ý Đúng / Sai")
+            num_tn_tra_loi_ngan = st.number_input("Trắc nghiệm Trả lời ngắn (Phần III):", min_value=0, max_value=15, value=4)
+            num_tl = 0
+            st.caption("ℹ️ *Đã khóa và đặt số câu Tự luận về 0.*")
+            
+        elif exam_format == "Tự luận 100%":
+            num_tn_4_lua_chon = 0
+            num_tn_dung_sai = 0
+            num_tn_tra_loi_ngan = 0
+            num_tl = st.number_input("Số câu hỏi Tự luận (Phần IV):", min_value=1, max_value=15, value=4)
+            st.caption("ℹ️ *Đã khóa và đặt số câu Trắc nghiệm về 0.*")
+            
+        else:
+            num_tn_4_lua_chon = st.number_input("Trắc nghiệm nhiều lựa chọn (Phần I):", min_value=0, max_value=40, value=12)
+            num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", min_value=0, max_value=10, value=2, help="Mỗi câu dạng này có 4 ý Đúng / Sai")
+            num_tn_tra_loi_ngan = st.number_input("Trắc nghiệm Trả lời ngắn (Phần III):", min_value=0, max_value=15, value=4)
+            num_tl = st.number_input("Số câu hỏi Tự luận (Phần IV):", min_value=0, max_value=10, value=3)
         
         st.markdown('---')
         code_choice = st.selectbox("Số lượng mã đề đảo tự động:", [1, 2, 4, 6, 8], index=2)
@@ -569,7 +592,7 @@ with tab1:
 
 with tab2:
     st.markdown('<div class="section-header">Nguồn nội dung kiến thức ra đề</div>', unsafe_allow_html=True)
-    content_source = st.radio("Chọn phương thức cung cấp nội dung:", ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức"], horizontal=True, help="Bạn nên chọn Upload nội dung cần kiểm tra để đề ra chính xác hơn.")
+    content_source = st.radio("Chọn phương thức cung cấp nội dung:", ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức"], horizontal=True)
     
     if content_source == "Nhập tay danh sách chủ đề":
         topics_list = st.text_area("Danh sách các chủ đề kiến thức:", value="Chương 1: Khái niệm cơ bản\nChương 2: Bài toán vận dụng liên quan", height=100)
@@ -588,17 +611,36 @@ with tab2:
             elif file_ext in ["png", "jpg", "jpeg"]: st.session_state.current_document_content = {"mime_type": "image/png" if file_ext == "png" else "image/jpeg", "data": file_bytes}
 
     # ==========================================
-    # PHẦN QUẢN LÝ PHÂN BỔ ĐIỂM SỐ NÂNG CẤP
+    # ĐỒNG BỘ LOGIC PHÂN BỔ ĐIỂM SỐ TỰ ĐỘNG
     # ==========================================
     st.markdown('<div class="section-header">Phân bổ điểm số cho từng phần & Tùy chọn điểm Vận dụng cao</div>', unsafe_allow_html=True)
     
     col_s1, col_s2, col_s3, col_s4, col_vdc = st.columns(5)
-    with col_s1: score_part1 = st.number_input("Điểm Phần I (Trắc nghiệm):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
-    with col_s2: score_part2 = st.number_input("Điểm Phần II (Đúng/Sai):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
-    with col_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
-    with col_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
     
-    with col_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=5.0, value=1.0, step=0.25, help="Chỉnh tăng lên cho lớp chọn hoặc giảm về 0 cho HS trung bình.")
+    if exam_format == "Trắc nghiệm 100%":
+        with col_s1: score_part1 = st.number_input("Điểm Phần I (Trắc nghiệm):", min_value=0.0, max_value=10.0, value=4.0, step=0.25)
+        with col_s2: score_part2 = st.number_input("Điểm Phần II (Đúng/Sai):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
+        with col_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
+        score_part4 = 0.0  # Khóa cứng Tự luận
+        with col_s4: st.number_input("Điểm Phần IV (Tự luận):", value=0.0, disabled=True)
+        with col_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=5.0, value=1.0, step=0.25)
+
+    elif exam_format == "Tự luận 100%":
+        score_part1 = 0.0
+        score_part2 = 0.0
+        score_part3 = 0.0
+        with col_s1: st.number_input("Điểm Phần I (Trắc nghiệm):", value=0.0, disabled=True)
+        with col_s2: st.number_input("Điểm Phần II (Đúng/Sai):", value=0.0, disabled=True)
+        with col_s3: st.number_input("Điểm Phần III (Trả lời ngắn):", value=0.0, disabled=True)
+        with col_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", min_value=10.0, max_value=10.0, value=10.0, disabled=True, help="Thuần tự luận mặc định là 10 điểm")
+        with col_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=5.0, value=2.0, step=0.25)
+
+    else: # Trắc nghiệm + Tự luận kết hợp
+        with col_s1: score_part1 = st.number_input("Điểm Phần I (Trắc nghiệm):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
+        with col_s2: score_part2 = st.number_input("Điểm Phần II (Đúng/Sai):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
+        with col_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
+        with col_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
+        with col_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=5.0, value=1.0, step=0.25)
     
     total_score = score_part1 + score_part2 + score_part3 + score_part4
     
