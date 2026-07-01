@@ -43,7 +43,14 @@ st.sidebar.info(
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    st.subheader("📂 1. Tải lên KHBD gốc")
+    st.markdown(
+    """
+    <div style="background-color: #E0F2FE; padding: 10px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 15px;">
+        <h4 style="margin: 0; color: #0369A1;">📂 1. Tải lên KHBD gốc</h4>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
     uploaded_file = st.file_uploader(
         "Chọn file KHBD Word (.docx)", 
         type=["docx"],
