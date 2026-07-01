@@ -1,0 +1,6 @@
+[theme]
+primaryColor = "#1E40AF"         # Màu xanh đậm hoàng gia cho các nút bấm, thanh tiến trình
+backgroundColor = "#F8FAFC"      # Màu nền xám trắng dịu mắt, đỡ mỏi cổ khi soạn bài lâu
+secondaryBackgroundColor = "#FFFFFF" # Màu nền các ô Container, Sidebar trắng tinh khôi
+textColor = "#0F172A"            # Màu chữ xám đen Midnight dễ đọc
+font = "sans serif"              # Font chữ không chân hiện đại, thanh thoát
