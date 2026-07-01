@@ -14,7 +14,7 @@ from vietnamese_word_corrector.report_generator import generate_excel_report
 
 st.set_page_config(page_title="AI Document & School Record Processor", layout="wide")
 
-st.title("📑 SỬA LỖI CHÍNH TẢ VÀ CHUẨN HÓA VĂN BẢN")
+st.markdown("## 📑 Sửa lỗi chính tả và chuẩn hóa văn bản")
 st.write("Giúp GV sửa lỗi chính tả và chuẩn hóa văn bản theo Nghị định 30/2020/NĐ-CP và Chương trình GDPT 2018. (Chú ý: Xem cấu hình bên slidebar)")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
