@@ -44,7 +44,7 @@ col1, col2 = st.columns([1, 1])
 with col1:
     st.markdown(
     """
-    <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 15px;">
+    <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
         <h4 style="margin: 0; color: #0369A1;">📂 1. Tải lên KHBD gốc</h4>
     </div>
     """, 
@@ -94,7 +94,7 @@ with col1:
 with col2:
     st.markdown(
     """
-    <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 15px;">
+    <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
         <h4 style="margin: 0; color: #0369A1;">🖥️ 2. Kết quả & Tải về</h4>
     </div>
     """, 
