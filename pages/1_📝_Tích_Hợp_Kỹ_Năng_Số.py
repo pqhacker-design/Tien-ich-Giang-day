@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.markdown("🤖 Tích hợp Năng lực số tự động vào KHBD")
+st.markdown("## 🤖 Tích hợp Năng lực số tự động vào KHBD")
 st.write("Giúp GV tích hợp Năng lực số theo Chương trình GDPT 2018 nhanh chóng và chuẩn xác (Chú ý: Xem cấu hình bên slidebar)")
 
 # --- THANH BÊN (SIDEBAR) ---
