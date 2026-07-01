@@ -6,6 +6,18 @@ from ai_classroom_game.services.ai_service import AIService
 from ai_classroom_game.modules.interactives import render_lucky_wheel
 from ai_classroom_game.modules.exporters import DocumentExporter
 
+st.markdown(
+    """
+    <style>
+        /* Nhắm mục tiêu vào văn bản bên trong các nút Tab của Streamlit */
+        button[data-baseweb="tab"] div p {
+            font-weight: bold !important;
+            font-size: 1.05em !important; /* Có thể phóng to chữ lên một chút nếu muốn */
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # 1. Cấu hình trang & Giao diện chuẩn Enterprise
 st.set_page_config(page_title="AI Thiết Kế Hoạt Động Lớp Học", layout="wide", initial_sidebar_state="expanded")
 db = DatabaseManager()
@@ -27,7 +39,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 3. KHU VỰC ĐIỀU KHIỂN CHÍNH (MAIN DASHBOARD)
-st.title("🚀 Thiết Kế Hoạt Động Tương Tác")
+st.markdown("## 🚀 Thiết Kế Hoạt Động Tương Tác")
 st.write("Giải pháp số hóa bài giảng, tạo trò chơi tương tác trực tiếp chuẩn Kahoot/Quizizz cho giáo viên hiện đại. (Xem ⚙️ bên sidebar)")
 
 # 2. THANH THÔNG TIN BỔ TRỢ (SIDEBAR) - CẤU HÌNH TIÊU CHUẨN SƯ PHẠM
