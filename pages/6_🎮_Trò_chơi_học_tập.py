@@ -79,7 +79,7 @@ tabs = st.tabs([
 
 # --- TAB 1: KHỞI ĐỘNG ---
 with tabs[0]:
-    st.header("⚡ Tạo Hoạt Động Khởi Động Sinh Động")
+    st.markdown("### ⚡ Tạo Hoạt Động Khởi Động Sinh Động")
     
     if "warmup_game_data" not in st.session_state:
         st.session_state.warmup_game_data = None
@@ -135,7 +135,7 @@ with tabs[0]:
 
 # --- TAB 2: THIẾT KẾ CÂU HỎI AI ---
 with tabs[1]:
-    st.header("🧠 Hệ Thống Sinh Câu Hỏi Tương Tác Đa Dạng")
+    st.markdown("### 🧠 Hệ Thống Sinh Câu Hỏi Tương Tác Đa Dạng")
     c1, c2 = st.columns([1, 2])
     with c1:
         topic_input = st.text_input("Tên bài học học tập", placeholder="Ví dụ: Định lý Pitago")
@@ -169,7 +169,7 @@ with tabs[1]:
 
 # --- TAB 3: TRÒ CHƠI TƯƠNG TÁC TRỰC TIẾP ---
 with tabs[2]:
-    st.header("🎬 Đấu Trường Tương Tác Thời Gian Thực")
+    st.markdown("### 🎬 Đấu Trường Tương Tác Thời Gian Thực")
     st.info("💡 Mẹo: Nhấn F11 để toàn màn hình trình duyệt khi chiếu cho học sinh chơi trực tiếp tại lớp.")
     
     game_select = st.selectbox("Lựa chọn Game Engine vận hành", ["Vòng Quay May Mắn", "Ô Chữ Kỳ Diệu", "Ai Là Triệu Phú"])
@@ -361,7 +361,7 @@ with tabs[2]:
 
 # --- TAB 4: KỊCH BẢN SƯ PHẠM ---
 with tabs[3]:
-    st.header("📋 Khung Kịch Bản Bài Giảng Sư Phạm Cao Cấp")
+    st.markdown("### 📋 Khung Kịch Bản Bài Giảng Sư Phạm Cao Cấp")
     framework_type = st.selectbox("Chọn mô hình thiết kế", ["Mô hình 5E (Engage - Explore - Explain - Elaborate - Evaluate)", "Phương pháp giáo dục STEM/STEAM Integration", "Phát triển năng lực số"])
     if st.button("🛠 Sinh kịch bản sư phạm tổng thể"):
         if not st.session_state.current_topic:
@@ -374,7 +374,7 @@ with tabs[3]:
 
 # --- TAB 5: XUẤT BẢN TÀI LIỆU ---
 with tabs[4]:
-    st.header("💾 Xuất Bản Học Liệu Số")
+    st.markdown("### 💾 Xuất Bản Học Liệu Số")
     if st.session_state.generated_quiz:
         st.write(f"Học liệu hiện hành sẵn có cho bài học: **{st.session_state.current_topic}**")
         
