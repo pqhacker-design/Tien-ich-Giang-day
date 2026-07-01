@@ -79,7 +79,7 @@ tabs = st.tabs([
 
 # --- TAB 1: KHỞI ĐỘNG ---
 with tabs[0]:
-    st.header("⚡ Tạo Hoạt Động Khởi Động Sinh Động")
+    st.markdown("# ⚡ Tạo Hoạt Động Khởi Động Sinh Động")
     
     if "warmup_game_data" not in st.session_state:
         st.session_state.warmup_game_data = None
