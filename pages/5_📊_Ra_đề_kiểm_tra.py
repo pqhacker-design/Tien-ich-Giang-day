@@ -547,8 +547,8 @@ with tab1:
         with st.container(border=True):
             st.markdown(
         """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #0369A1;">Lựa chọn bộ môn & Thông tin chung</h4>
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 6px;">
+            <h6 style="margin: 0; color: #0369A1;">Lựa chọn bộ môn & Thông tin chung</h6>
         </div>
         """, 
         unsafe_allow_html=True
