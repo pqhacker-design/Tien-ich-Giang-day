@@ -19,7 +19,18 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
+st.markdown(
+    """
+    <style>
+        /* Nhắm mục tiêu vào văn bản bên trong các nút Tab của Streamlit */
+        button[data-baseweb="tab"] div p {
+            font-weight: bold !important;
+            font-size: 1.05em !important; /* Có thể phóng to chữ lên một chút nếu muốn */
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # Khởi tạo Cơ sở dữ liệu SQLite cục bộ để lưu trữ lịch sử soạn giáo án của giáo viên
 conn = sqlite3.connect('lessons_history.db', check_same_thread=False)
 c = conn.cursor()
