@@ -30,6 +30,11 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+/* Nhắm mục tiêu vào văn bản bên trong các nút Tab của Streamlit */
+        button[data-baseweb="tab"] div p {
+            font-weight: bold !important;
+            font-size: 1.05em !important; /* Có thể phóng to chữ lên một chút nếu muốn */
+        }
     .main-title { font-size: 2.3rem; font-weight: 700; color: #1E3A8A; text-align: center; margin-bottom: 1.5rem; }
     .section-header { font-size: 1.3rem; font-weight: 600; color: #0F766E; margin-top: 1.5rem; margin-bottom: 1rem; border-left: 5px solid #0F766E; padding-left: 10px; }
     .stButton>button { width: 100%; background-color: #0F766E; color: white; border-radius: 8px; font-weight: 600; padding: 10px; }
