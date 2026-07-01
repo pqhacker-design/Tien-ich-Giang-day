@@ -41,7 +41,7 @@ st.sidebar.info(
 
 # --- MÀN HÌNH CHÍNH ---
 col1, col2 = st.columns([1, 1])
-
+with st.container(border=True):
 with col1:
     st.markdown(
     """
