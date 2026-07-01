@@ -40,7 +40,7 @@ st.markdown("""
 
 # 3. KHU VỰC ĐIỀU KHIỂN CHÍNH (MAIN DASHBOARD)
 st.markdown("## 🚀 Thiết Kế Hoạt Động Tương Tác")
-st.write("Giải pháp số hóa bài giảng, tạo trò chơi tương tác trực tiếp chuẩn Kahoot/Quizizz cho giáo viên hiện đại. (Xem ⚙️ bên sidebar)")
+st.info("Giải pháp số hóa bài giảng, tạo trò chơi tương tác trực tiếp chuẩn Kahoot/Quizizz cho giáo viên hiện đại. (Xem ⚙️ bên sidebar)")
 
 # 2. THANH THÔNG TIN BỔ TRỢ (SIDEBAR) - CẤU HÌNH TIÊU CHUẨN SƯ PHẠM
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
