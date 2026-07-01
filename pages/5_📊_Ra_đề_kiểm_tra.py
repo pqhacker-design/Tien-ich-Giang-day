@@ -679,7 +679,7 @@ with tab2:
     col_btn1, col_btn2 = st.columns(2)
     
     with col_btn1:
-        if st.button("📊 BƯỚC 1: KHỞI TẠO MA TRẬN & ĐẶC TẢ", disabled=score_error):
+        if st.button("📊 BƯỚC 1: KHỞI TẠO MA TRẬN & ĐẶC TẢ", type="primary", disabled=score_error):
             if total_ratio != 100:
                 st.error("Tổng tỷ lệ phần trăm phân bổ điểm phải bằng 100% trước khi khởi tạo.")
             elif not st.session_state.current_document_content:
