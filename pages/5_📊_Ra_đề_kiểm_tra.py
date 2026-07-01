@@ -572,8 +572,8 @@ with tab1:
         with st.container(border=True):
             st.markdown(
         """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #0369A1;">Cấu hình số lượng câu hỏi</h4>
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 6px;">
+            <h6 style="margin: 0; color: #0369A1;">Cấu hình số lượng câu hỏi</h6>
         </div>
         """, 
         unsafe_allow_html=True
@@ -614,8 +614,8 @@ with tab1:
 with tab2:
     st.markdown(
         """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #0369A1;">Nguồn nội dung kiến thức ra đề</h4>
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 6px;">
+            <h6 style="margin: 0; color: #0369A1;">Nguồn nội dung kiến thức ra đề</h6>
         </div>
         """, 
         unsafe_allow_html=True
@@ -644,7 +644,7 @@ with tab2:
     # ==========================================
     st.markdown(
         """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 6px;">
             <h6 style="margin: 0; color: #0369A1;">Phân bổ điểm số cho từng phần & Tùy chọn điểm Vận dụng cao</h6>
         </div>
         """, 
@@ -693,8 +693,8 @@ with tab2:
 
     st.markdown(
         """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #0369A1;">Lựa chọn mẫu cấu trúc Ma trận hiển thị</h4>
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 6px;">
+            <h6 style="margin: 0; color: #0369A1;">Lựa chọn mẫu cấu trúc Ma trận hiển thị</h6>
         </div>
         """, 
         unsafe_allow_html=True
@@ -703,8 +703,8 @@ with tab2:
 
     st.markdown(
         """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #0369A1;">Phân bổ Tỷ lệ Ma trận tư duy</h4>
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 6px;">
+            <h6 style="margin: 0; color: #0369A1;">Phân bổ Tỷ lệ Ma trận tư duy</h6>
         </div>
         """, 
         unsafe_allow_html=True
