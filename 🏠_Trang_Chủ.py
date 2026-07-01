@@ -33,7 +33,7 @@ st.markdown("---")
 # 4. DANH SÁCH ỨNG DỤNG THÀNH PHẦN (Được đẩy lên sát bên trên)
 st.markdown(
     """
-    <div style="background-color: #E0F2FE; padding: 10px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 15px;">
+    <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
         <h4 style="margin: 0; color: #0369A1;">🛠️ DANH SÁCH CÁC CÔNG CỤ TIỆN ÍCH</h4>
     </div>
     """, 
