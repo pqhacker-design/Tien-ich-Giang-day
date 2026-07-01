@@ -42,19 +42,20 @@ st.sidebar.info(
 # --- MÀN HÌNH CHÍNH ---
 col1, col2 = st.columns([1, 1])
 with col1:
-    st.markdown(
-    """
-    <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-        <h4 style="margin: 0; color: #0369A1;">📂 1. Tải lên KHBD gốc</h4>
-    </div>
-    """, 
-    unsafe_allow_html=True
-)
-    uploaded_file = st.file_uploader(
-        "Chọn file KHBD Word (.docx)", 
-        type=["docx"],
-        help="Hệ thống chỉ hỗ trợ định dạng .docx tiêu chuẩn."
+    with st.container(border=True):
+        st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">📂 1. Tải lên KHBD gốc</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
     )
+        uploaded_file = st.file_uploader(
+            "Chọn file KHBD Word (.docx)", 
+            type=["docx"],
+            help="Hệ thống chỉ hỗ trợ định dạng .docx tiêu chuẩn."
+        )
 
     if uploaded_file is not None:
         file_bytes = uploaded_file.read()
@@ -92,6 +93,7 @@ with col1:
                     st.error(f"❌ Đã xảy ra lỗi trong quá trình xử lý: {str(e)}")
 
 with col2:
+    with st.container(border=True):
     st.markdown(
     """
     <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
