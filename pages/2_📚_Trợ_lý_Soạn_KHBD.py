@@ -99,7 +99,7 @@ with tab_direct:
         raw_input_text = direct_text
 
 with tab_history:
-    st.subheader("Nhật ký các KHBD đã tạo trên hệ thống máy tính giáo viên")
+    st.write("Nhật ký các KHBD đã tạo trên hệ thống máy tính giáo viên")
     history_data = c.execute("SELECT id, time, topic, subject, grade FROM history ORDER BY id DESC").fetchall()
     if history_data:
         for item in history_data:
