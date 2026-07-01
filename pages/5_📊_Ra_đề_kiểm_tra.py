@@ -644,7 +644,7 @@ with tab2:
     # ==========================================
     st.markdown(
         """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
             <h6 style="margin: 0; color: #0369A1;">Phân bổ điểm số cho từng phần & Tùy chọn điểm Vận dụng cao</h6>
         </div>
         """, 
