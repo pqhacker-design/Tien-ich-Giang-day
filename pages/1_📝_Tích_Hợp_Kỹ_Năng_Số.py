@@ -41,7 +41,6 @@ st.sidebar.info(
 
 # --- MÀN HÌNH CHÍNH ---
 col1, col2 = st.columns([1, 1])
-with st.container(border=True):
 with col1:
     st.markdown(
     """
@@ -93,7 +92,14 @@ with col1:
                     st.error(f"❌ Đã xảy ra lỗi trong quá trình xử lý: {str(e)}")
 
 with col2:
-    st.subheader("🖥️ 2. Kết quả & Tải về")
+    st.markdown(
+    """
+    <div style="background-color: #E0F2FE; padding: 10px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 15px;">
+        <h4 style="margin: 0; color: #0369A1;">🖥️ 2. Kết quả & Tải về</h4>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
     
     # Kiểm tra xem đã có kết quả xử lý trong phiên làm việc chưa
     if 'ai_result' in st.session_state and 'processed_file' in st.session_state:
