@@ -545,7 +545,14 @@ with tab1:
     col1, col2 = st.columns(2)
     with col1:
         with st.container(border=True):
-            st.markdown('<div class="section-header">Lựa chọn bộ môn & Thông tin chung</div>', unsafe_allow_html=True)
+            st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">Lựa chọn bộ môn & Thông tin chung</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
             subject = st.selectbox("Chọn môn học cần thiết lập đề thi:", list(SUBJECTS_CONFIG.keys()))
             grade = st.selectbox("Khối lớp học:", [str(i) for i in range(1, 13)], index=7)
             exam_type = st.selectbox("Hình thức kiểm tra:", ["15 phút", "45 phút", "Giữa học kỳ I", "Cuối học kỳ I", "Giữa học kỳ II", "Cuối học kỳ II"])
@@ -563,7 +570,14 @@ with tab1:
 
     with col2:
         with st.container(border=True):
-            st.markdown('<div class="section-header">Cấu hình số lượng câu hỏi</div>', unsafe_allow_html=True)
+            st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">Cấu hình số lượng câu hỏi</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
             
             # Lựa chọn cấu trúc đề thi chính
             exam_format = st.selectbox(
@@ -598,7 +612,15 @@ with tab1:
             code_prefix = st.text_input("Ký hiệu mã đề bắt đầu:", value="101")
 
 with tab2:
-    st.markdown('<div class="section-header">Nguồn nội dung kiến thức ra đề</div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">Nguồn nội dung kiến thức ra đề</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+    st.markdown('<div class="section-header"></div>', unsafe_allow_html=True)
     content_source = st.radio("Chọn phương thức cung cấp nội dung:", ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức"], horizontal=True)
     
     if content_source == "Nhập tay danh sách chủ đề":
@@ -620,7 +642,15 @@ with tab2:
     # ==========================================
     # ĐỒNG BỘ LOGIC PHÂN BỔ ĐIỂM SỐ TỰ ĐỘNG
     # ==========================================
-    st.markdown('<div class="section-header">Phân bổ điểm số cho từng phần & Tùy chọn điểm Vận dụng cao</div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">Phân bổ điểm số cho từng phần & Tùy chọn điểm Vận dụng cao</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+    st.markdown('<div class="section-header"></div>', unsafe_allow_html=True)
     
     col_s1, col_s2, col_s3, col_s4, col_vdc = st.columns(5)
     
@@ -661,10 +691,24 @@ with tab2:
         st.success("✅ Cấu hình điểm số chính xác đạt 10/10 điểm chuẩn.")
         score_error = False
 
-    st.markdown('<div class="section-header">Lựa chọn mẫu cấu trúc Ma trận hiển thị</div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">Lựa chọn mẫu cấu trúc Ma trận hiển thị</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
     matrix_template = st.radio("Chọn mẫu ma trận xuất bản:", ["Mẫu đơn giản truyền thống", "Mẫu quy chuẩn Công văn 7991/BGDĐT-GDTrH"], index=0, horizontal=True)
 
-    st.markdown('<div class="section-header">Phân bổ Tỷ lệ Ma trận tư duy</div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">Phân bổ Tỷ lệ Ma trận tư duy</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
     c1, c2, c3, c4 = st.columns(4)
     with c1: nb_ratio = st.slider("Nhận biết (%)", 0, 100, target_ratios["nb"])
     with c2: th_ratio = st.slider("Thông hiểu (%)", 0, 100, target_ratios["th"])
