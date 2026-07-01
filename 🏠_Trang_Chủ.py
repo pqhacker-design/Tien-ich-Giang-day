@@ -31,8 +31,14 @@ with st.expander("🔑 Cấu hình kết nối AI (Nhập API key của bạn đ
 st.markdown("---")
 
 # 4. DANH SÁCH ỨNG DỤNG THÀNH PHẦN (Được đẩy lên sát bên trên)
-st.markdown("### 🛠️ Danh sách các công cụ tiện ích")
-
+st.markdown(
+    """
+    <div style="background-color: #E0F2FE; padding: 10px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 15px;">
+        <h4 style="margin: 0; color: #0369A1;">🛠️ DANH SÁCH CÁC CÔNG CỤ TIỆN ÍCH</h4>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
 # Hàng 1: Gồm 3 cột cho App 1, App 2, App 3
 col1, col2, col3 = st.columns(3)
 
