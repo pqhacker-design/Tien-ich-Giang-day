@@ -39,8 +39,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS history
 conn.commit()
 
 # --- Thân Giao Diện Chính Ứng Dụng ---
-st.title("🚀 Soạn KHBD tự động theo 5512.")
-st.write("Giúp GV soạn KHBD theo công văn 5512 có tích hợp năng lực số (Chú ý: Xem cấu hình bên slidebar)")
+st.markdown("## 🚀 Soạn KHBD tự động theo 5512.")
+st.info("Giúp GV soạn KHBD theo công văn 5512 có tích hợp năng lực số (Chú ý: Xem cấu hình bên slidebar)")
 
 # --- Giao Diện Thanh Công Cụ Sidebar ---
 # Chỉ để duy nhất chuỗi URL sạch bên trong dấu nháy
