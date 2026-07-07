@@ -11,17 +11,23 @@ st.set_page_config(
 st.markdown("## 🎓 Hệ sinh thái Trợ lý Giáo dục AI  ([Get API key](https://aistudio.google.com/api-keys))")
 st.caption("Nền tảng CNTT và AI hỗ trợ giảng dạy và học tập bám sát Chương trình GDPT 2018. (LƯU Ý: AI không làm giúp bạn, AI chỉ hỗ trợ cho bạn.)")
 
-# 3. QUẢN LÝ API KEY TẬP TRUNG (Thu gọn vào Expander - Mặc định ĐÓNG để đỡ chiếm chỗ)
+# --- 3. QUẢN LÝ API KEY TẬP TRUNG (SỬA LỖI MẤT BIẾN KHI CHUYỂN TRANG) ---
+if "saved_api_key" not in st.session_state:
+    st.session_state["saved_api_key"] = ""
+
 with st.expander("🔑 Cấu hình kết nối AI (Nhập API key của bạn để sử dụng các tiện ích)", expanded=False):
+    # Dùng giá trị mặc định lấy từ saved_api_key để không bị mất khi reload
     gemini_api_key = st.text_input(
         "Nhập Google Gemini API Key của bạn tại đây:",
+        value=st.session_state["saved_api_key"],
         type="password",
         help="Nhập một lần tại đây, tất cả các ứng dụng thành phần sẽ tự động sử dụng chung."
     )
 
     if gemini_api_key:
+        st.session_state["saved_api_key"] = gemini_api_key
         st.session_state["gemini_api_key"] = gemini_api_key
-        st.success("✔️ Đã đồng bộ API Key cho toàn bộ hệ thống!")
+        st.success("✔️ Đã đồng bộ API Key vào hệ thống phiên làm việc!")
     else:
         if "gemini_api_key" in st.session_state:
             st.info("ℹ️ Hệ thống đang sử dụng API Key đã lưu từ trước.")
