@@ -29,8 +29,8 @@ if "audit_report" not in st.session_state:
 if "user_text_content" not in st.session_state:
     st.session_state.user_text_content = ""
 
-st.title("🛡️ AI So sánh văn bản với mẫu hướng dẫn")
-st.caption("Giải pháp ứng dụng Trí tuệ nhân tạo So sánh và Đánh giá văn bản so với hướng dẫn mẫu.")
+st.markdown("## 🛡️ AI So sánh văn bản với mẫu hướng dẫn")
+st.info("Giải pháp ứng dụng Trí tuệ nhân tạo So sánh và Đánh giá văn bản so với hướng dẫn mẫu.")
 
 # --- SIDEBAR: Cấu hình hệ thống ---
 # ==============================================================================
@@ -65,13 +65,13 @@ else:
 # ==============================================================================
 # --- Giao diện Tabs chính ---
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-    "📋 1. Thư viện Mẫu Chuẩn", 
-    "📂 2. Hồ Sơ Cần Kiểm Tra", 
-    "🔬 3. Phân Tích & Đối Chiếu AI", 
-    "📊 4. Thẩm Định Hội Đồng",
-    "🛡️ 5. Thẩm Định AI Nâng Cao", 
-    "📈 6. Bảng Điều Khiển & Phản Biện", 
-    "🤖 7. Chat Cố Vấn Tương Tác"
+    "| 📋 1. Thư viện Mẫu Chuẩn", 
+    "| 📂 2. Hồ Sơ Cần Kiểm Tra", 
+    "| 🔬 3. Phân Tích & Đối Chiếu AI", 
+    "| 📊 4. Thẩm Định Hội Đồng",
+    "| 🛡️ 5. Thẩm Định AI Nâng Cao", 
+    "| 📈 6. Bảng Điều Khiển & Phản Biện", 
+    "| 🤖 7. Chat Cố Vấn Tương Tác"
 ])
 
 def export_audit_to_docx(audit_report, avg_score=None):
@@ -213,7 +213,7 @@ def export_fixed_doc(uploaded_file, audit_report):
     
 # --- TAB 1: VĂN BẢN MẪU ---
 with tab1:
-    st.header("Cung cấp Văn bản mẫu chỉ dẫn / Tiêu chí gốc")
+    st.markdown("### Cung cấp Văn bản mẫu chỉ dẫn / Tiêu chí gốc")
     uploaded_template = st.file_uploader("Tải lên File Mẫu (DOCX/PDF)", type=["docx", "pdf"], key="tmpl")
     if uploaded_template and ai_engine:
         with st.spinner("AI đang phân tích cấu trúc mẫu quy chuẩn..."):
