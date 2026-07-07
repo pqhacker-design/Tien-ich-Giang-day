@@ -67,8 +67,8 @@ st.markdown("""
 # **********************************************
 
 # ********** BƯỚC 3: Xây Dựng Giao Diện Người Dùng (UI) **********
-st.title("🎓 Gia Sư AI - Hỗ trợ học sinh học tập")
-st.write("Xin chào! Tôi là Gia Sư AI, sẵn sàng hỗ trợ bạn trong Tất cả các môn học từ TH đến THPT.")
+st.markdown("## 🎓 Gia Sư AI - Hỗ trợ học sinh học tập")
+st.info("Xin chào! Tôi là Gia Sư AI, sẵn sàng hỗ trợ bạn trong Tất cả các môn học từ TH đến THPT.")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
