@@ -10,7 +10,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 # --- CẤU HÌNH GIAO DIỆN ---
 st.set_page_config(page_title="Chuyển đổi Tài liệu sang Word", page_icon="🔄", layout="centered")
 
-st.title("🔄 Chuyển đổi tài liệu PDF, PNG, JPG sang Word")
+st.markdown("## 🔄 Chuyển đổi tài liệu PDF, PNG, JPG sang Word")
 st.write("Trợ lý giúp chuyển đổi file tài liệu định dạng .pdf, .png, .jpg tải xuống từ web sang Word.")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
