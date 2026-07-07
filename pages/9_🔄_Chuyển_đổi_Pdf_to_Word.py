@@ -11,7 +11,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 st.set_page_config(page_title="Chuyển đổi Tài liệu sang Word", page_icon="🔄", layout="centered")
 
 st.markdown("## 🔄 Chuyển đổi tài liệu PDF, PNG, JPG sang Word")
-st.write("Trợ lý giúp chuyển đổi file tài liệu định dạng .pdf, .png, .jpg tải xuống từ web sang Word.")
+st.info("Trợ lý giúp chuyển đổi file tài liệu định dạng .pdf, .png, .jpg tải xuống từ web sang Word.")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
