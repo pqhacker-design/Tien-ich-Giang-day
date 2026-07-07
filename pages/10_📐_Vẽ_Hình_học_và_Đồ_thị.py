@@ -15,7 +15,7 @@ st.set_page_config(
 st.markdown("## 📐 AI Vẽ Hình Học và Đồ Thị Toán Học")
 st.info("Trợ lý giúp vẽ hình hình học tự động và vẽ đồ thị từ đề bài (Hỗ trợ nhập chữ, tải Ảnh, PDF hoặc file Word)")
 
-# --- 2. KIỂM TRA VÀ ĐỒNG BỘ API KEY TỪ TRANG CHỦ (SỬA LỖI TRIỆT ĐỂ) ---
+# --- 2. KIỂM TRA VÀ ĐỒNG BỘ API KEY TỪ TRANG CHỦ (SỬA LỖI CRASH DÒNG 84) ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"].strip()
     # Gán vào biến môi trường hệ thống để engine hoạt động tốt
@@ -28,10 +28,10 @@ else:
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
     st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ ở thanh bên trái sẽ tự động kích hoạt.")
     
-    # Tạo liên kết quay lại trang chủ tiện lợi
+    # Tạo liên kết quay lại trang chủ tiện lợi bằng st.page_link (không bị crash như st.switch_page cũ)
     st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ nhập API Key", icon="🔄")
     
-    # LỆNH QUAN TRỌNG NHẤT: Dừng toàn bộ code ngay lập tức để chặn lỗi AttributeError xảy ra bên dưới
+    # LỆNH QUAN TRỌNG NHẤT: Dừng toàn bộ code ngay lập tức để chặn lỗi AttributeError xảy ra ở các dòng dưới
     st.stop() 
 
 # Khởi tạo các trạng thái đồ họa nếu đã vượt qua bộ lọc API Key ở trên
