@@ -70,11 +70,11 @@ with st.sidebar:
 ai_engine = AIService(gemini_key=gemini_key)
 
 tabs = st.tabs([
-    "🎯 Trò chơi Khởi động", 
-    "📘 Thiết Kế Câu Hỏi AI", 
-    "🕹️ Trò Chơi Trực Tiếp", 
-    "📑 Kịch Bản Sư Phạm", 
-    "📦 Xuất Bản Tài Liệu"
+    "|🎯 Trò chơi Khởi động", 
+    "|📘 Thiết Kế Câu Hỏi AI", 
+    "|🕹️ Trò Chơi Trực Tiếp", 
+    "|📑 Kịch Bản Sư Phạm", 
+    "|📦 Xuất Bản Tài Liệu"
 ])
 
 # --- TAB 1: KHỞI ĐỘNG ---
