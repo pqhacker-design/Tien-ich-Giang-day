@@ -207,7 +207,7 @@ with tabs[1]:
                         data=docx_data,
                         file_name="Ve_Hinh_Hoc_AI.docx",
                         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                        use_container_width=True
+                        use_container_width=True, type="primary"
                     )
 
 # TAB 3: HƯỚNG DẪN & VÍ DỤ MẪU
