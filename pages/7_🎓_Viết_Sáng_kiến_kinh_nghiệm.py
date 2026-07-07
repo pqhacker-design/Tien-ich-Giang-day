@@ -36,7 +36,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.title("📝 Viết SKKN và nghiên cứu Khoa học")
+st.markdown("## 📝 Viết SKKN và nghiên cứu Khoa học")
 st.write("Hỗ trợ, chỉnh sửa, đóng góp và gợi ý GV viết SKKN. (Xem DANH MỤC CHỨC NĂNG bên trái)")
 
 # --- 🔑 KIỂM TRA VÀ ÉP ĐỒNG BỘ API KEY TỪ TRANG CHỦ ---
@@ -75,7 +75,7 @@ with st.sidebar:
 
 # --- MÀN HÌNH CHÍNH ---
 if menu == "🏠 Tổng quan hệ thống":
-    st.title("Hệ thống Trợ lý AI Hỗ trợ viết SKKN và nghiên cứu Khoa học Sư phạm")
+    st.markdown("## Hệ thống Trợ lý AI Hỗ trợ viết SKKN và nghiên cứu Khoa học Sư phạm")
     st.markdown("""
     Chào mừng thầy/cô đến với nền tảng số hóa tối ưu năng lực nghiên cứu sư phạm ứng dụng. Hệ thống hỗ trợ xử lý toàn diện chu trình vòng đời một sáng kiến, giải pháp giáo dục:
     * **Tối ưu hóa thời gian biên soạn văn bản hành chính sư phạm.**
