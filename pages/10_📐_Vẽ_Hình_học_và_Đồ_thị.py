@@ -12,8 +12,8 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📐 AI Vẽ Hình Học và Đồ Thị Toán Học")
-st.caption("Trợ lý giúp vẽ hình hình học tự động và vẽ đồ thị từ đề bài (Hỗ trợ nhập chữ, tải Ảnh, PDF hoặc file Word)")
+st.markdown("## 📐 AI Vẽ Hình Học và Đồ Thị Toán Học")
+st.info("Trợ lý giúp vẽ hình hình học tự động và vẽ đồ thị từ đề bài (Hỗ trợ nhập chữ, tải Ảnh, PDF hoặc file Word)")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ (ĐÃ SỬA LỖI CÚ PHÁP) ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
@@ -56,14 +56,21 @@ config_dict = {
 }
 
 # --- THIẾT KẾ GIAO DIỆN CHÍNH ---
-tabs = st.tabs(["🔮 Vẽ Hình Tự Động", "📚 Lịch Sử & Xuất Word Hàng Loạt", "💡 Hướng Dẫn & Ví Dụ"])
+tabs = st.tabs(["| 🔮 Vẽ Hình Tự Động", "| 📚 Lịch Sử & Xuất Word Hàng Loạt", "| 💡 Hướng Dẫn & Ví Dụ"])
 
 # TAB 1: VẼ HÌNH TỰ ĐỘNG
 with tabs[0]:
     col_input, col_render = st.columns([1, 1.2])
     
     with col_input:
-        st.subheader("📤 Nhập Đề Bài & Tải File")
+        st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">📤 Nhập Đề Bài/Upload File</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
         mode = st.radio("Loại bài toán:", ["Hình học (THCS/THPT/Tọa độ)", "Đồ thị hàm số"], horizontal=True)
         mode_key = 'geometry' if "Hình học" in mode else 'function'
         
@@ -115,7 +122,14 @@ with tabs[0]:
                             st.error(f"Lỗi khi thực thi mã vẽ hình: {str(exec_err)}")
     
     with col_render:
-        st.subheader("🖼️ Kết Quả Trực Quan")
+        st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">🖼️ Kết Quả Trực Quan</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
         if st.session_state.generated_fig:
             # Hiển thị đồ thị lên giao diện
             st.pyplot(st.session_state.generated_fig)
@@ -157,7 +171,14 @@ with tabs[0]:
 
 # TAB 2: LỊCH SỬ VÀ XUẤT FILE WORD HÀNG LOẠT
 with tabs[1]:
-    st.subheader("📚 Quản lý thư viện hình đã vẽ & Xuất tài liệu Word")
+    st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">📚 Quản lý thư viện hình đã vẽ & Xuất tài liệu Word</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
     if not st.session_state.history:
         st.info("Chưa có bài toán nào trong lịch sử phiên làm việc này.")
     else:
