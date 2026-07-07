@@ -240,7 +240,7 @@ with tab2:
 # --- TAB 3: PHÂN TÍCH AI & TRACK CHANGES ---
 with tab3:
     st.markdown("### Kết quả phân tích, đối chiếu diện rộng")
-    if st.button("🚀 Khởi chạy Rà soát tự động bằng AI"):
+    if st.button("🚀 Khởi chạy Rà soát tự động bằng AI", type="primary"):
         if st.session_state.user_text_content and ai_engine:
             with st.spinner("AI đang tiến hành quét cấu trúc, kiểm tra lỗi hành chính và chính tả..."):
                 res = ai_engine.audit_document(st.session_state.template_reqs, st.session_state.user_text_content, audit_level)
@@ -285,7 +285,7 @@ with tab3:
                 data=docx_report_data,
                 file_name="Bien_Ban_Tham_Dinh_AI.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="btn_download_report"
+                key="btn_download_report", type="primary"
             )
             
         with col_download_2:
@@ -318,7 +318,7 @@ with tab4:
                 st.divider()
                 
         st.subheader("Sinh Minh Chứng Tự Động")
-        if st.button("📊 Tự Động Sinh Biểu Mẫu Khảo Sát/Thực Nghiệm Minh Chứng (Excel)"):
+        if st.button("📊 Tự Động Sinh Biểu Mẫu Khảo Sát/Thực Nghiệm Minh Chứng (Excel)", type="primary"):
             excel_file = EvidenceGenerator.generate_survey_table("Bảng Thống Kê Điểm Số Khảo Sát Thực Nghiệm Sáng Kiến", ["Năng lực tư duy hình học", "Khả năng vận dụng Chuyển đổi số"])
             st.download_button("📥 Tải xuống Biểu mẫu Excel Minh chứng", data=excel_file, file_name="minh_chung_ai_generated.xlsx")
 
@@ -345,7 +345,7 @@ with tab5:
         """, 
         unsafe_allow_html=True
     )
-            if st.button("Chạy quét cấu trúc lặp LLM"):
+            if st.button("Chạy quét cấu trúc lặp LLM", type="primary"):
                 with st.spinner("Đang phân tích độ tự nhiên và mật độ phân phối từ..."):
                     ai_detect_res = AdvancedAuditor.detect_ai_generated(st.session_state.user_text_content, ai_engine)
                     st.write(f"**Kết luận chung:** `{ai_detect_res.get('summary', 'Cần rà soát')}`")
@@ -363,7 +363,7 @@ with tab5:
         """, 
         unsafe_allow_html=True
     )
-            if st.button("Đối chiếu hệ thống dữ liệu"):
+            if st.button("Đối chiếu hệ thống dữ liệu", type="primary"):
                 with st.spinner("Đang so sánh biểu mẫu ý tưởng diện rộng..."):
                     plag_res = AdvancedAuditor.check_plagiarism(st.session_state.user_text_content, ai_engine)
                     for p in plag_res:
@@ -388,7 +388,7 @@ with tab6:
         """, 
         unsafe_allow_html=True
     )
-        if st.button("Phân tích xác suất Hội đồng thi đua"):
+        if st.button("Phân tích xác suất Hội đồng thi đua", type="primary"):
             with st.spinner("Đang chạy mô hình đối chiếu thư viện giải thưởng..."):
                 pred_res = AdvancedAuditor.predict_success_rate(st.session_state.user_text_content, ai_engine)
                 
@@ -421,7 +421,7 @@ with tab6:
         """, 
         unsafe_allow_html=True
     )
-        if st.button("Kích hoạt Hội đồng phản biện"):
+        if st.button("Kích hoạt Hội đồng phản biện", type="primary"):
             with st.spinner("Đang giả lập hội đồng thảo luận kín..."):
                 debates = DashboardPanel.simulate_committee_debate(st.session_state.user_text_content, ai_engine)
                 for d in debates:
@@ -450,7 +450,7 @@ with tab6:
                 "Phần biện pháp nào trong tài liệu thường bị Hội đồng chấm điểm thấp?"
             ]
         )
-        if st.button("Xin lộ trình chiến lược"):
+        if st.button("Xin lộ trình chiến lược", type="primary"):
             with st.spinner("AI đang vạch lộ trình hành động..."):
                 roadmap = DashboardPanel.get_strategic_roadmap(strat_query, ai_engine)
                 st.markdown(roadmap)
