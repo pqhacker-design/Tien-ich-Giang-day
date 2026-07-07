@@ -158,7 +158,14 @@ tab1, tab2, tab3 = st.tabs([
 
 # TAB 1: VĂN BẢN MẪU
 with tab1:
-    st.header("Cung cấp Văn bản mẫu chỉ dẫn / Tiêu chuẩn gốc")
+    st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">📂 Cung cấp Văn bản mẫu chỉ dẫn / Tiêu chuẩn gốc</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
     uploaded_template = st.file_uploader("Tải lên File Mẫu Quy chuẩn (DOCX/PDF)", type=["docx", "pdf"], key="tmpl")
     if uploaded_template and ai_engine:
         with st.spinner("AI đang phân tích cấu trúc mẫu quy chuẩn..."):
@@ -169,7 +176,14 @@ with tab1:
 
 # TAB 2: VĂN BẢN CẦN KIỂM TRA
 with tab2:
-    st.header("Tải lên hồ sơ/văn bản cần thẩm định đối chiếu")
+    st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">📂 Tải lên hồ sơ/văn bản cần thẩm định đối chiếu</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
     uploaded_user_file = st.file_uploader("Tải lên Hồ sơ của bạn (DOCX/PDF)", type=["docx", "pdf"], key="user_doc")
     if uploaded_user_file:
         raw_text = DocumentProcessor.read_file(uploaded_user_file)
@@ -183,7 +197,14 @@ with tab2:
 
 # TAB 3: PHÂN TÍCH, ĐỐI CHIẾU & XUẤT BÁO CÁO
 with tab3:
-    st.header("Kết quả phân tích, phát hiện sai sót & thiếu hụt")
+    st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">📂 Kết quả phân tích, phát hiện sai sót & bổ sung</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
     if st.button("🚀 Khởi chạy Rà soát & So sánh diện rộng bằng AI"):
         if st.session_state.user_text_content and st.session_state.template_reqs and ai_engine:
             with st.spinner("AI đang tiến hành đối chiếu cấu trúc, kiểm tra các mục thiếu hụt..."):
