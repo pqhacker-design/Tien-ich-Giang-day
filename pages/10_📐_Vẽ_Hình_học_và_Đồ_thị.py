@@ -5,7 +5,7 @@ from ai_math_drawer.ai_engine import AIEngine
 from ai_math_drawer.geometry_engine import GeometryEngine
 from ai_math_drawer.docx_exporter import DocxExporter
 
-# Khởi tạo cấu hình trang
+# 1. Khởi tạo cấu hình trang (Phải đặt ở đầu tiên của file trang con)
 st.set_page_config(
     page_title="AI Vẽ Hình Học và Đồ Thị Toán Học",
     page_icon="📐",
@@ -15,21 +15,29 @@ st.set_page_config(
 st.markdown("## 📐 AI Vẽ Hình Học và Đồ Thị Toán Học")
 st.info("Trợ lý giúp vẽ hình hình học tự động và vẽ đồ thị từ đề bài (Hỗ trợ nhập chữ, tải Ảnh, PDF hoặc file Word)")
 
-# --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ (ĐÃ SỬA LỖI CÚ PHÁP) ---
+# --- 2. XỬ LÝ API KEY TỪ TRANG CHỦ & NGĂN CHẶN LỖI ATTRIBUTEERROR CHẮC CHẮN ---
+# Kiểm tra nếu ở Trang Chủ giáo viên đã nhập và lưu API Key vào hệ thống chưa
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"].strip()
-    # Gán vào biến môi trường hệ thống để thư viện google-genai tự động nạp
+    
+    # Gán vào biến môi trường hệ thống để engine AI nhận diện được
     os.environ["GEMINI_API_KEY"] = api_key_input
+    
+    # Chỉ khởi tạo ai_engine khi biến này chưa tồn tại trong phiên làm việc
     if 'ai_engine' not in st.session_state:
         st.session_state.ai_engine = AIEngine()
 else:
-    # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
+    # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và KHÔNG cho chạy tiếp dưới mọi hình thức
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
-    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
-    st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
-    st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
+    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ ở thanh bên trái sẽ tự động kích hoạt.")
+    
+    # Sử dụng st.page_link thay thế st.switch_page để tránh lỗi chuyển hướng
+    st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ nhập API Key", icon="🔄")
+    
+    # LỆNH QUAN TRỌNG: Dừng toàn bộ code phía dưới ngay lập tức để chặn đứng lỗi gán biến rỗng (AttributeError)
+    st.stop() 
 
-# Khởi tạo các bộ nhớ trạng thái khác cho trang vẽ hình nếu chưa có
+# Khởi tạo các bộ nhớ trạng thái khác cho trang vẽ hình nếu vượt qua bộ lọc API Key ở trên
 if 'history' not in st.session_state:
     st.session_state.history = []
 if 'current_code' not in st.session_state:
@@ -37,7 +45,7 @@ if 'current_code' not in st.session_state:
 if 'generated_fig' not in st.session_state:
     st.session_state.generated_fig = None
 
-# --- SIDEBAR: CHỈ GIỮ LẠI TÙY CHỈNH ĐỒ HỌA ---
+# --- 3. SIDEBAR TÙY CHỈNH ĐỒ HỌA ---
 with st.sidebar:
     st.header("🎨 TÙY CHỈNH NÉT VẼ")
     line_color = st.color_picker("Màu nét vẽ chính:", "#1f77b4")
@@ -55,7 +63,7 @@ config_dict = {
     "font_size": font_size
 }
 
-# --- THIẾT KẾ GIAO DIỆN CHÍNH ---
+# --- 4. THIẾT KẾ GIAO DIỆN CHÍNH ---
 tabs = st.tabs(["| 🔮 Vẽ Hình Tự Động", "| 📚 Lịch Sử & Xuất Word Hàng Loạt", "| 💡 Hướng Dẫn & Ví Dụ"])
 
 # TAB 1: VẼ HÌNH TỰ ĐỘNG
@@ -64,24 +72,22 @@ with tabs[0]:
     
     with col_input:
         st.markdown(
-        """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #0369A1;">📤 Nhập Đề Bài/Upload File</h4>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+            """
+            <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+                <h4 style="margin: 0; color: #0369A1;">📤 Nhập Đề Bài/Upload File</h4>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
         mode = st.radio("Loại bài toán:", ["Hình học (THCS/THPT/Tọa độ)", "Đồ thị hàm số"], horizontal=True)
         mode_key = 'geometry' if "Hình học" in mode else 'function'
         
-        # Cho phép tải file đề bài
         uploaded_file = st.file_uploader(
             "Tải lên Ảnh đề bài, file PDF hoặc file Word chứa đề toán:", 
             type=["png", "jpg", "jpeg", "pdf", "docx"],
             help="Bạn có thể chụp màn hình câu hỏi toán rồi tải lên đây mà không cần gõ lại ký hiệu phức tạp."
         )
         
-        # Nhập yêu cầu cụ thể
         prompt = st.text_area(
             "Yêu cầu cụ thể hoặc đề bài dạng văn bản:",
             value="Hãy phân tích đề bài và vẽ hình minh họa.",
@@ -110,7 +116,6 @@ with tabs[0]:
                             fig = GeometryEngine.execute_drawing_code(result["code"], config_dict)
                             st.session_state.generated_fig = fig
                             
-                            # Lưu vào lịch sử vẽ
                             display_prompt = prompt if uploaded_file is None else f"[{uploaded_file.name}] {prompt}"
                             st.session_state.history.append({
                                 "prompt": display_prompt,
@@ -123,25 +128,22 @@ with tabs[0]:
     
     with col_render:
         st.markdown(
-        """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #0369A1;">🖼️ Kết Quả Trực Quan</h4>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+            """
+            <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+                <h4 style="margin: 0; color: #0369A1;">🖼️ Kết Quả Trực Quan</h4>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
         if st.session_state.generated_fig:
-            # Hiển thị đồ thị lên giao diện
             st.pyplot(st.session_state.generated_fig)
             
-            # Xuất ảnh ra bộ nhớ để download
             img_buf = GeometryEngine.convert_fig_to_image(
                 st.session_state.generated_fig, 
                 dpi=dpi_resolution, 
                 format=img_format
             )
             
-            # Nút download ảnh
             st.download_button(
                 label=f"📥 Tải xuống ảnh (. {img_format.upper()} - {dpi_resolution} DPI)",
                 data=img_buf,
@@ -152,7 +154,6 @@ with tabs[0]:
         else:
             st.info("Hình vẽ minh họa sẽ hiển thị ở đây sau khi bạn nhấn nút 'AI Phân Tích Đề & Vẽ Hình'.")
 
-    # Hiển thị Code Editor tự động bên dưới cho phép chỉnh sửa
     st.divider()
     st.subheader("💻 Mã Python Tạo Hình (AI sinh tự động)")
     if st.session_state.current_code:
@@ -218,17 +219,10 @@ with tabs[2]:
     2. **Đưa tài liệu lên**: Bạn có thể gõ trực tiếp đề bài hoặc tiện lợi nhất là đăng tải file Ảnh (chụp màn hình), file tài liệu PDF, file Word chứa câu hỏi.
     3. **Chỉ thị cho AI**: Ra lệnh cụ thể như: *'Hãy vẽ đồ thị câu 4'* hoặc *'Vẽ hình bài hình học cuối file'*.
     4. **Tải về**: Tự do tùy chỉnh nét vẽ, đổi kích thước chữ nhãn điểm và xuất file ảnh chất lượng cao hoặc xuất danh sách bài tập sang Word.
-    
-    ### 🌟 Các mẫu câu lệnh đề xuất chạy cực tốt với Gemini:
-    * *Hình học THCS:* `"Vẽ tam giác ABC có AB=5, AC=7, góc A bằng 60 độ. Vẽ đường cao AH và trung điểm M của BC."`
-    * *Đồ thị hàm số THPT:* `"Vẽ đồ thị hàm số y = (2*x + 1) / (x - 1). Hiển thị các tiệm cận đứng và tiệm cận ngang bằng nét đứt."`
-    * *Hình học tọa độ:* `"Trong mặt phẳng Oxy, vẽ đường tròn (C) tâm I(2, -3) bán kính R=4 và đường thẳng d: 3x - 4y + 5 = 0."`
     """)
-# --- FOOTER CỐ ĐỊNH ---
-st.divider()
-st.markdown("---")
 
-# 5. Chân trang (Footer)
+# --- 5. CHÂN TRANG (FOOTER) ---
+st.divider()
 col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
