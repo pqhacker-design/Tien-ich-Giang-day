@@ -310,7 +310,7 @@ with tab4:
         avg_score = sum([int(i.get('score', 70)) for i in st.session_state.audit_report]) / len(st.session_state.audit_report)
         st.metric(label="ĐIỂM TỔNG HỢP TOÀN DIỆN HỘI ĐỒNG AI", value=f"{round(avg_score,1)} / 100")
         
-        if st.button("📋 Xuất Biên Bản Thẩm Định Hội Đồng Phản Biện (5 Thành viên)"):
+        if st.button("📋 Xuất Biên Bản Thẩm Định Hội Đồng Phản Biện (5 Thành viên)", type="primary"):
             committee_res = CommitteeEvaluator.generate_committee_report("Hồ sơ SKKN Toán 8", avg_score, {}, 5)
             for member, data in committee_res.items():
                 st.write(f"**{data['role']} - {member}**: Chấm điểm: **{data['score']}** | Xếp loại: {data['rating']}")
