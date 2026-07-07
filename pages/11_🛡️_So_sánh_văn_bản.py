@@ -224,7 +224,7 @@ with tab1:
 
 # --- TAB 2: VĂN BẢN CẦN KIỂY TRA (Điểm mấu chốt xử lý lưu cache) ---
 with tab2:
-    st.header("Tải lên tài liệu giáo viên cần thẩm định")
+    st.markdown("### Tải lên tài liệu giáo viên cần thẩm định")
     uploaded_user_file = st.file_uploader("Tải lên Hồ sơ của bạn (DOCX/PDF)", type=["docx", "pdf"], key="user_doc")
     if uploaded_user_file:
         # Đọc 1 lần duy nhất để tránh cạn luồng stream bytes và bọc xử lý lỗi
@@ -239,7 +239,7 @@ with tab2:
 
 # --- TAB 3: PHÂN TÍCH AI & TRACK CHANGES ---
 with tab3:
-    st.header("Kết quả phân tích, đối chiếu diện rộng")
+    st.markdown("### Kết quả phân tích, đối chiếu diện rộng")
     if st.button("🚀 Khởi chạy Rà soát tự động bằng AI"):
         if st.session_state.user_text_content and ai_engine:
             with st.spinner("AI đang tiến hành quét cấu trúc, kiểm tra lỗi hành chính và chính tả..."):
@@ -305,7 +305,7 @@ with tab3:
                 
 # --- TAB 4: THẨM ĐỊNH HỘI ĐỒNG & MINH CHỨNG ---
 with tab4:
-    st.header("Mô Phỏng Hội Đồng Thẩm Định & Sinh Minh Chứng")
+    st.markdown("### Mô Phỏng Hội Đồng Thẩm Định & Sinh Minh Chứng")
     if st.session_state.audit_report:
         avg_score = sum([int(i.get('score', 70)) for i in st.session_state.audit_report]) / len(st.session_state.audit_report)
         st.metric(label="ĐIỂM TỔNG HỢP TOÀN DIỆN HỘI ĐỒNG AI", value=f"{round(avg_score,1)} / 100")
@@ -324,7 +324,7 @@ with tab4:
 
 # --- TAB 5: THẨM ĐỊNH AI NÂNG CAO (MODULE 8 & 9) ---
 with tab5:
-    st.header("🔬 Phân Hệ Thẩm Định Ngôn Ngữ Biến Đổi Nâng Cao")
+    st.markdown("### 🔬 Phân Hệ Thẩm Định Ngôn Ngữ Biến Đổi Nâng Cao")
     
     st.warning("""
     ⚠️ **CẢNH BÁO QUAN TRỌNG:**
@@ -337,7 +337,14 @@ with tab5:
         col_m8, col_m9 = st.columns(2)
         
         with col_m8:
-            st.subheader("🤖 Module 8: Quét Dấu Hiệu AI Sinh Văn Bản")
+            st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">🤖 Module 8: Quét Dấu Hiệu AI Sinh Văn Bản</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
             if st.button("Chạy quét cấu trúc lặp LLM"):
                 with st.spinner("Đang phân tích độ tự nhiên và mật độ phân phối từ..."):
                     ai_detect_res = AdvancedAuditor.detect_ai_generated(st.session_state.user_text_content, ai_engine)
@@ -348,7 +355,14 @@ with tab5:
                     st.table(df_ai)
                 
         with col_m9:
-            st.subheader("📚 Module 9: Kiểm Tra Đạo Văn & Trùng Lặp")
+            st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">📚 Module 9: Kiểm Tra Đạo Văn & Trùng Lặp</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
             if st.button("Đối chiếu hệ thống dữ liệu"):
                 with st.spinner("Đang so sánh biểu mẫu ý tưởng diện rộng..."):
                     plag_res = AdvancedAuditor.check_plagiarism(st.session_state.user_text_content, ai_engine)
@@ -362,11 +376,18 @@ with tab5:
 
 # --- TAB 6: BẢNG ĐIỀU KHIỂN & PHẢN BIỆN (MODULE 11, 12, 13) ---
 with tab6:
-    st.header("📊 Trung Tâm Điều Hành Thẩm Định & Dự Đoán")
+    st.markdown("### 📊 Trung Tâm Điều Hành Thẩm Định & Dự Đoán")
     
     if st.session_state.user_text_content and ai_engine:
         # Module 10: Dự đoán khả năng đạt giải
-        st.subheader("🔮 Module 10: Dự Đoán Khả Năng Được Công Nhận")
+        st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">🔮 Module 10: Dự Đoán Khả Năng Được Công Nhận</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
         if st.button("Phân tích xác suất Hội đồng thi đua"):
             with st.spinner("Đang chạy mô hình đối chiếu thư viện giải thưởng..."):
                 pred_res = AdvancedAuditor.predict_success_rate(st.session_state.user_text_content, ai_engine)
@@ -374,7 +395,7 @@ with tab6:
                 col1, col2, col3 = st.columns(3)
                 for rate in pred_res.get("rates", []):
                     if rate['level'] == "Cấp Trường": col1.metric("Xác suất Cấp Trường", f"{rate['probability']}%")
-                    if rate['level'] == "Cấp Huyện": col2.metric("Xác suất Cấp Huyện", f"{rate['probability']}%")
+                    if rate['level'] == "Cấp Xã / Phường": col2.metric("Xác suất Cấp Xã / Phường", f"{rate['probability']}%")
                     if rate['level'] == "Cấp Tỉnh": col3.metric("Xác suất Cấp Tỉnh", f"{rate['probability']}%")
                 
                 st.success(f"**Điểm mạnh cấu trúc:** {pred_res.get('strengths')}")
@@ -385,14 +406,21 @@ with tab6:
                 chart_data = pd.DataFrame({
                     'Tiêu chí': ['Cấu trúc', 'Nội dung', 'Minh chứng', 'Đổi mới'],
                     'Hồ sơ của bạn': [85, 70, 45, 60],
-                    'Chuẩn Cấp Huyện': [80, 75, 70, 70]
+                    'Chuẩn Cấp Xã / Phường': [80, 75, 70, 70]
                 })
                 st.bar_chart(chart_data, x='Tiêu chí')
 
         st.divider()
         
-        # Module 12: Mô phỏng tranh biện phản biện hội đồng
-        st.subheader("⚖️ Module 12: Góc Nhìn Phản Biện Hội Đồng Giả Lập")
+        # Module 11: Mô phỏng tranh biện phản biện hội đồng
+        st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">⚖️ Module 11: Góc Nhìn Phản Biện Hội Đồng Giả Lập</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
         if st.button("Kích hoạt Hội đồng phản biện"):
             with st.spinner("Đang giả lập hội đồng thảo luận kín..."):
                 debates = DashboardPanel.simulate_committee_debate(st.session_state.user_text_content, ai_engine)
@@ -403,14 +431,21 @@ with tab6:
                     
         st.divider()
         
-        # Module 13: Cố vấn chiến lược đường dài
-        st.subheader("🎯 Module 13: Cố Vấn Chiến Lược Hoàn Thiện")
+        # Module 12: Cố vấn chiến lược đường dài
+        st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">🎯 Module 12: Cố Vấn Chiến Lược Hoàn Thiện</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
         st.caption("AI hoạch định lộ trình chuyển đổi nâng hạng giải thưởng dựa trên các điểm nghẽn.")
         
         strat_query = st.selectbox(
             "Lựa chọn câu hỏi chiến lược:",
             [
-                "Tôi cần bổ sung gì cụ thể để hồ sơ này chắc chắn đạt cấp Huyện?",
+                "Tôi cần bổ sung gì cụ thể để hồ sơ này chắc chắn đạt cấp Xã / Phường?",
                 "Làm thế nào để nâng cấp phần giải pháp thực nghiệm lên tiêu chuẩn cấp Tỉnh?",
                 "Phần biện pháp nào trong tài liệu thường bị Hội đồng chấm điểm thấp?"
             ]
@@ -424,8 +459,8 @@ with tab6:
 
 # --- TAB 7: AI CỐ VẤN TƯƠNG TÁC ---
 with tab7:
-    st.header("💬 Trợ Lý Cố Vấn Học Đường (Contextual Chat)")
-    st.write("Đặt câu hỏi trực tiếp về tài liệu của bạn, AI sẽ trả lời dựa trên ngữ cảnh cấu trúc văn bản đang mở.")
+    st.markdown("### 💬 Trợ Lý Cố Vấn Học Đường (Contextual Chat)")
+    st.info("Đặt câu hỏi trực tiếp về tài liệu của bạn, AI sẽ trả lời dựa trên ngữ cảnh cấu trúc văn bản đang mở.")
     user_query = st.text_input("Ví dụ: Tôi nên viết lại phần lý do chọn đề tài như thế nào để thuyết phục?")
     if user_query and ai_engine:
         if st.session_state.user_text_content:
