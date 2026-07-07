@@ -125,7 +125,7 @@ with tabs[0]:
                 data=img_buf,
                 file_name=f"math_drawing.{img_format}",
                 mime=f"image/{img_format}",
-                use_container_width=True
+                use_container_width=True, type="primary"
             )
         else:
             st.info("Hình vẽ minh họa sẽ hiển thị ở đây sau khi bạn nhấn nút 'AI Phân Tích Đề & Vẽ Hình'.")
@@ -134,7 +134,7 @@ with tabs[0]:
     st.subheader("💻 Mã Python Tạo Hình (AI sinh tự động)")
     if st.session_state.current_code:
         edited_code = st.text_area("Bạn có thể tùy chỉnh hoặc sao chép đoạn mã này để chạy độc lập:", value=st.session_state.current_code, height=250)
-        if st.button("🔄 Cập nhật hình vẽ bằng mã đã sửa"):
+        if st.button("🔄 Cập nhật hình vẽ bằng mã đã sửa", type="primary"):
             try:
                 fig = GeometryEngine.execute_drawing_code(edited_code, config_dict)
                 st.session_state.generated_fig = fig
@@ -156,7 +156,7 @@ with tabs[1]:
             if st.checkbox(f"Bài toán {idx+1}: {item['prompt'][:80]}...", value=True, key=f"hist_{idx}"):
                 selected_indices.append(idx)
         
-        if st.button("📝 Xuất hình Các Bài Đã Chọn Sang Microsoft Word (.docx)", type="secondary"):
+        if st.button("📝 Xuất hình Các Bài Đã Chọn Sang Microsoft Word (.docx)", type="primary"):
             if not selected_indices:
                 st.warning("Vui lòng chọn ít nhất một hình vẽ!")
             else:
