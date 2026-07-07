@@ -12,25 +12,36 @@ st.set_page_config(
     layout="wide"
 )
 
+# ĐỊNH NGHĨA SẴN BIẾN ĐỂ TRIỆT TIÊU LỖI ATTRIBUTEERROR DÙ TRANG CÓ LỖI HAY CHƯA NHẬP KEY
+ai_engine = None 
+
 st.markdown("## 📐 AI Vẽ Hình Học và Đồ Thị Toán Học")
 st.info("Trợ lý giúp vẽ hình hình học tự động và vẽ đồ thị từ đề bài (Hỗ trợ nhập chữ, tải Ảnh, PDF hoặc file Word)")
 
-# --- 2. KIỂM TRA API KEY VÀ KHỞI TẠO AI ENGINE TRỰC TIẾP (SỬA LỖI ATTRIBUTEERROR) ---
-if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
-    api_key_input = st.session_state["gemini_api_key"].strip()
-    # Gán vào biến môi trường hệ thống để thư viện nhận diện
-    os.environ["GEMINI_API_KEY"] = api_key_input
-    
-    # KHỞI TẠO TRỰC TIẾP: Tạo biến cục bộ, không lưu vào session_state để tránh bị mất thuộc tính khi reload trang
+# --- 2. KIỂM TRA VÀ ĐỒNG BỘ API KEY TỪ BIẾN LƯU TRỮ TRANG CHỦ ---
+# Kiểm tra cả 2 biến để đảm bảo an toàn tối đa
+has_key = False
+api_key_final = ""
+
+if "saved_api_key" in st.session_state and st.session_state["saved_api_key"].strip() != "":
+    api_key_final = st.session_state["saved_api_key"].strip()
+    has_key = True
+elif "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
+    api_key_final = st.session_state["gemini_api_key"].strip()
+    has_key = True
+
+if has_key:
+    # Gán vào môi trường và khởi tạo Engine cục bộ an toàn cho luồng rerun
+    os.environ["GEMINI_API_KEY"] = api_key_final
     ai_engine = AIEngine()
 else:
-    # Nếu chưa nhập key ở trang chủ, nhắc nhở và chặn đứng chương trình
+    # Nếu thực sự chưa có key, hiển thị thông báo và chặn đứng giao diện phía dưới
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
     st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ ở thanh bên trái sẽ tự động kích hoạt.")
     st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ nhập API Key", icon="🔄")
     st.stop() 
 
-# Khởi tạo các bộ nhớ trạng thái dữ liệu (chỉ lưu data, không lưu đối tượng xử lý)
+# Khởi tạo bộ nhớ dữ liệu hình vẽ
 if 'history' not in st.session_state:
     st.session_state.history = []
 if 'current_code' not in st.session_state:
@@ -73,11 +84,13 @@ with tabs[0]:
         btn_generate = st.button("🚀 AI Phân Tích Đề & Vẽ Hình", type="primary", use_container_width=True)
         
         if btn_generate:
-            if uploaded_file is None and (not prompt.strip() or prompt == "Hãy phân tích đề bài và vẽ hình minh họa."):
+            # KIỂM TRA BỔ SUNG ĐỂ TRÁNH LỖI PHÁT SINH TỪ HÀNG ĐỢI SỰ KIỆN CỦA STREAMLIT
+            if ai_engine is None:
+                st.error("Hệ thống chưa sẵn sàng do thiếu API Key. Vui lòng làm mới lại trang hoặc nhập key tại Trang chủ.")
+            elif uploaded_file is None and (not prompt.strip() or prompt == "Hãy phân tích đề bài và vẽ hình minh họa."):
                 st.error("Vui lòng tải file đề bài lên hoặc nhập nội dung văn bản đề bài cụ thể!")
             else:
                 with st.spinner("AI đang phân tích dữ kiện hình học và lập trình tọa độ..."):
-                    # Sử dụng trực tiếp biến cục bộ ai_engine đã được cam kết tồn tại ở trên
                     result = ai_engine.analyze_and_generate_code(
                         mode=mode_key, 
                         user_request=prompt, 
