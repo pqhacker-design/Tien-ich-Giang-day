@@ -80,7 +80,7 @@ with tabs[0]:
         mode_key = 'geometry' if "Hình học" in mode else 'function'
         
         uploaded_file = st.file_uploader("Tải lên Ảnh đề bài, file PDF hoặc file Word chứa đề toán:", type=["png", "jpg", "jpeg", "pdf", "docx"])
-        prompt = st.text_area("Yêu cầu cụ thể hoặc đề bài dạng văn bản:", value="Hãy phân tích đề bài và vẽ hình minh họa.", height=80)
+        prompt = st.text_area("Yêu cầu cụ thể hoặc đề bài dạng văn bản:", placeholder="Vẽ đồ thị hàm số y=2x^2", height=80)
         btn_generate = st.button("🚀 AI Phân Tích Đề & Vẽ Hình", type="primary", use_container_width=True)
         
         if btn_generate:
