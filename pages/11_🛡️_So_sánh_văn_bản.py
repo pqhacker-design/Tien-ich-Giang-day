@@ -23,7 +23,7 @@ if "user_text_content" not in st.session_state:
 if "accepted_fixes" not in st.session_state:
     st.session_state.accepted_fixes = []
 
-st.title("🛡️ AI So sánh văn bản với mẫu hướng dẫn")
+st.markdown("## 🛡️ AI So sánh văn bản với mẫu hướng dẫn")
 st.caption("Ứng dụng tự động đối chiếu, phát hiện mục thiếu sót và hỗ trợ hiệu đính hồ sơ theo tiêu chuẩn.")
 
 # --- SIDEBAR: Cấu hình hệ thống ---
