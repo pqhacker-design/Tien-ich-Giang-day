@@ -7,7 +7,14 @@ except ModuleNotFoundError:
 
 # BỔ SUNG: Thêm tham số api_key=None vào định nghĩa hàm để nhận Key truyền sang
 def show_generator_module(api_key=None):
-    st.subheader("💡 Tự Động Đề Xuất Đề Tài & Thiết Kế Đề Cương")
+    st.markdown(
+        """
+        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #0369A1;">💡 Tự Động Đề Xuất Đề Tài & Thiết Kế Đề Cương</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
     
     with st.container():
         col1, col2 = st.columns(2)
