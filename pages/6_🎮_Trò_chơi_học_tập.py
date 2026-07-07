@@ -91,7 +91,7 @@ with tabs[0]:
         warmup_type = st.selectbox("Chọn loại trò chơi khởi động nhanh", [
             "Vòng quay may mắn", "Đuổi hình bắt chữ", "Ai nhanh hơn", "Mật mã bí mật", "Lật mảnh ghép"
         ])
-        warmup_prompt = st.text_area("Yêu cầu bổ sung cho trò chơi", placeholder="Ví dụ: Thiết kế trò chơi khởi động liên quan đến kiến thức phân số...")
+        warmup_prompt = st.text_area("Chủ đề hoạt động:", placeholder="Ví dụ: Thiết kế trò chơi khởi động liên quan đến kiến thức phân số, toán lớp 6")
         
         if st.button("🔥 Tạo Kịch Bản Trò Chơi", type="primary"):
             with st.spinner("AI đang thiết kế cấu trúc trò chơi và nạp ma trận câu hỏi..."):
