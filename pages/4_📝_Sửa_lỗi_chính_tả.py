@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import altair as alt
 
-# Import các module nội bộ (Đã sửa đổi đường dẫn chuẩn hóa package)
+# Import các module nội bộ
 from vietnamese_word_corrector.utils import load_criteria, save_criteria, get_docx_info
 from vietnamese_word_corrector.formatter import normalize_to_nd30
 from vietnamese_word_corrector.spelling_checker import check_vietnamese_spelling
@@ -15,9 +15,9 @@ from vietnamese_word_corrector.report_generator import generate_excel_report
 st.set_page_config(page_title="AI Document & School Record Processor", layout="wide")
 
 st.markdown("## 📑 Sửa lỗi chính tả và chuẩn hóa văn bản")
-st.info("Giúp GV sửa lỗi chính tả và chuẩn hóa văn bản Hành chính - Giáo dục. (Chú ý: Xem cấu hình bên slidebar)")
+st.info("Giúp GV sửa lỗi chính tả và chuẩn hóa văn bản Hành chính - Giáo dục theo Nghị định 30/2020/NĐ-CP & GDPT 2018.")
 
-# --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
+# --- 1. LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
 else:
@@ -26,6 +26,7 @@ else:
     st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
     st.stop() 
 
+# --- 2. SIDEBAR CẤU HÌNH TIÊU CHÍ ---
 st.sidebar.subheader("🎯 Tiêu chí kiểm tra Sổ Sách")
 current_criteria = load_criteria()
 
@@ -37,6 +38,7 @@ if st.sidebar.button("Cập nhật tiêu chí"):
         save_criteria(current_criteria)
         st.sidebar.success("Đã cập nhật tiêu chí động!")
 
+# --- 3. GIAO DIỆN TẢI FILE VÀ CẤU HÌNH ---
 uploaded_file = st.file_uploader("Kéo thả file văn bản hành chính hoặc Hồ sơ trường học của bạn (.DOCX)", type=["docx"])
 
 if uploaded_file is not None:
@@ -59,65 +61,73 @@ if uploaded_file is not None:
     c_nguphap = st.checkbox("Kiểm tra ngữ pháp & Hành văn", value=True)
     c_hoso = st.checkbox("Phân tích chiều sâu Hồ sơ Giáo dục (GDPT 2018)", value=True)
 
-    # NÚT BẤM CHỈ LÀM NHIỆM VỤ THAY ĐỔI TRẠNG THÁI VÀ TÍNH TOÁN
+    # --- 4. XỬ LÝ KHI BẤM NÚT PHÂN TÍCH ---
     if st.button("🚀 BẮT ĐẦU PHÂN TÍCH VÀ SỬA LỖI TỰ ĐỘNG", type="primary"):
-        with st.spinner("Hệ thống AI đang đọc hiểu và quét sâu cấu trúc văn bản..."):
+        with st.spinner("Hệ thống AI đang đọc hiểu, quét lỗi và tự động căn chỉnh thể thức..."):
             all_errors = []
             
+            # Kiểm tra chính tả & ngữ pháp bằng thuật toán NLP
             if c_chinhta:
                 all_errors.extend(check_vietnamese_spelling(doc_info["full_text"]))
             if c_nguphap:
                 all_errors.extend(check_vietnamese_grammar(doc_info["full_text"]))
                 
+            # Phân tích AI chuyên sâu nếu được bật
             ai_result = None
             if c_hoso or c_thethuc:
                 ai_result = analyze_document_with_ai(doc_info["full_text"], doc_info["filename"])
-                if ai_result and "loi_the_thuc" in ai_result:
+                if isinstance(ai_result, dict) and "loi_the_thuc" in ai_result:
                     all_errors.extend(ai_result["loi_the_thuc"])
 
-            # Khóa dữ liệu vào Session State để không bị mất khi chuyển Tab
+            # Chuẩn hóa thể thức NĐ30 (Căn lề, cỡ chữ, font Times New Roman, tô đậm đề mục)
+            out_standard_path = f"standardized_{doc_info['filename']}"
+            normalize_to_nd30(temp_path, out_standard_path)
+            
+            # Lưu trạng thái vào Session State
             st.session_state["all_errors"] = all_errors
             st.session_state["ai_result"] = ai_result
-            
-            # 2. Chuẩn hóa lề lối, font chữ, thụt đầu dòng, tô đậm đề mục vào file DOCX mới
-        out_standard_path = f"standardized_{doc_info['filename']}"
-        normalize_to_nd30(temp_path, out_standard_path)
-        
-        st.session_state["out_standard_path"] = out_standard_path
-        st.success("✨ Đã hoàn thành phân tích và chuẩn hóa thể thức!")
+            st.session_state["out_standard_path"] = out_standard_path
+            st.session_state["analyzed_file_name"] = uploaded_file.name
+            st.success("✨ Đã hoàn thành phân tích và chuẩn hóa thể thức!")
 
-    # ĐƯA TOÀN BỘ KHỐI HIỂN THỊ RA NGOÀI LỆNH IF BUTTON
-    # Chỉ cần kiểm tra xem trong Session State đã có dữ liệu phân tích của file hiện tại chưa
-    # ĐƯA TOÀN BỘ KHỐI HIỂN THỊ RA NGOÀI LỆNH IF BUTTON
+    # --- 5. HIỂN THỊ KẾT QUẢ VÀ TẠO TAB ---
     if "all_errors" in st.session_state and st.session_state.get("analyzed_file_name") == uploaded_file.name:
         res = st.session_state.get("ai_result")
-        errors = st.session_state["all_errors"]
+        errors = st.session_state.get("all_errors", [])
         
         st.write("---")
+        st.header("📊 KẾT QUẢ PHÂN TÍCH & CHUẨN HÓA VĂN BẢN")
         
-        # TRƯỜNG HỢP 1: CÓ SỬ DỤNG AI VÀ AI TRẢ VỀ KẾT QUẢ ĐÚNG DICT
-        if (c_hoso or c_thethuc) and isinstance(res, dict):
-            st.header("📊 KẾT QUẢ ĐÁNH GIÁ TỪ CHUYÊN GIA AI")
-            
+        # Nếu có kết quả đánh giá điểm số từ AI
+        if isinstance(res, dict):
             col_res1, col_res2 = st.columns([1, 1])
             with col_res1:
                 st.info(f"📋 **Loại hồ sơ nhận diện:** {res.get('loai_ho_so', 'Không xác định')} ({res.get('do_tin_cay', 0)}% độ tin cậy)")
-                st.metric(value=f"{res['diem'].get('tong', 0)} / 100", label="TỔNG ĐIỂM CHẤT LƯỢNG HỒ SƠ")
+                st.metric(value=f"{res.get('diem', {}).get('tong', 0)} / 100", label="TỔNG ĐIỂM CHẤT LƯỢNG HỒ SƠ")
                 st.subheader(f"Xếp loại chung: {res.get('xep_loai', 'Chưa xếp loại')}")
                 
             with col_res2:
                 st.write("**Biểu đồ phân rã điểm số năng lực văn bản:**")
                 chart_data = pd.DataFrame({
                     'Tiêu chí': ['Thể thức', 'Nội dung', 'GDPT 2018', 'Năng lực số', 'Khoa học'],
-                    'Điểm': [res['diem'].get('the_thuc',0), res['diem'].get('noi_dung',0), res['diem'].get('gdpt_2018',0), res['diem'].get('nang_luc_so',0), res['diem'].get('khoa_hoc',0)]
+                    'Điểm': [
+                        res.get('diem', {}).get('the_thuc', 0), 
+                        res.get('diem', {}).get('noi_dung', 0), 
+                        res.get('diem', {}).get('gdpt_2018', 0), 
+                        res.get('diem', {}).get('nang_luc_so', 0), 
+                        res.get('diem', {}).get('khoa_hoc', 0)
+                    ]
                 })
                 chart = alt.Chart(chart_data).mark_bar(color='#4CAF50').encode(x='Tiêu chí', y='Điểm')
                 st.altair_chart(chart, use_container_width=True)
 
-            st.write("---")
-            tab1, tab2, tab3 = st.tabs(["⚠️ Cảnh báo Cấu trúc & GDPT 2018", "📝 Phê duyệt Track Changes", "🤖 Trợ lý AI Hỏi Đáp"])
-            
-            with tab1:
+        st.write("---")
+        # Khởi tạo 3 Tab cố định
+        tab1, tab2, tab3 = st.tabs(["⚠️ Cảnh báo Cấu trúc & GDPT 2018", "📝 Phê duyệt Track Changes", "🤖 Trợ lý AI Hỏi Đáp"])
+        
+        # TAB 1: CẢNH BÁO AI
+        with tab1:
+            if isinstance(res, dict):
                 st.subheader("Kiểm tra sự tích hợp Chương trình GDPT 2018")
                 st.json(res.get("gdpt_2018_check", {}))
                 
@@ -128,50 +138,50 @@ if uploaded_file is not None:
                 st.subheader("Đề xuất cải tiến từ Hội đồng chuyên môn AI:")
                 for dexuat in res.get("de_xuat_cai_tien", []):
                     st.success(f"💡 {dexuat}")
-                    
-            with tab2:
-                remaining_errors = render_track_changes_view(errors)
-                st.write("---")
-                st.subheader("💾 Xuất dữ liệu & Báo cáo hoàn chỉnh")
-                if "out_standard_path" in st.session_state and os.path.exists(st.session_state["out_standard_path"]):
-                    with open(st.session_state["out_standard_path"], "rb") as f_word:
-                        st.download_button("📥 Tải về Văn bản đã chuẩn hóa lề lối (.DOCX)", data=f_word.read(), file_name=f"ChuanHoa_{doc_info['filename']}")
-                excel_data = generate_excel_report(remaining_errors, res['diem'])
-                st.download_button("📥 Xuất Báo cáo Thống kê lỗi chi tiết (.XLSX)", data=excel_data, file_name=f"BaoCaoLoi_{doc_info['filename']}.xlsx")
+            else:
+                st.info("💡 Bạn cần tích chọn tính năng 'Phân tích chiều sâu Hồ sơ' hoặc 'Kiểm tra thể thức' để xem đánh giá chuyên sâu từ AI.")
 
-            with tab3:
-                st.subheader("💬 Hỏi đáp tương tác sâu về các quy định pháp lý")
-                user_q = st.text_input("Ví dụ: Tại sao lỗi thể thức quốc hiệu của tôi lại bị chấm điểm thấp?")
-                if user_q:
-                    with st.spinner("AI đang tra cứu..."):
-                        context_prompt = f"Dựa trên văn bản có chất lượng điểm số tổng {res['diem'].get('tong', 0)}, người dùng hỏi: {user_q}."
-                        answer = get_ai_response(context_prompt)
-                        st.write(answer)
-
-        # TRƯỜNG HỢP 2: CHỈ BẬT CHÍNH TẢ / NGỮ PHÁP (KHÔNG DÙNG AI)
-        else:
-            st.header("📝 KẾT QUẢ KIỂM TRA CHÍNH TẢ & NGỮ PHÁP")
+        # TAB 2: SỬA LỖI & XUẤT FILE DOCX/XLSX
+        with tab2:
             remaining_errors = render_track_changes_view(errors)
-            
             st.write("---")
-            st.subheader("💾 Xuất dữ liệu")
+            st.subheader("💾 Xuất dữ liệu & Báo cáo hoàn chỉnh")
+            
+            # Nút tải file Word đã tự động định dạng lề lối
             if "out_standard_path" in st.session_state and os.path.exists(st.session_state["out_standard_path"]):
                 with open(st.session_state["out_standard_path"], "rb") as f_word:
-                    st.download_button("📥 Tải về Văn bản đã chuẩn hóa lề lối (.DOCX)", data=f_word.read(), file_name=f"ChuanHoa_{doc_info['filename']}")
+                    st.download_button(
+                        "📥 Tải về Văn bản đã chuẩn hóa lề lối (.DOCX)", 
+                        data=f_word.read(), 
+                        file_name=f"ChuanHoa_{doc_info['filename']}"
+                    )
             
-            # Tạo điểm giả lập rỗng để xuất Excel khi không bật AI
-            empty_scores = {"the_thuc": 0, "noi_dung": 0, "gdpt_2018": 0, "nang_luc_so": 0, "khoa_hoc": 0, "tong": 0}
-            excel_data = generate_excel_report(remaining_errors, empty_scores)
-            st.download_button("📥 Xuất Danh sách lỗi chi tiết (.XLSX)", data=excel_data, file_name=f"DanhSachLoi_{doc_info['filename']}.xlsx")
-                    
-    # Dọn dẹp tệp tạm thời sau phiên làm việc
+            # Xuất file Excel báo cáo lỗi
+            scores = res.get('diem', {}) if isinstance(res, dict) else {"the_thuc": 0, "noi_dung": 0, "gdpt_2018": 0, "nang_luc_so": 0, "khoa_hoc": 0, "tong": 0}
+            excel_data = generate_excel_report(remaining_errors, scores)
+            st.download_button(
+                "📥 Xuất Báo cáo Thống kê lỗi chi tiết (.XLSX)", 
+                data=excel_data, 
+                file_name=f"BaoCaoLoi_{doc_info['filename']}.xlsx"
+            )
+
+        # TAB 3: TRỢ LÝ AI HỎI ĐÁP
+        with tab3:
+            st.subheader("💬 Hỏi đáp tương tác sâu về các quy định pháp lý")
+            user_q = st.text_input("Ví dụ: Tại sao lỗi thể thức quốc hiệu của tôi lại bị chấm điểm thấp?")
+            if user_q:
+                with st.spinner("AI đang tra cứu Nghị định 30/2020/NĐ-CP & GDPT 2018..."):
+                    score_info = res.get('diem', {}).get('tong', 0) if isinstance(res, dict) else "Chưa chấm điểm"
+                    context_prompt = f"Dựa trên văn bản có chất lượng điểm số tổng {score_info}, người dùng hỏi: {user_q}. Hãy giải thích rõ căn cứ theo điều khoản pháp lý quy định hành chính NĐ 30/2020/NĐ-CP hoặc hướng dẫn của Bộ GD&ĐT."
+                    answer = get_ai_response(context_prompt)
+                    st.write(answer)
+
+    # Dọn dẹp file tạm sau khi kết thúc phiên
     if os.path.exists(temp_path):
         os.remove(temp_path)
-# --- FOOTER CỐ ĐỊNH ---
-st.divider()
-st.markdown("---")
 
-# 5. Chân trang (Footer)
+# --- 6. FOOTER CỐ ĐỊNH ---
+st.divider()
 col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
