@@ -132,10 +132,10 @@ with col11:
             st.switch_page("pages/11_🛡️_So_sánh_văn_bản.py")
 with col12:
     with st.container(border=True):
-        st.markdown("### Chưa biết làm gì")
-        st.write("Chưa có nội dung")
-        if st.button("🚀 Mở không được", key="btn_khong_biet", use_container_width=True):
-            st.switch_page("pages/12_🔄_Chuyển_đổi_Pdf_to_Word.py")            
+        st.markdown("### 12. Trợ lý soạn thảo văn bản")
+        st.write("Giúp GV soạn thảo và chỉnh sửa văn bản theo yêu cầu")
+        if st.button("🚀 Mở không được", key="btn_tro_ly_vb", use_container_width=True):
+            st.switch_page("pages/12_🤖_Trợ_lý_văn_bản.py")            
 st.markdown("---")
 
 # 5. Chân trang (Footer)
