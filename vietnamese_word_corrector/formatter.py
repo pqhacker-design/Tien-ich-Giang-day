@@ -5,7 +5,7 @@ import re
 from vietnamese_word_corrector.ai_checker import classify_paragraphs_with_ai
 
 def set_paragraph_text_and_style(p, text, font_size=13, bold=False, italic=False, align=WD_ALIGN_PARAGRAPH.JUSTIFY, uppercase=False):
-    """Xóa bỏ triệt để style cũ và áp dụng style chuẩn Times New Roman"""
+    """Hàm ghi đè style chuẩn Times New Roman"""
     if uppercase:
         text = text.upper()
         
@@ -25,25 +25,29 @@ def normalize_to_nd30(input_docx_path, output_docx_path):
 
     doc = docx.Document(input_docx_path)
 
-    # 1. Định dạng Lề giấy NĐ 30/2020/NĐ-CP
+    # 1. Căn lề trang giấy NĐ 30/2020/NĐ-CP
     for section in doc.sections:
         section.top_margin = Cm(2.0)
         section.bottom_margin = Cm(2.0)
         section.left_margin = Cm(3.0)
         section.right_margin = Cm(1.5)
 
-    # 2. Lấy danh sách văn bản và gọi AI phân loại
+    # 2. Lấy toàn bộ dòng văn bản
     raw_paragraphs = [p.text.strip() for p in doc.paragraphs]
     non_empty_indices = [i for i, text in enumerate(raw_paragraphs) if text]
     non_empty_texts = [raw_paragraphs[i] for i in non_empty_indices]
 
+    # Phân loại bằng AI
     ai_labels = classify_paragraphs_with_ai(non_empty_texts)
     
-    label_map = {}
-    for idx, orig_i in enumerate(non_empty_indices):
-        label_map[orig_i] = ai_labels[idx] if idx < len(ai_labels) else "BODY_TEXT"
+    # Biểu thức Regex dự phòng khi AI không gắn nhãn chính xác
+    pattern_quoc_hieu = re.compile(r'^(CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM|ĐỘC LẬP - TỰ DO - HẠNH PHÚC)', re.IGNORECASE)
+    pattern_main_title = re.compile(r'^(BẢNG THUYẾT MINH|KẾT LUẬN|TỔNG QUAN|QUYẾT ĐỊNH|THÔNG BÁO|BÁO CÁO|TỜ TRÌNH|KẾ HOẠCH)', re.IGNORECASE)
+    pattern_numbered_heading = re.compile(r'^\d+[\.\s\)]|^[I|V|X]+[\.\s\:]')
+    pattern_key_heading = re.compile(r'^(SỰ KIỆN|Ý NGHĨA|PHÂN TÍCH|KẾT LUẬN|TÔNG MÀU|PHÔNG CHỮ|SỰ KẾT HỢP)[\:\s]', re.IGNORECASE)
 
-    # 3. Ép định dạng dựa trên nhãn AI
+    # 3. Tiến hành định dạng lại từng dòng
+    label_idx = 0
     for i, p in enumerate(doc.paragraphs):
         text_raw = p.text.strip()
         if not text_raw:
@@ -53,21 +57,23 @@ def normalize_to_nd30(input_docx_path, output_docx_path):
         p.paragraph_format.space_before = Pt(3)
         p.paragraph_format.space_after = Pt(3)
 
-        label = label_map.get(i, "BODY_TEXT")
+        label = ai_labels[label_idx] if label_idx < len(ai_labels) else "BODY_TEXT"
+        label_idx += 1
 
-        if label in ["QUOC_HIEU", "MAIN_TITLE"]:
+        # KIỂM TRA ĐỊNH DẠNG (KẾT HỢP AI & REGEX REGULAR EXPRESSION)
+        if label in ["QUOC_HIEU", "MAIN_TITLE"] or pattern_quoc_hieu.search(text_raw) or pattern_main_title.match(text_raw):
             p.paragraph_format.first_line_indent = Cm(0)
             p.paragraph_format.space_before = Pt(6)
             p.paragraph_format.space_after = Pt(6)
             set_paragraph_text_and_style(p, text_raw, font_size=14, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, uppercase=True)
 
-        elif label == "HEADING_1":
+        elif label == "HEADING_1" or pattern_numbered_heading.match(text_raw):
             p.paragraph_format.first_line_indent = Cm(0)
             p.paragraph_format.space_before = Pt(6)
             p.paragraph_format.space_after = Pt(3)
             set_paragraph_text_and_style(p, text_raw, font_size=13, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, uppercase=True)
 
-        elif label == "HEADING_2":
+        elif label == "HEADING_2" or pattern_key_heading.match(text_raw):
             p.paragraph_format.first_line_indent = Cm(0.5)
             p.paragraph_format.space_before = Pt(4)
             p.paragraph_format.space_after = Pt(2)
@@ -81,7 +87,7 @@ def normalize_to_nd30(input_docx_path, output_docx_path):
             p.paragraph_format.first_line_indent = Cm(1.27)
             set_paragraph_text_and_style(p, text_raw, font_size=13, bold=False, align=WD_ALIGN_PARAGRAPH.JUSTIFY, uppercase=False)
 
-    # 4. Định dạng Bảng biểu
+    # 4. Định dạng Bảng biểu nếu có
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
