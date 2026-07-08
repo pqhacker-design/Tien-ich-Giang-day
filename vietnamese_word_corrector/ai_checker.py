@@ -4,7 +4,7 @@ import streamlit as st
 import re
 
 def get_ai_response(prompt):
-    api_key = st.session_state.get("gemini_api_key", "") # Sửa lại key đồng bộ với trang chủ
+    api_key = st.session_state.get("gemini_api_key", "")
     if not api_key:
         return "Chưa cấu hình API Key tại trang chủ."
     try:
@@ -14,6 +14,7 @@ def get_ai_response(prompt):
         return response.text
     except Exception as e:
         return f"Lỗi kết nối AI: {str(e)}"
+
 def detect_headings_with_ai(text):
     """Sử dụng Gemini để nhận diện danh sách các câu/đoạn là đề mục trong văn bản"""
     prompt = f"""
@@ -26,36 +27,35 @@ def detect_headings_with_ai(text):
     """
     res = get_ai_response(prompt)
     try:
-        import json, re
         match = re.search(r'\[.*\]', res, re.DOTALL)
         if match:
-            return json.loads(match.group(0))
+            return json.loads(match.group())
     except Exception:
         pass
     return []
+
 def classify_paragraphs_with_ai(paragraph_list):
     """
-    Sử dụng AI phân loại cấu trúc cho từng đoạn văn trong file Word.
-    Trả về danh sách loại hình tương ứng: QUOC_HIEU, MAIN_TITLE, HEADING_1, HEADING_2, BODY_TEXT, SIGNATURE
+    Phân loại vai trò thể thức của từng đoạn văn bằng AI.
+    Trả về danh sách nhãn tương ứng: QUOC_HIEU, MAIN_TITLE, HEADING_1, HEADING_2, BODY_TEXT, SIGNATURE
     """
     if not paragraph_list:
         return []
     
-    # Chuẩn bị dữ liệu gửi cho AI (đánh số dòng)
     numbered_paragraphs = [f"[{i}] {p}" for i, p in enumerate(paragraph_list)]
-    prompt_text = "\n".join(numbered_paragraphs[:150]) # Phân tích tối đa 150 đoạn đầu
+    prompt_text = "\n".join(numbered_paragraphs[:150]) # Phân tích 150 dòng đầu
 
     prompt = f"""
-    Bạn là một chuyên gia về thể thức văn bản hành chính Việt Nam (Nghị định 30/2020/NĐ-CP).
+    Bạn là chuyên gia về thể thức văn bản hành chính Việt Nam (Nghị định 30/2020/NĐ-CP).
     Hãy phân loại vai trò của từng dòng văn bản dưới đây thành một trong các nhãn sau:
     - QUOC_HIEU: Quốc hiệu, tiêu ngữ (CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM...)
-    - MAIN_TITLE: Tên loại văn bản / Tiêu đề lớn nhất (BÁO CÁO, QUYẾT ĐỊNH, BẢNG THUYẾT MINH..., Tên dự án/sự kiện)
-    - HEADING_1: Đề mục lớn, tiêu đề phần/chương/mục (1., 2., I., II., TỔNG QUAN, PHÂN TÍCH, KẾT LUẬN, SỰ KIỆN...)
+    - MAIN_TITLE: Tên loại văn bản / Tiêu đề chính lớn nhất (BÁO CÁO, QUYẾT ĐỊNH, BẢNG THUYẾT MINH..., Tên dự án/sự kiện)
+    - HEADING_1: Đề mục lớn (1., 2., I., II., TỔNG QUAN, PHÂN TÍCH, KẾT LUẬN, SỰ KIỆN...)
     - HEADING_2: Đề mục nhỏ hơn (a), b), Ý nghĩa:, Tông màu:, Phông chữ...)
     - BODY_TEXT: Đoạn văn nội dung thông thường
     - SIGNATURE: Nơi nhận, Chức danh, Chữ ký cuối văn bản
 
-    Yêu cầu trả về JSON duy nhất là 1 danh sách chuỗi nhãn tương ứng theo đúng thứ tự index [0], [1], [2]...
+    Yêu cầu trả về JSON duy nhất là 1 danh sách chuỗi nhãn tương ứng đúng thứ tự [0], [1], [2]...
     Ví dụ: ["MAIN_TITLE", "HEADING_1", "BODY_TEXT", "HEADING_2", "BODY_TEXT"]
 
     Danh sách dòng:
@@ -63,30 +63,29 @@ def classify_paragraphs_with_ai(paragraph_list):
     """
     
     res = get_ai_response(prompt)
-    try applicants:
-        import json, re
+    try:
         match = re.search(r'\[.*\]', res, re.DOTALL)
         if match:
             labels = json.loads(match.group())
-            # Nếu thiếu nhãn do văn bản dài hơn 150 dòng, bổ sung BODY_TEXT cho phần còn lại
             while len(labels) < len(paragraph_list):
                 labels.append("BODY_TEXT")
             return labels
     except Exception:
         pass
         
-    # Mặc định trả về BODY_TEXT nếu AI gặp lỗi
     return ["BODY_TEXT"] * len(paragraph_list)
-def analyze_document_with_ai(text, file_name):
+
+def analyze_document_with_ai(full_text, filename):
     prompt = f"""
-    Bạn là Chuyên gia kiểm định văn bản hành chính và hồ sơ giáo dục theo chương trình GDPT 2018.
-    Hãy phân tích văn bản sau (Tên file: {file_name}):
-    ---
-    {text[:4000]}
-    ---
-    Trả về định dạng JSON duy nhất, không bao gồm ký tự markdown loại khác ngoài json. Cấu trúc JSON như sau:
+    Bạn là Chuyên gia Đánh giá Hồ sơ Giáo dục & Thể thức Văn bản Hành chính (NĐ 30/2020/NĐ-CP).
+    Hãy đọc và phân tích toàn bộ văn bản sau đây:
+    Tên file: {filename}
+    Nội dung văn bản:
+    {full_text[:4000]}
+
+    Yêu cầu xuất kết quả theo đúng định dạng JSON chuẩn như sau (không kèm văn bản dẫn dắt):
     {{
-       "loai_ho_so": "Tên loại hồ sơ nhận diện",
+       "loai_ho_so": "Loại hồ sơ nhận diện",
        "do_tin_cay": 95,
        "diem": {{
           "the_thuc": 90,
@@ -112,16 +111,9 @@ def analyze_document_with_ai(text, file_name):
     res = get_ai_response(prompt)
     if res:
         try:
-            # Sử dụng Regex bóc tách nội dung nằm giữa cặp ngoặc nhọn {} nếu có text thừa xung quanh
-            json_match = re.search(r'\{.*\}', res, re.DOTALL)
-            if json_match:
-                cleaned = json_match.group(0)
-                return json.loads(cleaned)
-            
-            # Dự phòng phương pháp cũ nếu regex không khớp
-            cleaned = res.replace("```json", "").replace("```", "").strip()
-            return json.loads(cleaned)
-        except Exception as e:
-            # Nếu phân rã thất bại, trả về chuỗi thông báo lỗi để giao diện bắt được
-            return f"Lỗi phân rã cấu trúc JSON từ AI: {str(e)}. Phản hồi thô: {res}"
-    return None
+            match = re.search(r'\{.*\}', res, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+        except Exception:
+            pass
+    return {}
