@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import altair as alt
 
-# Import các module nội bộ
 from vietnamese_word_corrector.utils import load_criteria, save_criteria, get_docx_info
 from vietnamese_word_corrector.formatter import normalize_to_nd30
 from vietnamese_word_corrector.spelling_checker import check_vietnamese_spelling
@@ -17,7 +16,7 @@ st.set_page_config(page_title="AI Document & School Record Processor", layout="w
 st.markdown("## 📑 Sửa lỗi chính tả và chuẩn hóa văn bản")
 st.info("Giúp GV sửa lỗi chính tả và chuẩn hóa văn bản Hành chính - Giáo dục theo Nghị định 30/2020/NĐ-CP.")
 
-# --- 1. LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
+# --- 1. CHECK API KEY ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
 else:
@@ -38,11 +37,13 @@ if st.sidebar.button("Cập nhật tiêu chí"):
         save_criteria(current_criteria)
         st.sidebar.success("Đã cập nhật tiêu chí động!")
 
-# --- 3. TẢI FILE VÀ HIỂN THỊ THÔNG TIN ---
+# --- 3. UPLOAD FILE ---
 uploaded_file = st.file_uploader("Kéo thả file văn bản hành chính hoặc Hồ sơ trường học của bạn (.DOCX)", type=["docx"])
 
 if uploaded_file is not None:
     temp_path = f"temp_{uploaded_file.name}"
+    
+    # Lưu file từ bộ nhớ tạm vào ổ đĩa
     with open(temp_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
         
@@ -61,29 +62,27 @@ if uploaded_file is not None:
     c_nguphap = st.checkbox("Kiểm tra ngữ pháp & Hành văn", value=True)
     c_hoso = st.checkbox("Phân tích chiều sâu Hồ sơ Giáo dục (GDPT 2018)", value=True)
 
-    # --- 4. XỬ LÝ KHI BẤM NÚT "BẮT ĐẦU PHÂN TÍCH" ---
+    # --- 4. NÚT XỬ LÝ PHÂN TÍCH & CHUẨN HÓA ---
     if st.button("🚀 BẮT ĐẦU PHÂN TÍCH VÀ SỬA LỖI TỰ ĐỘNG", type="primary"):
         with st.spinner("Hệ thống AI đang đọc hiểu, quét lỗi và tự động căn chỉnh thể thức..."):
             all_errors = []
             
-            # Quét lỗi chính tả & ngữ pháp
             if c_chinhta:
                 all_errors.extend(check_vietnamese_spelling(doc_info["full_text"]))
             if c_nguphap:
                 all_errors.extend(check_vietnamese_grammar(doc_info["full_text"]))
                 
-            # Phân tích bằng AI
             ai_result = None
             if c_hoso or c_thethuc:
                 ai_result = analyze_document_with_ai(doc_info["full_text"], doc_info["filename"])
                 if isinstance(ai_result, dict) and "loi_the_thuc" in ai_result:
                     all_errors.extend(ai_result["loi_the_thuc"])
 
-            # THỰC HIỆN CHUẨN HÓA LỀ LỐI / FONT CHỮ TRONG LỆNH IF BUTTON
+            # ĐỊNH DẠNG LẠI FILE WORD THEO NĐ30
             out_standard_path = f"standardized_{doc_info['filename']}"
             normalize_to_nd30(temp_path, out_standard_path)
             
-            # Lưu dữ liệu vào Session State
+            # Lưu vết vào session_state
             st.session_state["all_errors"] = all_errors
             st.session_state["ai_result"] = ai_result
             st.session_state["out_standard_path"] = out_standard_path
@@ -99,7 +98,6 @@ if uploaded_file is not None:
         st.write("---")
         st.header("📊 KẾT QUẢ PHÂN TÍCH & CHUẨN HÓA VĂN BẢN")
         
-        # Nếu có kết quả đánh giá AI
         if isinstance(res, dict):
             col_res1, col_res2 = st.columns([1, 1])
             with col_res1:
@@ -123,7 +121,6 @@ if uploaded_file is not None:
                 st.altair_chart(chart, use_container_width=True)
 
         st.write("---")
-        # Khởi tạo 3 Tab hiển thị
         tab1, tab2, tab3 = st.tabs(["⚠️ Cảnh báo Cấu trúc & GDPT 2018", "📝 Phê duyệt Track Changes", "🤖 Trợ lý AI Hỏi Đáp"])
         
         with tab1:
@@ -146,7 +143,7 @@ if uploaded_file is not None:
             st.write("---")
             st.subheader("💾 Xuất dữ liệu & Báo cáo hoàn chỉnh")
             
-            # Tải file Word đã chuẩn hóa chuẩn NĐ30
+            # TẢI FILE WORD ĐÃ CHUẨN HÓA
             if "out_standard_path" in st.session_state and os.path.exists(st.session_state["out_standard_path"]):
                 with open(st.session_state["out_standard_path"], "rb") as f_word:
                     st.download_button(
@@ -156,7 +153,6 @@ if uploaded_file is not None:
                         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     )
             
-            # Xuất file Excel
             scores = res.get('diem', {}) if isinstance(res, dict) else {"the_thuc": 0, "noi_dung": 0, "gdpt_2018": 0, "nang_luc_so": 0, "khoa_hoc": 0, "tong": 0}
             excel_data = generate_excel_report(remaining_errors, scores)
             st.download_button(
@@ -176,11 +172,7 @@ if uploaded_file is not None:
                     answer = get_ai_response(context_prompt)
                     st.write(answer)
 
-    # Dọn dẹp file tạm
-    if os.path.exists(temp_path):
-        os.remove(temp_path)
-
-# --- 6. FOOTER ---
+# --- FOOTER ---
 st.divider()
 col_left, col_right = st.columns(2)
 with col_left:
