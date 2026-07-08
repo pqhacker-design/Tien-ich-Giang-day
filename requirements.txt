@@ -32,3 +32,4 @@ langchain-google-genai
 chromadb
 pydantic
 langchain-text-splitters
+langchain-core
