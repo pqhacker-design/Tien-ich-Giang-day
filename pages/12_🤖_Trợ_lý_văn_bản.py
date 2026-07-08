@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from config import config
+from edu_ai_assistant.config import config
 from edu_ai_assistant.modules.ui import UIManager
 from edu_ai_assistant.modules.parser import DocumentParser
 from edu_ai_assistant.modules.api_manager import APIManager
