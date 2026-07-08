@@ -14,7 +14,25 @@ def get_ai_response(prompt):
         return response.text
     except Exception as e:
         return f"Lỗi kết nối AI: {str(e)}"
+def detect_headings_with_ai(text):
+    """Sử dụng Gemini để nhận diện danh sách các câu/đoạn là đề mục trong văn bản"""
+    prompt = f"""
+    Hãy đọc văn bản sau và liệt kê chính xác tất cả các DÒNG TÊN ĐỀ MỤC, TIÊU ĐỀ CON, HOẶC MỤC LỚN có trong văn bản.
+    Chỉ trả về dạng danh sách JSON các chuỗi ký tự đề mục, không giải thích gì thêm.
+    Ví dụ: ["1. Mục đích", "II. Nội dung công việc", "a) Chuẩn bị"]
 
+    Nội dung văn bản:
+    {text[:3000]}
+    """
+    res = get_ai_response(prompt)
+    try:
+        import json, re
+        match = re.search(r'\[.*\]', res, re.DOTALL)
+        if match:
+            return json.loads(match.group(0))
+    except Exception:
+        pass
+    return []
 def analyze_document_with_ai(text, file_name):
     prompt = f"""
     Bạn là Chuyên gia kiểm định văn bản hành chính và hồ sơ giáo dục theo chương trình GDPT 2018.
