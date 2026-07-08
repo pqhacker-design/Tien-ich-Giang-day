@@ -1,5 +1,5 @@
-from modules.api_manager import APIManager
-from modules.rag import KnowledgeHubRAG
+from edu_ai_assistant.modules.api_manager import APIManager
+from edu_ai_assistant.modules.rag import KnowledgeHubRAG
 import streamlit as st
 
 class MultiAgentWorkflow:
