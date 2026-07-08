@@ -79,10 +79,12 @@ if uploaded_file is not None:
             st.session_state["all_errors"] = all_errors
             st.session_state["ai_result"] = ai_result
             
-            out_standard_path = f"standardized_{doc_info['filename']}"
-            normalize_to_nd30(temp_path, out_standard_path)
-            st.session_state["out_standard_path"] = out_standard_path
-            st.session_state["analyzed_file_name"] = uploaded_file.name
+            # 2. Chuẩn hóa lề lối, font chữ, thụt đầu dòng, tô đậm đề mục vào file DOCX mới
+        out_standard_path = f"standardized_{doc_info['filename']}"
+        normalize_to_nd30(temp_path, out_standard_path)
+        
+        st.session_state["out_standard_path"] = out_standard_path
+        st.success("✨ Đã hoàn thành phân tích và chuẩn hóa thể thức!")
 
     # ĐƯA TOÀN BỘ KHỐI HIỂN THỊ RA NGOÀI LỆNH IF BUTTON
     # Chỉ cần kiểm tra xem trong Session State đã có dữ liệu phân tích của file hiện tại chưa
