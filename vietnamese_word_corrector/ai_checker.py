@@ -33,6 +33,50 @@ def detect_headings_with_ai(text):
     except Exception:
         pass
     return []
+def classify_paragraphs_with_ai(paragraph_list):
+    """
+    Sử dụng AI phân loại cấu trúc cho từng đoạn văn trong file Word.
+    Trả về danh sách loại hình tương ứng: QUOC_HIEU, MAIN_TITLE, HEADING_1, HEADING_2, BODY_TEXT, SIGNATURE
+    """
+    if not paragraph_list:
+        return []
+    
+    # Chuẩn bị dữ liệu gửi cho AI (đánh số dòng)
+    numbered_paragraphs = [f"[{i}] {p}" for i, p in enumerate(paragraph_list)]
+    prompt_text = "\n".join(numbered_paragraphs[:150]) # Phân tích tối đa 150 đoạn đầu
+
+    prompt = f"""
+    Bạn là một chuyên gia về thể thức văn bản hành chính Việt Nam (Nghị định 30/2020/NĐ-CP).
+    Hãy phân loại vai trò của từng dòng văn bản dưới đây thành một trong các nhãn sau:
+    - QUOC_HIEU: Quốc hiệu, tiêu ngữ (CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM...)
+    - MAIN_TITLE: Tên loại văn bản / Tiêu đề lớn nhất (BÁO CÁO, QUYẾT ĐỊNH, BẢNG THUYẾT MINH..., Tên dự án/sự kiện)
+    - HEADING_1: Đề mục lớn, tiêu đề phần/chương/mục (1., 2., I., II., TỔNG QUAN, PHÂN TÍCH, KẾT LUẬN, SỰ KIỆN...)
+    - HEADING_2: Đề mục nhỏ hơn (a), b), Ý nghĩa:, Tông màu:, Phông chữ...)
+    - BODY_TEXT: Đoạn văn nội dung thông thường
+    - SIGNATURE: Nơi nhận, Chức danh, Chữ ký cuối văn bản
+
+    Yêu cầu trả về JSON duy nhất là 1 danh sách chuỗi nhãn tương ứng theo đúng thứ tự index [0], [1], [2]...
+    Ví dụ: ["MAIN_TITLE", "HEADING_1", "BODY_TEXT", "HEADING_2", "BODY_TEXT"]
+
+    Danh sách dòng:
+    {prompt_text}
+    """
+    
+    res = get_ai_response(prompt)
+    try applicants:
+        import json, re
+        match = re.search(r'\[.*\]', res, re.DOTALL)
+        if match:
+            labels = json.loads(match.group())
+            # Nếu thiếu nhãn do văn bản dài hơn 150 dòng, bổ sung BODY_TEXT cho phần còn lại
+            while len(labels) < len(paragraph_list):
+                labels.append("BODY_TEXT")
+            return labels
+    except Exception:
+        pass
+        
+    # Mặc định trả về BODY_TEXT nếu AI gặp lỗi
+    return ["BODY_TEXT"] * len(paragraph_list)
 def analyze_document_with_ai(text, file_name):
     prompt = f"""
     Bạn là Chuyên gia kiểm định văn bản hành chính và hồ sơ giáo dục theo chương trình GDPT 2018.
