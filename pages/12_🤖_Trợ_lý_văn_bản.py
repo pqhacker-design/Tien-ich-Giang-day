@@ -1,12 +1,12 @@
 import streamlit as st
 import os
 from config import config
-from modules.ui import UIManager
-from modules.parser import DocumentParser
-from modules.api_manager import APIManager
-from modules.rag import KnowledgeHubRAG
-from modules.multi_agent import MultiAgentWorkflow
-from modules.word_export import WordExportEngine
+from edu_ai_assistant.modules.ui import UIManager
+from edu_ai_assistant.modules.parser import DocumentParser
+from edu_ai_assistant.modules.api_manager import APIManager
+from edu_ai_assistant.modules.rag import KnowledgeHubRAG
+from edu_ai_assistant.modules.multi_agent import MultiAgentWorkflow
+from edu_ai_assistant.modules.word_export import WordExportEngine
 
 # 1. Khởi tạo Giao diện
 UIManager.setup_theme()
