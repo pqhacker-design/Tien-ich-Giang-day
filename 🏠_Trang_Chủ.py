@@ -134,8 +134,8 @@ with col12:
     with st.container(border=True):
         st.markdown("### 12. Trợ lý soạn thảo văn bản")
         st.write("Giúp GV soạn thảo và chỉnh sửa văn bản theo yêu cầu")
-        if st.button("🚀 Mở không được", key="btn_tro_ly_vb", use_container_width=True):
-            st.switch_page("pages/12_🤖_Trợ_lý_văn_bản.py")            
+        if st.button("🚀 Mở Trợ lý soạn thảo VB", key="btn_tro_ly_vb", use_container_width=True):
+            st.switch_page("pages/12_🤖_Trợ_lý_soạn_ thảo_văn_bản.py")            
 st.markdown("---")
 
 # 5. Chân trang (Footer)
