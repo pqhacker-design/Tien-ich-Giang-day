@@ -31,3 +31,4 @@ langchain-community
 langchain-google-genai
 chromadb
 pydantic
+langchain-text-splitters
