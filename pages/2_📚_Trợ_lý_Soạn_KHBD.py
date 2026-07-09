@@ -17,7 +17,7 @@ st.set_page_config(
     page_title="AI KHBD Thông Minh 4.0",
     page_icon="🎓",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 st.markdown(
     """
@@ -39,15 +39,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS history
 conn.commit()
 
 # --- Thân Giao Diện Chính Ứng Dụng ---
-st.markdown("## 🚀 Soạn KHBD tự động theo 5512.")
-st.info("Giúp GV soạn KHBD theo công văn 5512 có tích hợp năng lực số (Chú ý: Xem cấu hình bên slidebar)")
-
-# --- Giao Diện Thanh Công Cụ Sidebar ---
-# Chỉ để duy nhất chuỗi URL sạch bên trong dấu nháy
-st.sidebar.image("https://img.icons8.com/fluent/96/000000/artificial-intelligence.png", width=80)
-st.sidebar.title("AI GIÁO ÁN THÔNG MINH")
-st.sidebar.caption("Hệ thống trợ lý số hóa Giáo dục thời đại 4.0")
-st.sidebar.markdown("---")
+st.markdown("## 🚀 Soạn KHBD tự động theo 5512")
+st.info("Giúp GV soạn KHBD theo công văn 5512 có tích hợp năng lực số.")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
@@ -59,19 +52,27 @@ else:
     st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
     st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
 
-# Form thu thập dữ liệu định danh cấu trúc lớp học từ giáo viên
-st.sidebar.subheader("Cấu hình Nhận diện bài dạy")
-subject_select = st.sidebar.text_input("Môn học giáo viên giảng dạy:", value="Toán học")
-grade_select = st.sidebar.selectbox("Khối lớp áp dụng:", [f"Lớp {i}" for i in range(1, 13)], index=7)
-duration_select = st.sidebar.text_input("Thời lượng tiết dạy:", value="2 Tiết")
+# --- CẤU HÌNH NHẬN DIỆN BÀI DẠY (ĐƯỢC ĐƯA LÊN TRANG CHÍNH) ---
+with st.expander("⚙️ **Cấu hình Nhận diện bài dạy**", expanded=True):
+    col_sub, col_grd, col_dur = st.columns(3)
+    
+    with col_sub:
+        subject_select = st.text_input("Môn học giáo viên giảng dạy:", value="Toán học")
+    with col_grd:
+        grade_select = st.selectbox("Khối lớp áp dụng:", [f"Lớp {i}" for i in range(1, 13)], index=7)
+    with col_dur:
+        duration_select = st.text_input("Thời lượng tiết dạy:", value="2 Tiết")
 
-# Xác định cấp học tự động phục vụ cấu hình phân phối năng lực số thích ứng
-grade_num = int(''.join(filter(str.isdigit, grade_select)))
-if grade_num <= 5: level_detected = "Tiểu học"
-elif grade_num <= 9: level_detected = "THCS"
-else: level_detected = "THPT"
+    # Xác định cấp học tự động phục vụ cấu hình phân phối năng lực số thích ứng
+    grade_num = int(''.join(filter(str.isdigit, grade_select)))
+    if grade_num <= 5: 
+        level_detected = "Tiểu học"
+    elif grade_num <= 9: 
+        level_detected = "THCS"
+    else: 
+        level_detected = "THPT"
 
-st.sidebar.info(f"Hệ thống tự động kích hoạt Khung năng lực số cấp: **{level_detected}**")
+    st.info(f"Hệ thống tự động kích hoạt Khung năng lực số cấp: **{level_detected}**")
 
 st.write("Tải KHBD cũ (.docx, .pdf) hoặc nhập văn bản thô để AI tự động chuyển đổi số hóa hành chính học tập.")
 # Thiết kế Tab phân vùng các tính năng xử lý đầu vào dữ liệu khác nhau
@@ -206,11 +207,11 @@ if "processed_json" in st.session_state:
         use_container_width=True
     )
     st.caption("Ghi chú định dạng: File Word đầu ra tự động cấu hình Font chữ Times New Roman, Cỡ 13, Dãn dòng 1.15, Biên lề trang (2cm-2cm-3cm-2cm) đúng tuyệt đối quy định văn bản hành chính Việt Nam.")
+
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
-st.markdown("---")
 
-# 5. Chân trang (Footer)
+# Chân trang (Footer)
 col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
