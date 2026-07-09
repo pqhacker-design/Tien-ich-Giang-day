@@ -43,7 +43,7 @@ with st.expander("⚙️ **Cấu hình Tiêu chí kiểm tra Sổ Sách & Hồ s
                 st.success("Đã cập nhật tiêu chí động!")
 
 # --- 3. UPLOAD FILE ---
-uploaded_file = st.file_uploader("Kéo thả file văn bản hành chính hoặc Hồ sơ trường học của bạn (.DOCX)", type=["docx"])
+uploaded_file = st.file_uploader("**Kéo thả file văn bản hành chính hoặc Hồ sơ trường học của bạn (.DOCX):**", type=["docx"])
 
 if uploaded_file is not None:
     temp_path = f"temp_{uploaded_file.name}"
