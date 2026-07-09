@@ -620,7 +620,6 @@ with tab2:
         """, 
         unsafe_allow_html=True
     )
-    st.markdown('<div class="section-header"></div>', unsafe_allow_html=True)
     content_source = st.radio("**Chọn phương thức cung cấp nội dung:**", ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức"], horizontal=True)
     
     if content_source == "Nhập tay danh sách chủ đề":
