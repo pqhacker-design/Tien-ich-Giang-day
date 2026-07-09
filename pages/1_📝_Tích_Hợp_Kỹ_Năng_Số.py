@@ -13,7 +13,7 @@ st.markdown("## 🤖 Tích hợp Năng lực số tự động vào KHBD")
 st.info("Giúp GV tích hợp Năng lực số theo Chương trình GDPT 2018 nhanh chóng và chuẩn xác.")
 
 # --- KHU VỰC CẤU HÌNH HỆ THỐNG (ĐÃ CHUYỂN TỪ SIDEBAR VÀO ĐẦU TRANG CHÍNH) ---
-with st.expander("*** ⚙️ Cấu hình hệ thống", expanded=False):
+with st.expander("⚙️ Cấu hình hệ thống", expanded=False):
 
     col_cfg1, col_cfg2 = st.columns([2, 1])
     
