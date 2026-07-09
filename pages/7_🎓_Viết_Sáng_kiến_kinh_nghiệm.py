@@ -37,7 +37,7 @@ st.set_page_config(
 )
 
 st.markdown("## 📝 Viết SKKN và nghiên cứu Khoa học")
-st.info("Hỗ trợ, chỉnh sửa, đóng góp và gợi ý GV viết SKKN. (Xem DANH MỤC CHỨC NĂNG bên trái)")
+st.info("Hỗ trợ, chỉnh sửa, đóng góp và gợi ý GV viết SKKN. Chọn các tab bên dưới để sử dụng từng chức năng.")
 
 # --- 🔑 KIỂM TRA VÀ ÉP ĐỒNG BỘ API KEY TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
@@ -52,29 +52,19 @@ else:
 # Khởi tạo DB nội bộ
 init_db()
 
-# --- SIDEBAR ĐIỀU HƯỚNG ---
-with st.sidebar:
-    st.title("🎓 TRỢ LÝ SKKN AI")
-    st.subheader("Hỗ trợ viết SKKN và Nghiên cứu khoa học")
-    st.markdown("---")
-    
-    menu = st.radio(
-        "DANH MỤC CHỨC NĂNG:",
-        [
-            "🏠 Tổng quan hệ thống",
-            "💡 I. Tạo Đề tài Thông minh",
-            "📝 II. Thiết kế Đề cương & Viết nội dung",
-            "📊 III. Xử lý Thống kê & Sinh Minh chứng",
-            "📂 IV. Kiểm tra & Xuất bản Word",
-            "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI",
-            "📚 Thư viện Mẫu Sáng kiến"
-        ]
-    )
-    st.markdown("---")
-    st.caption("⚡ Phiên bản tối ưu hóa hệ thống liên kết tập trung 2026.")
+# --- DÂN MỤC CHỨC NĂNG DẠNG TABS ---
+tab_overview, tab_gen, tab_writer, tab_data, tab_docx, tab_critique, tab_lib = st.tabs([
+    "🏠 Tổng quan",
+    "💡 I. Tạo Đề tài",
+    "📝 II. Viết nội dung",
+    "📊 III. Xử lý Thống kê",
+    "📂 IV. Xuất bản Word",
+    "🕵️‍♂️ Phản biện AI",
+    "📚 Thư viện Mẫu"
+])
 
-# --- MÀN HÌNH CHÍNH ---
-if menu == "🏠 Tổng quan hệ thống":
+# --- NỘI DUNG TỪNG TAB ---
+with tab_overview:
     st.markdown("""
     Chào mừng thầy/cô đến với nền tảng số hóa tối ưu năng lực nghiên cứu sư phạm ứng dụng. Hệ thống hỗ trợ xử lý toàn diện chu trình vòng đời một sáng kiến, giải pháp giáo dục:
     * **Tối ưu hóa thời gian biên soạn văn bản hành chính sư phạm.**
@@ -89,25 +79,25 @@ if menu == "🏠 Tổng quan hệ thống":
             for p in projects:
                 st.info(f"ID: {p[0]} - Đề tài: **{p[1]}** - Bộ môn: {p[2]} ({p[3]})")
         else:
-            st.write("Chưa có dự án nào được lưu. Hãy bắt đầu tạo đề tài tại thanh điều hướng bên trái.")
+            st.write("Chưa có dự án nào được lưu. Hãy bắt đầu tạo đề tài tại các tab chức năng.")
     except Exception as e:
         st.error(f"Không thể kết nối cơ sở dữ liệu: {e}")
 
-elif menu == "💡 I. Tạo Đề tài Thông minh":
+with tab_gen:
     show_generator_module(api_key=user_api_key)
 
-elif menu == "📝 II. Thiết kế Đề cương & Viết nội dung":
+with tab_writer:
     show_content_writer_module(api_key=user_api_key)
 
-elif menu == "📊 III. Xử lý Thống kê & Sinh Minh chứng":
+with tab_data:
     show_data_analysis_module()
     st.markdown("---")
     show_evidence_creator_module()
-    
-elif menu == "📂 IV. Kiểm tra & Xuất bản Word":
-    show_docx_processor_module(api_key=user_api_key) # Thêm user_api_key vào đây
 
-elif menu == "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI":
+with tab_docx:
+    show_docx_processor_module(api_key=user_api_key)
+
+with tab_critique:
     st.header("🕵️‍♂️ Trợ Lý AI Phản Biện Đề Tài - Đóng vai Hội đồng chấm Sáng kiến")
     st.warning("Hãy dán nội dung bản nháp đề tài của thầy/cô vào đây để Hội đồng AI chấm điểm thử nghiệm trước khi nộp chính thức lên cấp trên.")
     
@@ -123,13 +113,12 @@ elif menu == "🕵️‍♂️ Trợ lý Hội đồng Phản biện AI":
         else:
             st.error("Vui lòng cung cấp nội dung văn bản đề tài để hội đồng phân tích.")
 
-elif menu == "📚 Thư viện Mẫu Sáng kiến":
-    show_library_module(api_key=user_api_key) # Truyền Key tập trung vào đây
+with tab_lib:
+    show_library_module(api_key=user_api_key)
+
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
-st.markdown("---")
 
-# 5. Chân trang (Footer)
 col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
