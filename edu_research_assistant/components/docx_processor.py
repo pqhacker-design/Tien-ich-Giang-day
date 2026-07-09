@@ -132,14 +132,14 @@ def show_docx_processor_module(api_key=None):
     st.subheader("📂 Trợ Lý AI Phân Tích & Thẩm Định Bản Nháp Word")
     st.info("Hỗ trợ đọc file .docx, tự động phát hiện lỗi chính tả, câu từ sư phạm và đánh giá cấu trúc theo quy chuẩn.")
     
-    uploaded_file = st.file_uploader("Tải lên bản nháp Sáng kiến kinh nghiệm của thầy (.docx)", type=["docx"])
+    uploaded_file = st.file_uploader("**Tải lên bản nháp Sáng kiến kinh nghiệm (.docx):**", type=["docx"])
     
     if uploaded_file is not None:
         st.success("✅ Đã tải tệp lên thành công!")
         
         doc_title = st.text_input("Xác nhận hoặc nhập Tên Đề Tài để xuất file (.docx):", value="Ứng dụng công nghệ đổi mới phương pháp dạy học")
         
-        if st.button("🧠 Kích hoạt AI quét và kiểm tra toàn diện"):
+        if st.button("🧠 Kích hoạt AI quét và kiểm tra toàn diện", type="primary"):
             with st.spinner("AI đang tiến hành thẩm định và hiệu đính văn bản song song..."):
                 try:
                     # 1. Đọc nội dung file Word
