@@ -47,7 +47,7 @@ with col1:
             unsafe_allow_html=True
         )
         uploaded_file = st.file_uploader(
-            "Chọn file KHBD Word (.docx)", 
+            "**Chọn file KHBD Word (.docx):**", 
             type=["docx"],
             help="Hệ thống chỉ hỗ trợ định dạng .docx tiêu chuẩn."
         )
