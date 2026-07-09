@@ -9,11 +9,11 @@ def show_data_analysis_module():
     
     c1, c2 = st.columns(2)
     with c1:
-        pre_scores_str = st.text_area("Điểm TRƯỚC tác động (cách nhau bằng dấu phẩy):", value="5,6,5,7,4,8,6,5,7,6")
+        pre_scores_str = st.text_area("**Điểm TRƯỚC tác động (cách nhau bằng dấu phẩy):**", value="5,6,5,7,4,8,6,5,7,6")
     with c2:
-        post_scores_str = st.text_area("Điểm SAU tác động (cách nhau bằng dấu phẩy):", value="7,8,7,9,6,9,8,7,9,8")
+        post_scores_str = st.text_area("**Điểm SAU tác động (cách nhau bằng dấu phẩy):**", value="7,8,7,9,6,9,8,7,9,8")
         
-    if st.button("📉 Phân tích thống kê & Vẽ biểu đồ"):
+    if st.button("📉 Phân tích thống kê & Vẽ biểu đồ", type="primary"):
         try:
             pre_scores = [float(x.strip()) for x in pre_scores_str.split(",") if x.strip()]
             post_scores = [float(x.strip()) for x in post_scores_str.split(",") if x.strip()]
