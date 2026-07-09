@@ -785,7 +785,7 @@ with tab3:
             "score_part1": score_part1, "score_part2": score_part2, "score_part3": score_part3, "score_part4": score_part4,
             "matrix_template": matrix_template, "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio
         }
-        inc_mat = st.checkbox("Chèn bảng Ma trận phân bổ vào đầu tài liệu", value=True)
+        inc_mat = st.checkbox("Chèn bảng Ma trận phân bổ vào đầu file đề", value=True)
         export_mode = st.radio("**Hình thức xuất bản bộ đề:**", ["Tải file đơn lẻ", "Nén tất cả mã đề vào file ZIP", "Gộp chung vào 1 file Word"])
         
         if export_mode == "Tải file đơn lẻ":
