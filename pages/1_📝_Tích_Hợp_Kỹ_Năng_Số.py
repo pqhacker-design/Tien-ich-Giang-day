@@ -10,47 +10,52 @@ st.set_page_config(
 )
 
 st.markdown("## 🤖 Tích hợp Năng lực số tự động vào KHBD")
-st.info("Giúp GV tích hợp Năng lực số theo Chương trình GDPT 2018 nhanh chóng và chuẩn xác (Chú ý: Xem cấu hình bên slidebar)")
+st.info("Giúp GV tích hợp Năng lực số theo Chương trình GDPT 2018 nhanh chóng và chuẩn xác.")
 
-# --- THANH BÊN (SIDEBAR) ---
-st.sidebar.header("⚙️ CẤU HÌNH HỆ THỐNG")
-
-# --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
-if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
-    api_key = st.session_state["gemini_api_key"]
-else:
-    # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
-    st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
-    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
-    st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
-    st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
-
-# Lựa chọn cấp học môn học
-cap_hoc = st.sidebar.selectbox(
-    "Chọn cấp học mục tiêu:",
-    ["Tự động nhận diện", "Tiểu học", "THCS", "THPT"]
-)
-
-st.sidebar.markdown("---")
-st.sidebar.info(
-    "💡 **Hướng dẫn:**\n"
-    "1. Nhập API Key ở Trang chủ.\n"
-    "2. Tải lên file KHBD `.docx` hiện có ở cột bên trái.\n"
-    "3. Nhấn nút xử lý để AI tự động phân tích và chèn cấu trúc năng lực số thích hợp."
-)
-
-# --- MÀN HÌNH CHÍNH ---
-col1, col2 = st.columns([1, 1])
-with col1:
-    with st.container(border=True):
-        st.markdown(
+# --- KHU VỰC CẤU HÌNH HỆ THỐNG (ĐÃ CHUYỂN TỪ SIDEBAR VÀO ĐẦU TRANG CHÍNH) ---
+with st.container(border=True):
+    st.markdown(
         """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #0369A1;">📂 1. Tải lên KHBD gốc</h4>
+        <div style="background-color: #F0F9FF; padding: 6px 12px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 12px;">
+            <h4 style="margin: 0; color: #0369A1;">⚙️ Cấu hình hệ thống</h4>
         </div>
         """, 
         unsafe_allow_html=True
     )
+    
+    col_cfg1, col_cfg2 = st.columns([2, 1])
+    
+    with col_cfg1:
+        # Kiểm tra API Key tập trung từ session state
+        if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
+            api_key = st.session_state["gemini_api_key"]
+            st.success("🔑 **Trạng thái API Key:** Đã nhận diện thành công từ Trang chủ.")
+        else:
+            st.warning("⚠️ **Chưa tìm thấy API Key:** Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key.")
+            st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
+            st.stop() # Dừng chạy các dòng code phía dưới nếu chưa có key
+
+    with col_cfg2:
+        # Lựa chọn cấp học môn học
+        cap_hoc = st.selectbox(
+            "Chọn cấp học mục tiêu:",
+            ["Tự động nhận diện", "Tiểu học", "THCS", "THPT"]
+        )
+
+st.markdown("---")
+
+# --- MÀN HÌNH CHÍNH (XỬ LÝ FILE & KẾT QUẢ) ---
+col1, col2 = st.columns([1, 1])
+with col1:
+    with st.container(border=True):
+        st.markdown(
+            """
+            <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+                <h4 style="margin: 0; color: #0369A1;">📂 1. Tải lên KHBD gốc</h4>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
         uploaded_file = st.file_uploader(
             "Chọn file KHBD Word (.docx)", 
             type=["docx"],
@@ -61,8 +66,8 @@ with col1:
             file_bytes = uploaded_file.read()
             st.success(f"✔️ Đã tải lên file thành công: **{uploaded_file.name}**")
             
-            # Nút kích hoạt xử lý tích hợp (Đã loại bỏ điều kiện kiểm tra biến trùng lặp gây lỗi)
-            if st.button("🚀 Bắt đầu tích hợp năng lực số", type="primary"):
+            # Nút kích hoạt xử lý tích hợp
+            if st.button("🚀 Bắt đầu tích hợp năng lực số", type="primary", use_container_width=True):
                 with st.spinner("🔄 Đang đọc dữ liệu và gửi phân tích tới Gemini AI..."):
                     try:
                         # Bước 1: Trích xuất nội dung văn bản giáo án
@@ -95,13 +100,13 @@ with col1:
 with col2:
     with st.container(border=True):
         st.markdown(
-        """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #0369A1;">🖥️ 2. Kết quả & Tải về</h4>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+            """
+            <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+                <h4 style="margin: 0; color: #0369A1;">🖥️ 2. Kết quả & Tải về</h4>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
         
         # Kiểm tra xem đã có kết quả xử lý trong phiên làm việc chưa
         if 'ai_result' in st.session_state and 'processed_file' in st.session_state:
@@ -134,11 +139,11 @@ with col2:
             )
         else:
             st.info("Chưa có dữ liệu xử lý. Vui lòng hoàn thành các bước ở cột bên trái.")
+
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
-st.markdown("---")
 
-# 5. Chân trang (Footer)
+# Chân trang (Footer)
 col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
