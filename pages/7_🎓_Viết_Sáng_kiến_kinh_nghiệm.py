@@ -98,14 +98,14 @@ with tab_docx:
     show_docx_processor_module(api_key=user_api_key)
 
 with tab_critique:
-    st.header("🕵️‍♂️ Trợ Lý AI Phản Biện Đề Tài - Đóng vai Hội đồng chấm Sáng kiến")
+    st.header("### 🕵️‍♂️ Trợ Lý AI Phản Biện Đề Tài - Đóng vai Hội đồng chấm Sáng kiến")
     st.warning("Hãy dán nội dung bản nháp đề tài của thầy/cô vào đây để Hội đồng AI chấm điểm thử nghiệm trước khi nộp chính thức lên cấp trên.")
     
-    critique_title = st.text_input("Tên đề tài cần thẩm định", value="Ứng dụng sơ đồ tư duy kết hợp công nghệ AI nhằm nâng cao năng lực tự học hình học của học sinh lớp 8")
-    critique_content = st.text_area("Nội dung chi tiết các chương/biện pháp đã viết", height=300, placeholder="Dán toàn bộ nội dung văn bản tại đây...")
-    council_level = st.selectbox("Cấp hội đồng chấm duyệt", ["Cấp Trường / Cơ sở", "Cấp Xã / Phường / Đặc khu", "Cấp Tỉnh / Thành phố / Sở GDĐT"])
+    critique_title = st.text_input("**Tên đề tài cần thẩm định:**", value="Ứng dụng sơ đồ tư duy kết hợp công nghệ AI nhằm nâng cao năng lực tự học hình học của học sinh lớp 8")
+    critique_content = st.text_area("**Nội dung chi tiết các chương/biện pháp đã viết:", height=300, placeholder="Dán toàn bộ nội dung văn bản tại đây...")
+    council_level = st.selectbox("**Cấp hội đồng chấm duyệt:**", ["Cấp Trường / Cơ sở", "Cấp Xã / Phường / Đặc khu", "Cấp Tỉnh / Thành phố / Sở GDĐT"])
     
-    if st.button("⚖️ Bắt đầu Thẩm định & Chấm điểm"):
+    if st.button("⚖️ Bắt đầu Thẩm định & Chấm điểm", type="primary"):
         if critique_content:
             with st.spinner("Hội đồng đang thảo luận, phản biện kín và chấm điểm..."):
                 critique_res = get_council_critique(critique_title, critique_content, council_level, api_key=user_api_key)
