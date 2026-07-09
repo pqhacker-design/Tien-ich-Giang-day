@@ -31,9 +31,9 @@ with st.expander("⚙️ **Cấu hình Tiêu chí kiểm tra Sổ Sách & Hồ s
     
     col_cfg1, col_cfg2, col_cfg3 = st.columns([1, 1, 1])
     with col_cfg1:
-        profile_type = st.selectbox("Loại hồ sơ cấu hình:", list(current_criteria.keys()))
+        profile_type = st.selectbox("**Loại hồ sơ cấu hình:**", list(current_criteria.keys()))
     with col_cfg2:
-        new_criterion = st.text_input("Thêm mục kiểm tra bắt buộc:")
+        new_criterion = st.text_input("**Thêm mục kiểm tra bắt buộc:**")
     with col_cfg3:
         st.write("&#160;") # Khoảng trắng tạo lề căn chỉnh nút bấm
         if st.button("Cập nhật tiêu chí", use_container_width=True, type="primary"):
