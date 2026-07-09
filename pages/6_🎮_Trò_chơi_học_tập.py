@@ -360,7 +360,7 @@ with tabs[2]:
 with tabs[3]:
     st.markdown("### 📋 Khung Kịch Bản Bài Giảng Sư Phạm Cao Cấp")
     framework_type = st.selectbox("**Chọn mô hình thiết kế:**", ["Mô hình 5E (Engage - Explore - Explain - Elaborate - Evaluate)", "Phương pháp giáo dục STEM/STEAM Integration", "Phát triển năng lực số"])
-    if st.button("🛠 Sinh kịch bản sư phạm tổng thể"):
+    if st.button("🛠 Sinh kịch bản sư phạm tổng thể", type="primary"):
         if not st.session_state.current_topic:
             st.warning("Vui lòng qua Tab 'Thiết Kế Câu Hỏi AI' để tạo chủ đề bài học trước.")
         else:
@@ -381,6 +381,7 @@ with tabs[4]:
             st.download_button(
                 label="📥 Tải giáo án Word (.docx)",
                 data=docx_file,
+                type="primary",
                 file_name=f"Giao_an_AI_{st.session_state.current_topic}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
@@ -389,6 +390,7 @@ with tabs[4]:
             st.download_button(
                 label="📥 Tải Slide Trình Chiếu (.pptx)",
                 data=pptx_file,
+                type="primary",
                 file_name=f"Slide_Game_{st.session_state.current_topic}.pptx",
                 mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
             )
@@ -403,6 +405,7 @@ with tabs[4]:
             st.download_button(
                 label="🔮 Tải File Excel Mẫu Nhập Quizizz",
                 data=quizizz_excel,
+                type="primary",
                 file_name=f"Quizizz_Import_{st.session_state.current_topic}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 key="btn_quizizz"
@@ -412,6 +415,7 @@ with tabs[4]:
             st.download_button(
                 label="🟢 Tải File Excel Mẫu Nhập Kahoot",
                 data=kahoot_excel,
+                type="primary",
                 file_name=f"Kahoot_Import_{st.session_state.current_topic}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 key="btn_kahoot"
