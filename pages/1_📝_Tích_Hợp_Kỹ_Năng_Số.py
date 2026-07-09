@@ -30,7 +30,7 @@ with st.expander("⚙️ **CẤU HÌNH HỆ THỐNG:**", expanded=False):
     with col_cfg2:
         # Lựa chọn cấp học môn học
         cap_hoc = st.selectbox(
-            "Chọn cấp học mục tiêu:",
+            "**Chọn cấp học mục tiêu:**",
             ["Tự động nhận diện", "Tiểu học", "THCS", "THPT"]
         )
 
