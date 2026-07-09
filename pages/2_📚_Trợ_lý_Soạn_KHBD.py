@@ -94,7 +94,7 @@ with tab_upload:
             st.text_area("Nội dung gốc đọc được:", value=raw_input_text, height=150, disabled=True)
 
 with tab_direct:
-    direct_text = st.text_area("Nếu không tải file, hãy copy nội dung bài dạy hoặc chuỗi ý tưởng bài dạy vào đây:", height=200, 
+    direct_text = st.text_area("**Nếu không tải file, hãy copy nội dung bài dạy hoặc chuỗi ý tưởng bài dạy vào đây:**", height=100, 
                                placeholder="Ví dụ: Bài 3: Khái niệm liên kết hóa học hóa học lớp 10, thời lượng 2 tiết...")
     if direct_text:
         raw_input_text = direct_text
