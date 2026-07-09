@@ -54,13 +54,13 @@ init_db()
 
 # --- DÂN MỤC CHỨC NĂNG DẠNG TABS ---
 tab_overview, tab_gen, tab_writer, tab_data, tab_docx, tab_critique, tab_lib = st.tabs([
-    "🏠 Tổng quan",
-    "💡 I. Tạo Đề tài",
-    "📝 II. Viết nội dung",
-    "📊 III. Xử lý Thống kê",
-    "📂 IV. Xuất bản Word",
-    "🕵️‍♂️ Phản biện AI",
-    "📚 Thư viện Mẫu"
+    "**| 🏠 Tổng quan**",
+    "**| 💡 I. Tạo Đề tài**",
+    "**| 📝 II. Viết nội dung**",
+    "**| 📊 III. Xử lý Thống kê**",
+    "**| 📂 IV. Xuất bản Word**",
+    "**| 🕵️‍♂️ Phản biện AI**",
+    "**| 📚 Thư viện Mẫu**"
 ])
 
 # --- NỘI DUNG TỪNG TAB ---
