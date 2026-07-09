@@ -34,8 +34,6 @@ with st.expander("⚙️ Cấu hình hệ thống", expanded=False):
             ["Tự động nhận diện", "Tiểu học", "THCS", "THPT"]
         )
 
-st.markdown("---")
-
 # --- MÀN HÌNH CHÍNH (XỬ LÝ FILE & KẾT QUẢ) ---
 col1, col2 = st.columns([1, 1])
 with col1:
