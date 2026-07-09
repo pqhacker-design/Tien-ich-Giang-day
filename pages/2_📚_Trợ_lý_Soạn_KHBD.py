@@ -53,7 +53,7 @@ else:
     st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
 
 # --- CẤU HÌNH NHẬN DIỆN BÀI DẠY (ĐƯỢC ĐƯA LÊN TRANG CHÍNH) ---
-with st.expander("⚙️ **Cấu hình Nhận diện bài dạy**", expanded=True):
+with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=False):
     col_sub, col_grd, col_dur = st.columns(3)
     
     with col_sub:
