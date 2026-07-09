@@ -9,21 +9,22 @@ except ModuleNotFoundError:
 def show_content_writer_module(api_key=None):
     st.subheader("📝 Trợ Lý AI Biên Soạn Nội Dung Chuyên Sâu")
     
-    title = st.text_input("Nhập tên đề tài chính thức cần viết bài:", value="Ứng dụng sơ đồ tư duy kết hợp công nghệ AI nhằm nâng cao năng lực tự học hình học của học sinh lớp 8")
-    mode = st.selectbox("Chế độ viết:", ["Viết ngắn", "Viết tiêu chuẩn", "Viết chi tiết", "Viết chuyên sâu"])
-    action = st.selectbox("Hành động:", ["Viết mới từ đầu", "Viết mở rộng ý", "Tóm tắt/Rút gọn", "Chuyển đổi văn phong sư phạm"])
+    title = st.text_input("**Nhập tên đề tài chính thức cần viết bài:**", value="Ứng dụng sơ đồ tư duy kết hợp công nghệ AI nhằm nâng cao năng lực tự học hình học của học sinh lớp 8")
+    mode = st.selectbox("**Chế độ viết:**", ["Viết ngắn", "Viết tiêu chuẩn", "Viết chi tiết", "Viết chuyên sâu"])
+    action = st.selectbox("**Hành động:**", ["Viết mới từ đầu", "Viết mở rộng ý", "Tóm tắt/Rút gọn", "Chuyển đổi văn phong sư phạm"])
     
-    section = st.selectbox("Chọn chương/phần mục:", [
+    section = st.selectbox("**Chọn chương/phần mục:**", [
         "Lý do chọn đề tài / Đặt vấn đề",
         "Cơ sở lý luận khoa học",
         "Thực trạng và nguyên nhân khó khăn",
         "Các biện pháp thực hiện (Nội dung cốt lõi)",
-        "Kết quả đạt được và bài học kinh nghiệm"
+        "Kết quả đạt được và bài học kinh nghiệm",
+        "Đề tài hoàn chỉnh các phần"
     ])
     
-    context_note = st.text_area("Ý tưởng cốt lõi hoặc tài liệu tham khảo bổ sung (nếu có):")
+    context_note = st.text_area("**Ý tưởng cốt lõi hoặc tài liệu tham khảo bổ sung (nếu có):**")
 
-    if st.button("✍️ Bắt đầu sinh nội dung học thuật"):
+    if st.button("✍️ Bắt đầu sinh nội dung học thuật", type="primary"):
         if not title.strip():
             st.error("Vui lòng nhập tên đề tài trước khi viết.")
             return
