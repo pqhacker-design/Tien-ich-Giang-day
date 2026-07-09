@@ -66,8 +66,6 @@ with st.expander("⚙️ **CẤU HÌNH HOẠT ĐỘNG SUY PHẠM**", expanded=Tr
         organization = st.radio("Hình thức tổ chức", ["Cá nhân", "Cặp đôi", "Hoạt động nhóm", "Toàn lớp"])
         st.success("✔ Đã đồng bộ API Key từ Trang chủ.")
 
-st.markdown("---")
-
 tabs = st.tabs([
     "| 🎯 Trò chơi Khởi động", 
     "| 📘 Thiết Kế Câu Hỏi AI", 
