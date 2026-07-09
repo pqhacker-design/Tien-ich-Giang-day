@@ -389,14 +389,14 @@ Có thể tự giải các bài tương tự mà không cần xem đáp án.
     
     try:
         st.session_state.chat_session = client.chats.create(
-            model="gemini-3.5-flash",
+            model="gemini-2.5-flash",
             config=config
         )
     except Exception as e:
         st.warning("Hệ thống chính đang bận, đang kết nối với phòng gia sư dự phòng...")
         try:
             st.session_state.chat_session = client.chats.create(
-                model="gemini-2.5-flash",
+                model="gemini-1.5-flash",
                 config=config
             )
         except Exception as final_error:
