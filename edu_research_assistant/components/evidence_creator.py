@@ -10,15 +10,15 @@ def show_evidence_creator_module():
     with st.form("evidence_form"):
         col1, col2 = st.columns(2)
         with col1:
-            title = st.text_input("Tên đề tài/Sáng kiến", placeholder="Ví dụ: Ứng dụng AI hỗ trợ cá nhân hóa bài tập Hình học lớp 8")
-            subject = st.text_input("Môn học", value="Toán")
-            grade = st.text_input("Khối lớp", value="Lớp 8")
+            title = st.text_input("**Tên đề tài/Sáng kiến:**", placeholder="Ví dụ: Ứng dụng AI hỗ trợ cá nhân hóa bài tập Hình học lớp 8")
+            subject = st.text_input("**Môn học:**", value="Toán")
+            grade = st.text_input("**Khối lớp:**", value="Lớp 8")
         with col2:
-            students_count = st.number_input("Số lượng học sinh tham gia tác động (N)", min_value=1, value=35)
-            duration = st.text_input("Thời gian thực hiện", value="Học kỳ II năm học 2025 - 2026")
+            students_count = st.number_input("**Số lượng học sinh tham gia tác động (N):**", min_value=1, value=35)
+            duration = st.text_input("**Thời gian thực hiện:**", value="Học kỳ II năm học 2025 - 2026")
             
-        solutions = st.text_area("Tóm tắt nội dung giải pháp chính cốt lõi", placeholder="Nhập các biện pháp thực hiện chính...")
-        submitted = st.form_submit_button("🔥 Khởi tạo Toàn bộ Hệ thống Hồ sơ Minh chứng (Một Chạm)")
+        solutions = st.text_area("**Tóm tắt nội dung giải pháp chính cốt lõi:**", placeholder="Nhập các biện pháp thực hiện chính...")
+        submitted = st.form_submit_button("🔥 Khởi tạo Toàn bộ Hệ thống Hồ sơ Minh chứng (Một Chạm)", type="primary")
 
     if submitted:
         st.success("Hệ thống đã phân tích và thiết lập thành công danh mục phụ lục!")
