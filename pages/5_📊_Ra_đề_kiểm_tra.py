@@ -649,34 +649,33 @@ with tab2:
         """, 
         unsafe_allow_html=True
     )
-    st.markdown('<div class="section-header"></div>', unsafe_allow_html=True)
     
     col_s1, col_s2, col_s3, col_s4, col_vdc = st.columns(5)
     
     if exam_format == "Trắc nghiệm 100%":
-        with col_s1: score_part1 = st.number_input("Điểm Phần I (Trắc nghiệm):", min_value=0.0, max_value=10.0, value=4.0, step=0.25)
-        with col_s2: score_part2 = st.number_input("Điểm Phần II (Đúng/Sai):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
-        with col_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
+        with col_s1: score_part1 = st.number_input("**Điểm Phần I (Trắc nghiệm):**", min_value=0.0, max_value=10.0, value=4.0, step=0.25)
+        with col_s2: score_part2 = st.number_input("**Điểm Phần II (Đúng/Sai):**", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
+        with col_s3: score_part3 = st.number_input("**Điểm Phần III (Trả lời ngắn):**", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
         score_part4 = 0.0  # Khóa cứng Tự luận
-        with col_s4: st.number_input("Điểm Phần IV (Tự luận):", value=0.0, disabled=True)
-        with col_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=5.0, value=1.0, step=0.25)
+        with col_s4: st.number_input("**Điểm Phần IV (Tự luận):**", value=0.0, disabled=True)
+        with col_vdc: score_vdc_custom = st.number_input("**Điểm phần VDC:**", min_value=0.0, max_value=5.0, value=1.0, step=0.25)
 
     elif exam_format == "Tự luận 100%":
         score_part1 = 0.0
         score_part2 = 0.0
         score_part3 = 0.0
-        with col_s1: st.number_input("Điểm Phần I (Trắc nghiệm):", value=0.0, disabled=True)
-        with col_s2: st.number_input("Điểm Phần II (Đúng/Sai):", value=0.0, disabled=True)
-        with col_s3: st.number_input("Điểm Phần III (Trả lời ngắn):", value=0.0, disabled=True)
-        with col_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", min_value=10.0, max_value=10.0, value=10.0, disabled=True, help="Thuần tự luận mặc định là 10 điểm")
-        with col_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=5.0, value=2.0, step=0.25)
+        with col_s1: st.number_input("**Điểm Phần I (Trắc nghiệm):**", value=0.0, disabled=True)
+        with col_s2: st.number_input("**Điểm Phần II (Đúng/Sai):**", value=0.0, disabled=True)
+        with col_s3: st.number_input("**Điểm Phần III (Trả lời ngắn):**", value=0.0, disabled=True)
+        with col_s4: score_part4 = st.number_input("**Điểm Phần IV (Tự luận):**", min_value=10.0, max_value=10.0, value=10.0, disabled=True, help="Thuần tự luận mặc định là 10 điểm")
+        with col_vdc: score_vdc_custom = st.number_input("**Điểm phần VDC:**", min_value=0.0, max_value=5.0, value=2.0, step=0.25)
 
     else: # Trắc nghiệm + Tự luận kết hợp
-        with col_s1: score_part1 = st.number_input("Điểm Phần I (Trắc nghiệm):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
-        with col_s2: score_part2 = st.number_input("Điểm Phần II (Đúng/Sai):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
-        with col_s3: score_part3 = st.number_input("Điểm Phần III (Trả lời ngắn):", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
-        with col_s4: score_part4 = st.number_input("Điểm Phần IV (Tự luận):", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
-        with col_vdc: score_vdc_custom = st.number_input("Điểm dành riêng cho VDC:", min_value=0.0, max_value=5.0, value=1.0, step=0.25)
+        with col_s1: score_part1 = st.number_input("**Điểm Phần I (Trắc nghiệm):**", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
+        with col_s2: score_part2 = st.number_input("**Điểm Phần II (Đúng/Sai):**", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
+        with col_s3: score_part3 = st.number_input("**Điểm Phần III (Trả lời ngắn):**", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
+        with col_s4: score_part4 = st.number_input("**Điểm Phần IV (Tự luận):**", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
+        with col_vdc: score_vdc_custom = st.number_input("**Điểm phần VDC:**", min_value=0.0, max_value=5.0, value=1.0, step=0.25)
     
     total_score = score_part1 + score_part2 + score_part3 + score_part4
     
@@ -698,7 +697,7 @@ with tab2:
         """, 
         unsafe_allow_html=True
     )
-    matrix_template = st.radio("Chọn mẫu ma trận xuất bản:", ["Mẫu đơn giản truyền thống", "Mẫu quy chuẩn Công văn 7991/BGDĐT-GDTrH"], index=0, horizontal=True)
+    matrix_template = st.radio("**Chọn mẫu ma trận xuất bản:**", ["Mẫu đơn giản truyền thống", "Mẫu quy chuẩn Công văn 7991/BGDĐT-GDTrH"], index=0, horizontal=True)
 
     st.markdown(
         """
@@ -709,10 +708,10 @@ with tab2:
         unsafe_allow_html=True
     )
     c1, c2, c3, c4 = st.columns(4)
-    with c1: nb_ratio = st.slider("Nhận biết (%)", 0, 100, target_ratios["nb"])
-    with c2: th_ratio = st.slider("Thông hiểu (%)", 0, 100, target_ratios["th"])
-    with c3: vd_ratio = st.slider("Vận dụng (%)", 0, 100, target_ratios["vd"])
-    with c4: vdc_ratio = st.slider("Vận dụng cao (%)", 0, 100, target_ratios["vdc"])
+    with c1: nb_ratio = st.slider("**Nhận biết (%)**", 0, 100, target_ratios["nb"])
+    with c2: th_ratio = st.slider("**Thông hiểu (%)**", 0, 100, target_ratios["th"])
+    with c3: vd_ratio = st.slider("**Vận dụng (%)**", 0, 100, target_ratios["vd"])
+    with c4: vdc_ratio = st.slider("**Vận dụng cao (%)**", 0, 100, target_ratios["vdc"])
     
     total_ratio = nb_ratio + th_ratio + vd_ratio + vdc_ratio
     if total_ratio != 100:
@@ -787,14 +786,14 @@ with tab3:
             "matrix_template": matrix_template, "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio
         }
         inc_mat = st.checkbox("Chèn bảng Ma trận phân bổ vào đầu tài liệu", value=True)
-        export_mode = st.radio("Hình thức xuất bản bộ đề:", ["Tải file đơn lẻ", "Nén tất cả mã đề vào file ZIP", "Gộp chung vào 1 file Word"])
+        export_mode = st.radio("**Hình thức xuất bản bộ đề:**", ["Tải file đơn lẻ", "Nén tất cả mã đề vào file ZIP", "Gộp chung vào 1 file Word"])
         
         if export_mode == "Tải file đơn lẻ":
             all_available_codes = list(st.session_state.multi_codes_data.keys())
             if "ĐỀ GỐC" in all_available_codes:
                 all_available_codes.remove("ĐỀ GỐC")
                 all_available_codes = ["ĐỀ GỐC"] + all_available_codes
-            sel_code = st.selectbox("Chọn bản đề cần xuất bản:", all_available_codes)
+            sel_code = st.selectbox("**Chọn đề cần xuất bản:**", all_available_codes)
             docx_buf = build_single_docx(config_pkg, st.session_state.multi_codes_data[sel_code], sel_code, include_matrix=inc_mat)
             st.download_button(label=f"📥 TẢI FILE WORD [{sel_code}]", data=docx_buf, file_name=f"De_{subject}_{sel_code}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
             
