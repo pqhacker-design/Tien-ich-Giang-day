@@ -408,9 +408,7 @@ Có thể tự giải các bài tương tự mà không cần xem đáp án.
 if "chat_session" in st.session_state:
     st.session_state.chat_session._client = client
 
-st.markdown("---")
 st.markdown("**Hãy nhập câu hỏi hoặc tải tài liệu (Ảnh/PDF) lên nhé!**")
-st.markdown("---")
 
 # ---------- CHỨC NĂNG TẢI FILE LÊN (ẢNH & PDF) ----------
 uploaded_file = st.file_uploader(
