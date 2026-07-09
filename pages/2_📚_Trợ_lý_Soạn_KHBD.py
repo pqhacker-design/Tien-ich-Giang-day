@@ -57,11 +57,11 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
     col_sub, col_grd, col_dur = st.columns(3)
     
     with col_sub:
-        subject_select = st.text_input("Môn học giáo viên giảng dạy:", value="Toán học")
+        subject_select = st.text_input("**Môn học giáo viên giảng dạy:**", value="Toán học")
     with col_grd:
-        grade_select = st.selectbox("Khối lớp áp dụng:", [f"Lớp {i}" for i in range(1, 13)], index=7)
+        grade_select = st.selectbox("**Khối lớp áp dụng:**", [f"Lớp {i}" for i in range(1, 13)], index=7)
     with col_dur:
-        duration_select = st.text_input("Thời lượng tiết dạy:", value="2 Tiết")
+        duration_select = st.text_input("**Thời lượng tiết dạy:**", value="2 Tiết")
 
     # Xác định cấp học tự động phục vụ cấu hình phân phối năng lực số thích ứng
     grade_num = int(''.join(filter(str.isdigit, grade_select)))
@@ -74,14 +74,14 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
 
     st.info(f"Hệ thống tự động kích hoạt Khung năng lực số cấp: **{level_detected}**")
 
-st.write("Tải KHBD cũ (.docx, .pdf) hoặc nhập văn bản thô để AI tự động chuyển đổi số hóa hành chính học tập.")
+st.write("**Tải KHBD cũ (.docx, .pdf) hoặc nhập văn bản thô để AI tự động chuyển đổi số hóa hành chính học tập.**")
 # Thiết kế Tab phân vùng các tính năng xử lý đầu vào dữ liệu khác nhau
-tab_upload, tab_direct, tab_history = st.tabs(["| 📂 Chuẩn hóa KHBD từ KHBD đã có", "| 📝 Tạo KHBD bất kì theo yêu cầu", "| 📜 Lịch sử soạn thảo số"])
+tab_upload, tab_direct, tab_history = st.tabs(["| 📂 **Chuẩn hóa KHBD từ KHBD đã có**", "| 📝 **Tạo KHBD bất kì theo yêu cầu**", "| 📜 **Lịch sử soạn thảo số**"])
 
 raw_input_text = ""
 
 with tab_upload:
-    uploaded_file = st.file_uploader("Kéo và thả file Word (.docx) hoặc tài liệu PDF của KHBD cũ vào đây:", type=["docx", "pdf"])
+    uploaded_file = st.file_uploader("**Kéo và thả file Word (.docx) hoặc tài liệu PDF của KHBD cũ vào đây:**", type=["docx", "pdf"])
     if uploaded_file is not None:
         file_bytes = uploaded_file.read()
         if uploaded_file.name.endswith(".docx"):
