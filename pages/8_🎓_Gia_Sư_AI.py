@@ -408,11 +408,9 @@ Có thể tự giải các bài tương tự mà không cần xem đáp án.
 if "chat_session" in st.session_state:
     st.session_state.chat_session._client = client
 
-st.markdown("**Hãy nhập câu hỏi hoặc tải tài liệu (Ảnh/PDF) lên nhé!**")
-
 # ---------- CHỨC NĂNG TẢI FILE LÊN (ẢNH & PDF) ----------
 uploaded_file = st.file_uploader(
-    "Tải ảnh bài tập hoặc file PDF tài liệu lên (Toán, Lý, Hóa, Văn, Anh...)",
+    "**Hãy nhập câu hỏi hoặc tải tài liệu (Ảnh/PDF) lên nhé!**",
     type=["png", "jpg", "jpeg", "pdf"],
     key="file_uploader" 
 )
