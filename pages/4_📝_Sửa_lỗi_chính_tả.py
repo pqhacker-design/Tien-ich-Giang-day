@@ -25,17 +25,24 @@ else:
     st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
     st.stop() 
 
-# --- 2. SIDEBAR CẤU HÌNH ---
-st.sidebar.subheader("🎯 Tiêu chí kiểm tra Sổ Sách")
-current_criteria = load_criteria()
+# --- 2. CẤU HÌNH TIÊU CHÍ (ĐÃ CHUYỂN TỪ SIDEBAR VÀO GIAO DIỆN CHÍNH) ---
+with st.expander("⚙️ **Cấu hình Tiêu chí kiểm tra Sổ Sách & Hồ sơ**", expanded=False):
+    current_criteria = load_criteria()
+    
+    col_cfg1, col_cfg2, col_cfg3 = st.columns([2, 3, 1])
+    with col_cfg1:
+        profile_type = st.selectbox("Loại hồ sơ cấu hình:", list(current_criteria.keys()))
+    with col_cfg2:
+        new_criterion = st.text_input("Thêm mục kiểm tra bắt buộc:")
+    with col_cfg3:
+        st.write("&#160;") # Khoảng trắng tạo lề căn chỉnh nút bấm
+        if st.button("Cập nhật tiêu chí", use_container_width=True):
+            if new_criterion:
+                current_criteria[profile_type].append(new_criterion)
+                save_criteria(current_criteria)
+                st.success("Đã cập nhật tiêu chí động!")
 
-profile_type = st.sidebar.selectbox("Loại hồ sơ cấu hình:", list(current_criteria.keys()))
-new_criterion = st.sidebar.text_input("Thêm mục kiểm tra bắt buộc:")
-if st.sidebar.button("Cập nhật tiêu chí"):
-    if new_criterion:
-        current_criteria[profile_type].append(new_criterion)
-        save_criteria(current_criteria)
-        st.sidebar.success("Đã cập nhật tiêu chí động!")
+st.write("---")
 
 # --- 3. UPLOAD FILE ---
 uploaded_file = st.file_uploader("Kéo thả file văn bản hành chính hoặc Hồ sơ trường học của bạn (.DOCX)", type=["docx"])
@@ -57,13 +64,17 @@ if uploaded_file is not None:
 
     st.write("---")
     st.subheader("🛠️ Chế độ phân tích & Chuẩn hóa")
-    c_thethuc = st.checkbox("Kiểm tra thể thức (NĐ 30/2020/NĐ-CP)", value=True)
-    c_chinhta = st.checkbox("Kiểm tra chính tả nâng cao", value=True)
-    c_nguphap = st.checkbox("Kiểm tra ngữ pháp & Hành văn", value=True)
-    c_hoso = st.checkbox("Phân tích chiều sâu Hồ sơ Giáo dục (GDPT 2018)", value=True)
+    
+    col_chk1, col_chk2 = st.columns(2)
+    with col_chk1:
+        c_thethuc = st.checkbox("Kiểm tra thể thức (NĐ 30/2020/NĐ-CP)", value=True)
+        c_chinhta = st.checkbox("Kiểm tra chính tả nâng cao", value=True)
+    with col_chk2:
+        c_nguphap = st.checkbox("Kiểm tra ngữ pháp & Hành văn", value=True)
+        c_hoso = st.checkbox("Phân tích chiều sâu Hồ sơ Giáo dục (GDPT 2018)", value=True)
 
     # --- 4. NÚT XỬ LÝ PHÂN TÍCH & CHUẨN HÓA ---
-    if st.button("🚀 BẮT ĐẦU PHÂN TÍCH VÀ SỬA LỖI TỰ ĐỘNG", type="primary"):
+    if st.button("🚀 BẮT ĐẦU PHÂN TÍCH VÀ SỬA LỖI TỰ ĐỘNG", type="primary", use_container_width=True):
         with st.spinner("Hệ thống AI đang đọc hiểu, quét lỗi và tự động căn chỉnh thể thức..."):
             all_errors = []
             
@@ -150,7 +161,8 @@ if uploaded_file is not None:
                         label="📥 Tải về Văn bản đã chuẩn hóa lề lối (.DOCX)", 
                         data=f_word.read(), 
                         file_name=f"ChuanHoa_{doc_info['filename']}",
-                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        use_container_width=True
                     )
             
             scores = res.get('diem', {}) if isinstance(res, dict) else {"the_thuc": 0, "noi_dung": 0, "gdpt_2018": 0, "nang_luc_so": 0, "khoa_hoc": 0, "tong": 0}
@@ -159,7 +171,8 @@ if uploaded_file is not None:
                 label="📥 Xuất Báo cáo Thống kê lỗi chi tiết (.XLSX)", 
                 data=excel_data, 
                 file_name=f"BaoCaoLoi_{doc_info['filename']}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True
             )
 
         with tab3:
