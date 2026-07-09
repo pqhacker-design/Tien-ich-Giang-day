@@ -38,11 +38,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. KHU VỰC ĐIỀU KHIỂN CHÍNH (MAIN DASHBOARD)
-st.markdown("## 🚀 Thiết Kế Hoạt Động Tương Tác")
-st.info("Giải pháp số hóa bài giảng, tạo trò chơi tương tác trực tiếp chuẩn Kahoot/Quizizz cho giáo viên hiện đại. (Xem ⚙️ bên sidebar)")
-
-# 2. THANH THÔNG TIN BỔ TRỢ (SIDEBAR) - CẤU HÌNH TIÊU CHUẨN SƯ PHẠM
+# Kiểm tra Google Gemini API Key
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     gemini_key = st.session_state["gemini_api_key"].strip()
 else:
@@ -50,24 +46,27 @@ else:
     st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
     st.stop()
 
-# --- ĐÃ LOẠI BỎ OPENAI KEY TẠI ĐÂY ---
-
-with st.sidebar:
-    st.image("https://img.icons8.com/fluent/96/000000/brainstorm-skill.png", width=80)
-    st.title("⚙️ CẤU HÌNH HOẠT ĐỘNG")
-    st.markdown("---")
-    
-    subject = st.selectbox("Môn học", ["Toán học", "Ngữ văn", "Tiếng Anh", "Khoa học tự nhiên", "Lịch sử & Địa lý", "Tin học", "STEM"])
-    grade = st.selectbox("Khối lớp", [f"Lớp {i}" for i in range(1, 13)])
-    duration = st.slider("Thời lượng hoạt động (Phút)", 5, 45, 15, step=5)
-    difficulty = st.select_slider("Mức độ nhận thức", options=["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"])
-    organization = st.radio("Hình thức tổ chức", ["Cá nhân", "Cặp đôi", "Hoạt động nhóm", "Toàn lớp"])
-    
-    st.markdown("---")
-    st.success("✔ Đã đồng bộ API Key thành công từ Trang chủ.")
-
 # Khởi tạo AIService chỉ với gemini_key
 ai_engine = AIService(gemini_key=gemini_key)
+
+# 2. KHU VỰC ĐIỀU KHIỂN CHÍNH (MAIN DASHBOARD)
+st.markdown("## 🚀 Thiết Kế Hoạt Động Tương Tác")
+st.info("Giải pháp số hóa bài giảng, tạo trò chơi tương tác trực tiếp chuẩn Kahoot/Quizizz cho giáo viên hiện đại.")
+
+# --- PHẦN CẤU HÌNH HOẠT ĐỘNG (ĐÃ CHUYỂN TỪ SIDEBAR VÀO GIAO DIỆN CHÍNH) ---
+with st.expander("⚙️ **CẤU HÌNH HOẠT ĐỘNG SUY PHẠM**", expanded=True):
+    col_cfg1, col_cfg2, col_cfg3 = st.columns(3)
+    with col_cfg1:
+        subject = st.selectbox("Môn học", ["Toán học", "Ngữ văn", "Tiếng Anh", "Khoa học tự nhiên", "Lịch sử & Địa lý", "Tin học", "STEM"])
+        grade = st.selectbox("Khối lớp", [f"Lớp {i}" for i in range(1, 13)])
+    with col_cfg2:
+        duration = st.slider("Thời lượng hoạt động (Phút)", 5, 45, 15, step=5)
+        difficulty = st.select_slider("Mức độ nhận thức", options=["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"])
+    with col_cfg3:
+        organization = st.radio("Hình thức tổ chức", ["Cá nhân", "Cặp đôi", "Hoạt động nhóm", "Toàn lớp"])
+        st.success("✔ Đã đồng bộ API Key từ Trang chủ.")
+
+st.markdown("---")
 
 tabs = st.tabs([
     "| 🎯 Trò chơi Khởi động", 
@@ -421,11 +420,10 @@ with tabs[4]:
             )
     else:
         st.info("Chưa có dữ liệu học liệu được tạo từ AI. Hãy hoàn tất tạo câu hỏi ở Tab 2 để tiến hành xuất bản trực tuyến.")
+
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
-st.markdown("---")
 
-# 5. Chân trang (Footer)
 col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
