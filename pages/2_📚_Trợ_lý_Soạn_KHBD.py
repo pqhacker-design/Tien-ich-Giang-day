@@ -76,7 +76,7 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
 
 st.write("**Tải KHBD cũ (.docx, .pdf) hoặc nhập văn bản thô để AI tự động chuyển đổi số hóa hành chính học tập.**")
 # Thiết kế Tab phân vùng các tính năng xử lý đầu vào dữ liệu khác nhau
-tab_upload, tab_direct, tab_history = st.tabs(["| 📂 **Chuẩn hóa KHBD từ KHBD đã có**", "| 📝 **Tạo KHBD bất kì theo yêu cầu**", "| 📜 **Lịch sử soạn thảo số**"])
+tab_upload, tab_direct, tab_history = st.tabs(["**| 📂 Chuẩn hóa KHBD từ KHBD đã có**", "**| 📝 Tạo KHBD bất kì theo yêu cầu**", "**| 📜 Lịch sử soạn thảo số**"])
 
 raw_input_text = ""
 
