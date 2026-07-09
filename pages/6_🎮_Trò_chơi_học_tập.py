@@ -54,7 +54,7 @@ st.markdown("## 🚀 Thiết Kế Hoạt Động Tương Tác")
 st.info("Giải pháp số hóa bài giảng, tạo trò chơi tương tác trực tiếp chuẩn Kahoot/Quizizz cho giáo viên hiện đại.")
 
 # --- PHẦN CẤU HÌNH HOẠT ĐỘNG (ĐÃ CHUYỂN TỪ SIDEBAR VÀO GIAO DIỆN CHÍNH) ---
-with st.expander("⚙️ **CẤU HÌNH HOẠT ĐỘNG SUY PHẠM**", expanded=True):
+with st.expander("⚙️ **CẤU HÌNH HOẠT ĐỘNG**", expanded=False):
     col_cfg1, col_cfg2, col_cfg3 = st.columns(3)
     with col_cfg1:
         subject = st.selectbox("Môn học", ["Toán học", "Ngữ văn", "Tiếng Anh", "Khoa học tự nhiên", "Lịch sử & Địa lý", "Tin học", "STEM"])
