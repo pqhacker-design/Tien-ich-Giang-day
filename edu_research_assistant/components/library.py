@@ -162,11 +162,11 @@ def show_library_module(api_key=None):
     st.markdown("### 🤖 Tính năng: Tự động biên soạn Sáng kiến mẫu theo yêu cầu")
     
     user_topic = st.text_input(
-        "✍️ Nhập tên Đề tài/Sáng kiến thầy cô muốn tạo mẫu:",
+        "**✍️ Nhập tên Đề tài/Sáng kiến thầy cô muốn tạo mẫu:**",
         placeholder="Ví dụ: Ứng dụng AI và chuyển đổi số nâng cao hiệu quả dạy học môn Toán lớp 8"
     )
     
-    if st.button("🔥 Kích hoạt AI biên soạn Bản mẫu"):
+    if st.button("🔥 Kích hoạt AI biên soạn Bản mẫu", type="primary"):
         if not user_topic.strip():
             st.warning("⚠️ Vui lòng nhập tên đề tài trước khi bấm tạo mẫu.")
         else:
@@ -224,7 +224,7 @@ def show_library_module(api_key=None):
     # --- THƯ VIỆN CÁC MẪU CỐ ĐỊNH CŨ ---
     # --- THƯ VIỆN CÁC MẪU CỐ ĐỊNH ---
     st.markdown("### 📁 Danh mục các mẫu quy chuẩn có sẵn trong thư viện")
-    search_query = st.text_input("🔍 Tìm kiếm nhanh trong kho mẫu sẵn có:", "")
+    search_query = st.text_input("**🔍 Tìm kiếm nhanh trong kho mẫu sẵn có:**", "")
     
     library_data = {
         "Toán học": [
