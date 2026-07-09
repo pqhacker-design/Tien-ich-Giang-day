@@ -13,16 +13,8 @@ st.markdown("## 🤖 Tích hợp Năng lực số tự động vào KHBD")
 st.info("Giúp GV tích hợp Năng lực số theo Chương trình GDPT 2018 nhanh chóng và chuẩn xác.")
 
 # --- KHU VỰC CẤU HÌNH HỆ THỐNG (ĐÃ CHUYỂN TỪ SIDEBAR VÀO ĐẦU TRANG CHÍNH) ---
-with st.container(border=True):
-    st.markdown(
-        """
-        <div style="background-color: #F0F9FF; padding: 6px 12px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 12px;">
-            <h4 style="margin: 0; color: #0369A1;">⚙️ Cấu hình hệ thống</h4>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
-    
+with st.expander("*** ⚙️ Cấu hình hệ thống", expanded=False)
+
     col_cfg1, col_cfg2 = st.columns([2, 1])
     
     with col_cfg1:
