@@ -539,7 +539,7 @@ model = init_gemini_client(api_key_input)
 if 'current_document_content' not in st.session_state: 
     st.session_state.current_document_content = ""
 
-tab1, tab2, tab3 = st.tabs(["| 📋 1. Chọn Môn học & Số câu", "| 📊 2. Phân bổ Ma trận & Điểm số", "| 📥 3. Đóng gói & Xuất Đề"])
+tab1, tab2, tab3 = st.tabs(["**| 📋 1. Chọn Môn học & Số câu**", "**| 📊 2. Phân bổ Ma trận & Điểm số**", "**| 📥 3. Đóng gói & Xuất Đề**"])
 
 with tab1:
     col1, col2 = st.columns(2)
@@ -553,11 +553,11 @@ with tab1:
         """, 
         unsafe_allow_html=True
     )
-            subject = st.selectbox("Chọn môn học cần thiết lập đề thi:", list(SUBJECTS_CONFIG.keys()))
-            grade = st.selectbox("Khối lớp học:", [str(i) for i in range(1, 13)], index=7)
-            exam_type = st.selectbox("Hình thức kiểm tra:", ["15 phút", "45 phút", "Giữa học kỳ I", "Cuối học kỳ I", "Giữa học kỳ II", "Cuối học kỳ II"])
-            duration = st.number_input("Thời lượng làm bài (phút):", min_value=15, max_value=150, value=15, step=5)
-            school_year = st.text_input("Năm học:", value="2026-2027")
+            subject = st.selectbox("**Chọn môn học cần thiết lập đề thi:**", list(SUBJECTS_CONFIG.keys()))
+            grade = st.selectbox("**Khối lớp học:**", [str(i) for i in range(1, 13)], index=7)
+            exam_type = st.selectbox("**Hình thức kiểm tra:**", ["15 phút", "45 phút", "Giữa học kỳ I", "Cuối học kỳ I", "Giữa học kỳ II", "Cuối học kỳ II"])
+            duration = st.number_input("**Thời lượng làm bài (phút):**", min_value=15, max_value=150, value=15, step=5)
+            school_year = st.text_input("**Năm học:**", value="2026-2027")
             
             difficulty_levels = {
                 "Cơ bản (Phù hợp HS Yếu - Trung bình)": {"nb": 50, "th": 30, "vd": 20, "vdc": 0},
@@ -565,7 +565,7 @@ with tab1:
                 "Nâng cao (Phù hợp lớp khá - lớp chọn)": {"nb": 30, "th": 30, "vd": 25, "vdc": 15},
                 "Phân hóa mạnh (Bồi dưỡng giỏi)": {"nb": 20, "th": 30, "vd": 30, "vdc": 20}
             }
-            level_choice = st.selectbox("Độ khó mục tiêu của đề thi:", list(difficulty_levels.keys()), index=1)
+            level_choice = st.selectbox("**Độ khó mục tiêu của đề thi:**", list(difficulty_levels.keys()), index=1)
             target_ratios = difficulty_levels[level_choice]
 
     with col2:
@@ -581,15 +581,15 @@ with tab1:
             
             # Lựa chọn cấu trúc đề thi chính
             exam_format = st.selectbox(
-                "Chọn cấu trúc / dạng đề kiểm tra:",
+                "**Chọn cấu trúc / dạng đề kiểm tra:**",
                 ["Trắc nghiệm + Tự luận", "Trắc nghiệm 100%", "Tự luận 100%"]
             )
             
             # Xử lý logic số lượng câu hỏi theo dạng đề
             if exam_format == "Trắc nghiệm 100%":
-                num_tn_4_lua_chon = st.number_input("Trắc nghiệm nhiều lựa chọn (Phần I):", min_value=0, max_value=40, value=12)
-                num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", min_value=0, max_value=10, value=2, help="Mỗi câu dạng này có 4 ý Đúng / Sai")
-                num_tn_tra_loi_ngan = st.number_input("Trắc nghiệm Trả lời ngắn (Phần III):", min_value=0, max_value=15, value=4)
+                num_tn_4_lua_chon = st.number_input("**Trắc nghiệm nhiều lựa chọn (Phần I):**", min_value=0, max_value=40, value=12)
+                num_tn_dung_sai = st.number_input("**Trắc nghiệm Đúng/Sai (Phần II):**", min_value=0, max_value=10, value=2, help="Mỗi câu dạng này có 4 ý Đúng / Sai")
+                num_tn_tra_loi_ngan = st.number_input("**Trắc nghiệm Trả lời ngắn (Phần III):**", min_value=0, max_value=15, value=4)
                 num_tl = 0
                 st.caption("ℹ️ *Đã khóa và đặt số câu Tự luận về 0.*")
                 
@@ -597,19 +597,19 @@ with tab1:
                 num_tn_4_lua_chon = 0
                 num_tn_dung_sai = 0
                 num_tn_tra_loi_ngan = 0
-                num_tl = st.number_input("Số câu hỏi Tự luận (Phần IV):", min_value=1, max_value=15, value=4)
+                num_tl = st.number_input("**Số câu hỏi Tự luận (Phần IV):**", min_value=1, max_value=15, value=4)
                 st.caption("ℹ️ *Đã khóa và đặt số câu Trắc nghiệm về 0.*")
                 
             else:
-                num_tn_4_lua_chon = st.number_input("Trắc nghiệm nhiều lựa chọn (Phần I):", min_value=0, max_value=40, value=12)
-                num_tn_dung_sai = st.number_input("Trắc nghiệm Đúng/Sai (Phần II):", min_value=0, max_value=10, value=2, help="Mỗi câu dạng này có 4 ý Đúng / Sai")
-                num_tn_tra_loi_ngan = st.number_input("Trắc nghiệm Trả lời ngắn (Phần III):", min_value=0, max_value=15, value=4)
-                num_tl = st.number_input("Số câu hỏi Tự luận (Phần IV):", min_value=0, max_value=10, value=3)
+                num_tn_4_lua_chon = st.number_input("**Trắc nghiệm nhiều lựa chọn (Phần I):**", min_value=0, max_value=40, value=12)
+                num_tn_dung_sai = st.number_input("**Trắc nghiệm Đúng/Sai (Phần II):**", min_value=0, max_value=10, value=2, help="Mỗi câu dạng này có 4 ý Đúng / Sai")
+                num_tn_tra_loi_ngan = st.number_input("**Trắc nghiệm Trả lời ngắn (Phần III):**", min_value=0, max_value=15, value=4)
+                num_tl = st.number_input("**Số câu hỏi Tự luận (Phần IV):**", min_value=0, max_value=10, value=3)
             
             st.markdown('---')
-            code_choice = st.selectbox("Số lượng mã đề đảo tự động:", [1, 2, 4, 6, 8], index=2)
+            code_choice = st.selectbox("**Số lượng mã đề đảo tự động:**", [1, 2, 4, 6, 8], index=2)
             num_codes = int(code_choice)
-            code_prefix = st.text_input("Ký hiệu mã đề bắt đầu:", value="101")
+            code_prefix = st.text_input("**Ký hiệu mã đề bắt đầu:**", value="101")
 
 with tab2:
     st.markdown(
@@ -621,14 +621,14 @@ with tab2:
         unsafe_allow_html=True
     )
     st.markdown('<div class="section-header"></div>', unsafe_allow_html=True)
-    content_source = st.radio("Chọn phương thức cung cấp nội dung:", ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức"], horizontal=True)
+    content_source = st.radio("**Chọn phương thức cung cấp nội dung:**", ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức"], horizontal=True)
     
     if content_source == "Nhập tay danh sách chủ đề":
-        topics_list = st.text_area("Danh sách các chủ đề kiến thức:", value="Chương 1: Khái niệm cơ bản\nChương 2: Bài toán vận dụng liên quan", height=100)
+        topics_list = st.text_area("**Danh sách các chủ đề kiến thức:**", value="Chương 1: Khái niệm cơ bản\nChương 2: Bài toán vận dụng liên quan", height=100)
         st.session_state.current_document_content = topics_list
     else:
-        uploaded_doc = st.file_uploader("Tải lên tài liệu:", type=["docx", "txt", "pdf", "png", "jpg", "jpeg"])
-        user_custom_req = st.text_input("Yêu cầu bổ sung khi đọc tài liệu:", value="")
+        uploaded_doc = st.file_uploader("**Tải lên tài liệu:**", type=["docx", "txt", "pdf", "png", "jpg", "jpeg"])
+        user_custom_req = st.text_input("**Yêu cầu bổ sung khi đọc tài liệu:**", value="")
         st.session_state.user_custom_req = user_custom_req.strip()
         
         if uploaded_doc is not None:
