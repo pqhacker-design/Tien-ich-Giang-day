@@ -29,7 +29,7 @@ else:
 with st.expander("⚙️ **Cấu hình Tiêu chí kiểm tra Sổ Sách & Hồ sơ**", expanded=False):
     current_criteria = load_criteria()
     
-    col_cfg1, col_cfg2, col_cfg3 = st.columns([2, 3, 1])
+    col_cfg1, col_cfg2, col_cfg3 = st.columns([1, 1, 1])
     with col_cfg1:
         profile_type = st.selectbox("Loại hồ sơ cấu hình:", list(current_criteria.keys()))
     with col_cfg2:
@@ -41,8 +41,6 @@ with st.expander("⚙️ **Cấu hình Tiêu chí kiểm tra Sổ Sách & Hồ s
                 current_criteria[profile_type].append(new_criterion)
                 save_criteria(current_criteria)
                 st.success("Đã cập nhật tiêu chí động!")
-
-st.write("---")
 
 # --- 3. UPLOAD FILE ---
 uploaded_file = st.file_uploader("Kéo thả file văn bản hành chính hoặc Hồ sơ trường học của bạn (.DOCX)", type=["docx"])
