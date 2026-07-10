@@ -45,11 +45,9 @@ if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].s
         col_model, col_level = st.columns([1,2])
         
         with col_model:
-            model_name = st.selectbox("Lựa chọn Mô hình", ["gemini-2.5-flash", "gemini-3.0-flash"])
+            model_name = st.selectbox("**Lựa chọn Mô hình:**", ["gemini-2.5-flash", "gemini-3.0-flash"])
         with col_level:
-            audit_level = st.radio("Mức độ rà soát", ["Toàn diện (Cấu trúc + Câu từ)", "Cấu trúc khung", "Từ khóa & Minh chứng"], horizontal=True)
-        
-        st.divider() # Vạch ngăn cách giữa phần cấu hình và nội dung Tabs
+            audit_level = st.radio("**Mức độ rà soát:**", ["Toàn diện (Cấu trúc + Câu từ)", "Cấu trúc khung", "Từ khóa & Minh chứng"], horizontal=True)
         
         # Khởi tạo hoặc cập nhật đối tượng AIEngine dùng chung
         if 'ai_engine' not in st.session_state or st.session_state.ai_engine is None:
@@ -71,13 +69,13 @@ else:
 
 # --- Giao diện Tabs chính ---
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-    "| 📋 1. Thư viện Mẫu Chuẩn", 
-    "| 📂 2. Hồ Sơ Cần Kiểm Tra", 
-    "| 🔬 3. Phân Tích & Đối Chiếu AI", 
-    "| 📊 4. Thẩm Định Hội Đồng",
-    "| 🛡️ 5. Thẩm Định AI Nâng Cao", 
-    "| 📈 6. Bảng Điều Khiển & Phản Biện", 
-    "| 🤖 7. Chat Cố Vấn Tương Tác"
+    "**| 📋 1. Thư viện Mẫu Chuẩn**", 
+    "**| 📂 2. Hồ Sơ Cần Kiểm Tra**", 
+    "**| 🔬 3. Phân Tích & Đối Chiếu AI**", 
+    "**| 📊 4. Thẩm Định Hội Đồng**",
+    "**| 🛡️ 5. Thẩm Định AI Nâng Cao**", 
+    "**| 📈 6. Bảng Điều Khiển & Phản Biện**", 
+    "**| 🤖 7. Chat Cố Vấn Tương Tác**"
 ])
 
 def export_audit_to_docx(audit_report, avg_score=None):
@@ -218,7 +216,7 @@ def export_fixed_doc(uploaded_file, audit_report):
 # --- TAB 1: VĂN BẢN MẪU ---
 with tab1:
     st.markdown("### Cung cấp Văn bản mẫu chỉ dẫn / Tiêu chí gốc")
-    uploaded_template = st.file_uploader("Tải lên File Mẫu (DOCX/PDF)", type=["docx", "pdf"], key="tmpl")
+    uploaded_template = st.file_uploader("**Tải lên File Mẫu (DOCX/PDF):**", type=["docx", "pdf"], key="tmpl")
     if uploaded_template and ai_engine:
         with st.spinner("AI đang phân tích cấu trúc mẫu quy chuẩn..."):
             text = DocumentProcessor.read_file(uploaded_template)
@@ -229,7 +227,7 @@ with tab1:
 # --- TAB 2: VĂN BẢN CẦN KIỂY TRA ---
 with tab2:
     st.markdown("### Tải lên tài liệu giáo viên cần thẩm định")
-    uploaded_user_file = st.file_uploader("Tải lên Hồ sơ của bạn (DOCX/PDF)", type=["docx", "pdf"], key="user_doc")
+    uploaded_user_file = st.file_uploader("**Tải lên Hồ sơ của bạn (DOCX/PDF):**", type=["docx", "pdf"], key="user_doc")
     if uploaded_user_file:
         raw_text = DocumentProcessor.read_file(uploaded_user_file)
         if raw_text.startswith("LỖI:"):
