@@ -55,22 +55,22 @@ with st.expander("⚙️ **CẤU HÌNH ĐỒ HỌA & ĐẦU RA:**", expanded=Fal
     col_config_1, col_config_2 = st.columns(2)
     
     with col_config_1:
-        st.markdown("**🎨 TÙY CHỈNH NÉT VẼ**")
+        st.markdown("**🎨 TÙY CHỈNH NÉT VẼ:**")
         cc1, cc2, cc3 = st.columns([1, 1.5, 1.5])
         with cc1:
-            line_color = st.color_picker("Màu nét chính:", "#1f77b4")
+            line_color = st.color_picker("**Màu nét chính:**", "#1f77b4")
         with cc2:
-            line_width = st.slider("Độ dày nét vẽ:", 1.0, 5.0, 2.0, 0.5)
+            line_width = st.slider("**Độ dày nét vẽ:**", 1.0, 5.0, 2.0, 0.5)
         with cc3:
-            font_size = st.slider("Kích thước chữ chú thích:", 8, 20, 12, 1)
+            font_size = st.slider("**Kích thước chữ:**", 8, 20, 12, 1)
     
     with col_config_2:
-        st.markdown("**💾 CẤU HÌNH XUẤT BẢN**")
+        st.markdown("**💾 CẤU HÌNH XUẤT BẢN:**")
         cc4, cc5 = st.columns(2)
         with cc4:
-            img_format = st.selectbox("Định dạng ảnh:", ["png", "jpg", "svg", "pdf"])
+            img_format = st.selectbox("**Định dạng ảnh:**", ["png", "jpg", "svg", "pdf"])
         with cc5:
-            dpi_resolution = st.selectbox("Độ phân giải (DPI):", [150, 300, 600], index=1)
+            dpi_resolution = st.selectbox("**Độ phân giải (DPI):**", [150, 300, 600], index=1)
     
     config_dict = {
         "line_color": line_color,
@@ -78,10 +78,8 @@ with st.expander("⚙️ **CẤU HÌNH ĐỒ HỌA & ĐẦU RA:**", expanded=Fal
         "font_size": font_size
     }
     
-    st.divider()
-
 # --- 4. GIAO DIỆN CHÍNH CỦA ỨNG DỤNG ---
-tabs = st.tabs(["| 🔮 Vẽ Hình Tự Động", "| 📚 Lịch Sử & Xuất Word Hàng Loạt", "| 💡 Hướng Dẫn & Ví Dụ"])
+tabs = st.tabs(["**| 🔮 Vẽ Hình Tự Động**", "**| 📚 Lịch Sử & Xuất Word Hàng Loạt**", "**| 💡 Hướng Dẫn & Ví Dụ**"])
 
 # TAB 1: VẼ HÌNH TỰ ĐỘNG
 with tabs[0]:
@@ -89,11 +87,11 @@ with tabs[0]:
     
     with col_input:
         st.markdown('<div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;"><h4 style="margin: 0; color: #0369A1;">📤 Nhập Đề Bài/Upload File</h4></div>', unsafe_allow_html=True)
-        mode = st.radio("Loại bài toán:", ["Hình học (THCS/THPT/Tọa độ)", "Đồ thị hàm số"], horizontal=True)
+        mode = st.radio("**Loại bài toán:**", ["Hình học (THCS/THPT/Tọa độ)", "Đồ thị hàm số"], horizontal=True)
         mode_key = 'geometry' if "Hình học" in mode else 'function'
         
-        uploaded_file = st.file_uploader("Tải lên Ảnh đề bài, file PDF hoặc file Word chứa đề toán:", type=["png", "jpg", "jpeg", "pdf", "docx"])
-        prompt = st.text_area("Yêu cầu cụ thể hoặc đề bài dạng văn bản:", placeholder="Vẽ đồ thị hàm số y=2x^2", height=80)
+        uploaded_file = st.file_uploader("**Tải lên Ảnh đề bài, file PDF hoặc file Word chứa đề toán:**", type=["png", "jpg", "jpeg", "pdf", "docx"])
+        prompt = st.text_area("**Yêu cầu cụ thể hoặc đề bài dạng văn bản:**", placeholder="Vẽ đồ thị hàm số y=2x^2", height=80)
         btn_generate = st.button("🚀 AI Phân Tích Đề & Vẽ Hình", type="primary", use_container_width=True)
         
         if btn_generate:
