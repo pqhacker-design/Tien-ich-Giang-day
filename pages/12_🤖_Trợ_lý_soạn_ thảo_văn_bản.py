@@ -25,19 +25,13 @@ rag_system = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, st.session_state["api_ke
 # 3. Giao diện Chính (Main Interface)
 UIManager.render_header()
 
-# Để Sidebar trống hoặc bạn có thể bỏ hẳn câu lệnh "with st.sidebar:" nếu không dùng đến gì ở sidebar nữa.
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3429/3429402.png", width=80)
-    st.markdown("### 🤖 Trợ lý Giáo dục")
-    st.caption("Hệ thống hỗ trợ soạn thảo & rà soát văn bản thông minh.")
-
 # Tabs Chức năng (Thêm Tab Cấu hình vào trang chính)
 tab_dashboard, tab_process, tab_copilot, tab_templates, tab_config = st.tabs([
-    "📈 Dashboard", 
-    "⚡ Xử lý Văn bản (Smart Workflow)", 
-    "💬 Document Copilot", 
-    "📁 Thư viện Mẫu",
-    "⚙️ Cấu hình Hệ thống"
+    "**📈 Dashboard**", 
+    "**⚡ Xử lý Văn bản thông minh**", 
+    "**💬 Document Copilot**", 
+    "**📁 Thư viện Mẫu**",
+    "**⚙️ Cấu hình Hệ thống**"
 ])
 
 # --- TAB DASHBOARD ---
@@ -54,10 +48,10 @@ with tab_dashboard:
 
 # --- TAB XỬ LÝ VĂN BẢN ---
 with tab_process:
-    st.subheader("📄 Tải lên & Điều khiển Multi-Agent Workflow")
+    st.subheader("📄 Tải lên & Điều khiển quy trình làm việc")
     
     uploaded_file = st.file_uploader(
-        "Kéo thả hoặc chọn file văn bản giáo dục (DOCX, PDF, TXT)", 
+        "**Kéo thả hoặc chọn file văn bản giáo dục (DOCX, PDF, TXT):**", 
         type=["docx", "pdf", "txt"]
     )
 
