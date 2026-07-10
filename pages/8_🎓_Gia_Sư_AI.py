@@ -487,7 +487,6 @@ st.components.v1.html(
 
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
-st.markdown("---")
 
 # 5. Chân trang (Footer)
 col_left, col_right = st.columns(2)
