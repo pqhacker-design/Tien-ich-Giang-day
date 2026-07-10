@@ -26,12 +26,12 @@ rag_system = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, st.session_state["api_ke
 UIManager.render_header()
 
 # Tabs Chức năng (Thêm Tab Cấu hình vào trang chính)
-tab_dashboard, tab_process, tab_copilot, tab_templates, tab_config = st.tabs([
+tab_config, tab_dashboard, tab_process, tab_copilot, tab_templates = st.tabs([
+    "**⚙️ Cấu hình Hệ thống**",
     "**📈 Dashboard**", 
     "**⚡ Xử lý Văn bản thông minh**", 
     "**💬 Document Copilot**", 
-    "**📁 Thư viện Mẫu**",
-    "**⚙️ Cấu hình Hệ thống**"
+    "**📁 Thư viện Mẫu**"
 ])
 
 # --- TAB DASHBOARD ---
@@ -180,7 +180,7 @@ with tab_config:
         
     with col_c2:
         st.markdown("#### 📚 Knowledge Hub (RAG)")
-        rag_upload = st.file_uploader("Nạp Thông tư/Nghị định mẫu vào cơ sở dữ liệu", type=["docx", "pdf", "txt"], key="rag_file")
+        rag_upload = st.file_uploader("**Nạp Thông tư/Nghị định mẫu vào cơ sở dữ liệu:**", type=["docx", "pdf", "txt"], key="rag_file")
         if rag_upload:
             if st.button("📥 Lưu vào Vector DB", type="secondary"):
                 with st.spinner("Đang phân tích & sinh Vector Embedding..."):
