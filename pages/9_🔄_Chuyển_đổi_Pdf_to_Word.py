@@ -171,7 +171,7 @@ def create_word_document(text_content):
 
 # --- GIAO DIỆN STREAMLIT UPLOAD VÀ XỬ LÝ ---
 uploaded_file = st.file_uploader(
-    "Tải lên Tài liệu dạng Ảnh hoặc PDF cần chuyển đổi:",
+    "**Tải lên Tài liệu dạng Ảnh hoặc PDF cần chuyển đổi:**",
     type=["png", "jpg", "jpeg", "pdf"]
 )
 
@@ -181,7 +181,7 @@ if uploaded_file is not None:
     
     st.info(f"📁 Đã nhận file: **{uploaded_file.name}**")
     
-    if st.button("🚀 Bắt đầu chuyển đổi"):
+    if st.button("🚀 Bắt đầu chuyển đổi", type="primary"):
         with st.spinner("Hệ thống AI thông minh đang bóc tách văn bản gốc và chuyển đổi..."):
             
             # KHÔNG DÙNG THƯ VIỆN ĐỌC TEXT LAYER ĐỂ TRÁNH DÍNH WATERMARK RÁC
@@ -253,7 +253,6 @@ if uploaded_file is not None:
 
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
-st.markdown("---")
 
 # 5. Chân trang (Footer)
 col_left, col_right = st.columns(2)
