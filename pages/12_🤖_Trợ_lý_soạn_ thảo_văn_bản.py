@@ -11,7 +11,7 @@ from edu_ai_assistant.modules.word_export import WordExportEngine
 # 1. Khởi tạo Giao diện
 UIManager.setup_theme()
 
-# 2. Khởi tạo Session State
+# 2. Khởi tạo Session State (Sử dụng trực tiếp API Key từ hệ thống, ẩn ô nhập liệu)
 if "api_key" not in st.session_state:
     st.session_state["api_key"] = config.GEMINI_API_KEY
 if "processed_doc" not in st.session_state:
@@ -19,48 +19,28 @@ if "processed_doc" not in st.session_state:
 if "parsed_text" not in st.session_state:
     st.session_state["parsed_text"] = ""
 
-# 3. Sidebar Cấu hình & Đăng nhập
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3429/3429402.png", width=80)
-    st.title("⚙️ Cấu hình Hệ thống")
-    
-    # User Profile Info
-    user_role = st.selectbox("Vai trò người dùng", [config.ROLE_TEACHER, config.ROLE_ADMIN, config.ROLE_GUEST])
-    st.info(f"👤 Quyền: **{user_role}**")
-    
-    st.divider()
-    
-    # API Key Input
-    input_key = st.text_input("Gemini API Key", value=st.session_state["api_key"], type="password")
-    if input_key != st.session_state["api_key"]:
-        st.session_state["api_key"] = input_key
-        st.success("Đã cập nhật API Key!")
-
-    st.divider()
-    st.markdown("### 📚 Knowledge Hub (RAG)")
-    rag_upload = st.file_uploader("Nạp Thông tư/Nghị định mẫu vào RAG", type=["docx", "pdf", "txt"], key="rag_file")
-    if rag_upload:
-        if st.button("📥 Lưu vào Vector DB"):
-            with st.spinner("Đang phân tích & sinh Vector Embedding..."):
-                content, meta = DocumentParser.parse_file(rag_upload)
-                rag_sys = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, st.session_state["api_key"])
-                rag_sys.add_document(content, {"source": rag_upload.name})
-                st.toast(f"Đã nạp thành công {rag_upload.name} vào Tri thức ngành!", icon="✅")
-
 # Khởi tạo RAG System
 rag_system = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, st.session_state["api_key"]) if st.session_state["api_key"] else None
 
-# 4. Giao diện Chính (Main Interface)
+# 3. Giao diện Chính (Main Interface)
 UIManager.render_header()
 
-# Tabs Chức năng
-tab_dashboard, tab_process, tab_copilot, tab_templates = st.tabs([
+# Để Sidebar trống hoặc bạn có thể bỏ hẳn câu lệnh "with st.sidebar:" nếu không dùng đến gì ở sidebar nữa.
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/3429/3429402.png", width=80)
+    st.markdown("### 🤖 Trợ lý Giáo dục")
+    st.caption("Hệ thống hỗ trợ soạn thảo & rà soát văn bản thông minh.")
+
+# Tabs Chức năng (Thêm Tab Cấu hình vào trang chính)
+tab_dashboard, tab_process, tab_copilot, tab_templates, tab_config = st.tabs([
     "📈 Dashboard", 
     "⚡ Xử lý Văn bản (Smart Workflow)", 
     "💬 Document Copilot", 
-    "📁 Thư viện Mẫu"
+    "📁 Thư viện Mẫu",
+    "⚙️ Cấu hình Hệ thống"
 ])
 
+# --- TAB DASHBOARD ---
 with tab_dashboard:
     UIManager.render_dashboard()
     st.markdown("### 🕒 Lịch sử xử lý gần đây")
@@ -72,6 +52,7 @@ with tab_dashboard:
     }
     st.table(history_df)
 
+# --- TAB XỬ LÝ VĂN BẢN ---
 with tab_process:
     st.subheader("📄 Tải lên & Điều khiển Multi-Agent Workflow")
     
@@ -110,7 +91,7 @@ with tab_process:
 
         if st.button("🚀 KÍCH HOẠT MULTI-AGENT WORKFLOW", type="primary", use_container_width=True):
             if not st.session_state["api_key"]:
-                st.error("🔑 Vui lòng nhập Gemini API Key ở thanh bên (Sidebar) trước khi tiếp tục.")
+                st.error("🔑 Hệ thống chưa cấu hình Gemini API Key. Vui lòng kiểm tra lại file config.")
             else:
                 progress_bar = st.progress(0)
                 status_text = st.empty()
@@ -137,6 +118,7 @@ with tab_process:
                 type="primary"
             )
 
+# --- TAB DOCUMENT COPILOT ---
 with tab_copilot:
     st.subheader("💬 Trò chuyện trực tiếp với Văn bản (Document Copilot)")
     if not st.session_state["parsed_text"]:
@@ -166,6 +148,7 @@ Trả lời câu hỏi của người dùng dựa trên văn bản này:
                 st.write(response)
                 st.session_state["chat_history"].append({"role": "assistant", "content": response})
 
+# --- TAB THƯ VIỆN MẪU ---
 with tab_templates:
     st.subheader("📁 Kho Mẫu Văn bản Giáo dục Chuẩn")
     st.info("💡 Bạn có thể chọn mẫu chuẩn bên dưới để xuất trực tiếp hoặc làm khung mẫu cho AI.")
@@ -188,3 +171,26 @@ with tab_templates:
         #### 4. Biên bản & Công văn Hành chính
         - Chuẩn Nghị định 30/2020/NĐ-CP về Thể thức văn bản.
         """)
+
+# --- TAB CẤU HÌNH HỆ THỐNG (MỚI CHUYỂN TỪ SIDEBAR) ---
+with tab_config:
+    st.subheader("⚙️ Cấu hình Hệ thống & Tri thức ngành")
+    
+    col_c1, col_c2 = st.columns([1, 2])
+    
+    with col_c1:
+        st.markdown("#### 👤 Người dùng")
+        user_role = st.selectbox("Vai trò người dùng", [config.ROLE_TEACHER, config.ROLE_ADMIN, config.ROLE_GUEST])
+        st.info(f" Quyền hiện tại: **{user_role}**")
+        st.caption("🔑 *API Key: Đã được cấu hình dùng chung tự động từ hệ thống.*")
+        
+    with col_c2:
+        st.markdown("#### 📚 Knowledge Hub (RAG)")
+        rag_upload = st.file_uploader("Nạp Thông tư/Nghị định mẫu vào cơ sở dữ liệu", type=["docx", "pdf", "txt"], key="rag_file")
+        if rag_upload:
+            if st.button("📥 Lưu vào Vector DB", type="secondary"):
+                with st.spinner("Đang phân tích & sinh Vector Embedding..."):
+                    content, meta = DocumentParser.parse_file(rag_upload)
+                    rag_sys = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, st.session_state["api_key"])
+                    rag_sys.add_document(content, {"source": rag_upload.name})
+                    st.toast(f"Đã nạp thành công {rag_upload.name} vào Tri thức ngành!", icon="✅")
