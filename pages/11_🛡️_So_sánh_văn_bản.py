@@ -41,7 +41,7 @@ if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].s
     os.environ["GEMINI_API_KEY"] = api_key_input
     
     # --- VÙNG CẤU HÌNH TRÊN TRANG CHÍNH ---
-    st.markdown("### ⚙️ Cấu hình Hệ thống")
+with st.expander("⚙️ **CẤU HÌNH HỆ THỐNG:**", expanded=False):
     col_model, col_level = st.columns(2)
     
     with col_model:
