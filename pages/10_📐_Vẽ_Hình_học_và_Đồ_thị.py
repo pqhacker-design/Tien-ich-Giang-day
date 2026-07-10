@@ -49,23 +49,36 @@ if 'current_code' not in st.session_state:
 if 'generated_fig' not in st.session_state:
     st.session_state.generated_fig = None
 
-# --- 3. THANH SIDEBAR TÙY CHỈNH NÉT VẼ ---
-with st.sidebar:
-    st.header("🎨 TÙY CHỈNH NÉT VẼ")
-    line_color = st.color_picker("Màu nét vẽ chính:", "#1f77b4")
-    line_width = st.slider("Độ dày nét vẽ:", 1.0, 5.0, 2.0, 0.5)
-    font_size = st.slider("Kích thước chữ chú thích:", 8, 20, 12, 1)
-    
-    st.divider()
-    st.header("💾 CẤU HÌNH XUẤT BẢN")
-    img_format = st.selectbox("Định dạng ảnh:", ["png", "jpg", "svg", "pdf"])
-    dpi_resolution = st.selectbox("Độ phân giải (DPI):", [150, 300, 600], index=1)
+# --- 3. KHU VỰC CẤU HÌNH NÉT VẼ & XUẤT BẢN TRÊN TRANG CHÍNH ---
+st.markdown('<div style="background-color: #F8FAFC; padding: 10px; border-left: 5px solid #64748B; border-radius: 4px; margin-bottom: 15px;"><h4 style="margin: 0; color: #475569;">⚙️ CẤU HÌNH ĐỒ HỌA & ĐẦU RA</h4></div>', unsafe_allow_html=True)
+
+col_config_1, col_config_2 = st.columns(2)
+
+with col_config_1:
+    st.markdown("**🎨 TÙY CHỈNH NÉT VẼ**")
+    cc1, cc2, cc3 = st.columns([1, 1.5, 1.5])
+    with cc1:
+        line_color = st.color_picker("Màu nét chính:", "#1f77b4")
+    with cc2:
+        line_width = st.slider("Độ dày nét vẽ:", 1.0, 5.0, 2.0, 0.5)
+    with cc3:
+        font_size = st.slider("Kích thước chữ chú thích:", 8, 20, 12, 1)
+
+with col_config_2:
+    st.markdown("**💾 CẤU HÌNH XUẤT BẢN**")
+    cc4, cc5 = st.columns(2)
+    with cc4:
+        img_format = st.selectbox("Định dạng ảnh:", ["png", "jpg", "svg", "pdf"])
+    with cc5:
+        dpi_resolution = st.selectbox("Độ phân giải (DPI):", [150, 300, 600], index=1)
 
 config_dict = {
     "line_color": line_color,
     "line_width": line_width,
     "font_size": font_size
 }
+
+st.divider()
 
 # --- 4. GIAO DIỆN CHÍNH CỦA ỨNG DỤNG ---
 tabs = st.tabs(["| 🔮 Vẽ Hình Tự Động", "| 📚 Lịch Sử & Xuất Word Hàng Loạt", "| 💡 Hướng Dẫn & Ví Dụ"])
@@ -182,7 +195,7 @@ with tabs[2]:
     1. **Đồng bộ khóa**: Hãy chắc chắn bạn đã nhập Gemini API Key tại Trang Chủ.
     2. **Đưa tài liệu lên**: Nhập chữ hoặc tải file Ảnh, PDF, Word chứa đề bài.
     3. **Chỉ thị cho AI**: Gõ yêu cầu cụ thể và nhấn nút vẽ hình.
-    4. **Tải về**: Tùy chỉnh màu sắc nét vẽ ở thanh bên trái và tải ảnh hoặc file Word về máy.
+    4. **Tải về**: Tùy chỉnh màu sắc nét vẽ ở khu vực cấu hình phía trên và tải ảnh hoặc file Word về máy.
     """)
 
 # --- 5. FOOTER CỐ ĐỊNH ---
