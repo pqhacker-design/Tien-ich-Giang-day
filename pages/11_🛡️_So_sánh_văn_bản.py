@@ -40,26 +40,26 @@ if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].s
     # Gán vào biến môi trường hệ thống để thư viện tự động nạp
     os.environ["GEMINI_API_KEY"] = api_key_input
     
-    # --- VÙNG CẤU HÌNH TRÊN TRANG CHÍNH ---
-with st.expander("⚙️ **CẤU HÌNH HỆ THỐNG:**", expanded=False):
-    col_model, col_level = st.columns(2)
-    
-    with col_model:
-        model_name = st.selectbox("Lựa chọn Mô hình", ["gemini-2.5-flash", "gemini-3.0-flash"])
-    with col_level:
-        audit_level = st.radio("Mức độ rà soát", ["Toàn diện (Cấu trúc + Câu từ)", "Cấu trúc khung", "Từ khóa & Minh chứng"], horizontal=True)
-    
-    st.divider() # Vạch ngăn cách giữa phần cấu hình và nội dung Tabs
-    
-    # Khởi tạo hoặc cập nhật đối tượng AIEngine dùng chung
-    if 'ai_engine' not in st.session_state or st.session_state.ai_engine is None:
-        st.session_state.ai_engine = AIEngine(api_key=api_key_input, model_name=model_name)
-    else:
-        # Nếu đã có sẵn ai_engine từ trước, chỉ cập nhật lại model_name nếu user thay đổi box
-        st.session_state.ai_engine.model_name = model_name
-    
-    # Gán biến cục bộ để các hàm phía dưới gọi ngắn gọn
-    ai_engine = st.session_state.ai_engine
+        # --- VÙNG CẤU HÌNH TRÊN TRANG CHÍNH ---
+    with st.expander("⚙️ **CẤU HÌNH HỆ THỐNG:**", expanded=False):
+        col_model, col_level = st.columns(2)
+        
+        with col_model:
+            model_name = st.selectbox("Lựa chọn Mô hình", ["gemini-2.5-flash", "gemini-3.0-flash"])
+        with col_level:
+            audit_level = st.radio("Mức độ rà soát", ["Toàn diện (Cấu trúc + Câu từ)", "Cấu trúc khung", "Từ khóa & Minh chứng"], horizontal=True)
+        
+        st.divider() # Vạch ngăn cách giữa phần cấu hình và nội dung Tabs
+        
+        # Khởi tạo hoặc cập nhật đối tượng AIEngine dùng chung
+        if 'ai_engine' not in st.session_state or st.session_state.ai_engine is None:
+            st.session_state.ai_engine = AIEngine(api_key=api_key_input, model_name=model_name)
+        else:
+            # Nếu đã có sẵn ai_engine từ trước, chỉ cập nhật lại model_name nếu user thay đổi box
+            st.session_state.ai_engine.model_name = model_name
+        
+        # Gán biến cục bộ để các hàm phía dưới gọi ngắn gọn
+        ai_engine = st.session_state.ai_engine
 
 else:
     # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
