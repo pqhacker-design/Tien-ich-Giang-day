@@ -42,7 +42,7 @@ if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].s
     
         # --- VÙNG CẤU HÌNH TRÊN TRANG CHÍNH ---
     with st.expander("⚙️ **CẤU HÌNH HỆ THỐNG:**", expanded=False):
-        col_model, col_level = st.columns(2)
+        col_model, col_level = st.columns([1,2])
         
         with col_model:
             model_name = st.selectbox("Lựa chọn Mô hình", ["gemini-2.5-flash", "gemini-3.0-flash"])
