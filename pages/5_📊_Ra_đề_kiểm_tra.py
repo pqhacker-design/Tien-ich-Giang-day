@@ -827,7 +827,6 @@ with tab3:
 
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
-st.markdown("---")
 
 col_left, col_right = st.columns(2)
 with col_left:
