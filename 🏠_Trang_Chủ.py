@@ -34,8 +34,6 @@ with st.expander("🔑 Cấu hình kết nối AI (Nhập API key của bạn đ
         else:
             st.warning("⚠️ Vui lòng nhập Gemini API Key để kích hoạt các tính năng AI trong các ứng dụng con.")
 
-st.markdown("---")
-
 # 4. DANH SÁCH ỨNG DỤNG THÀNH PHẦN (Được đẩy lên sát bên trên)
 st.markdown(
     """
