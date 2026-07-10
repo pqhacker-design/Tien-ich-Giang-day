@@ -32,19 +32,24 @@ if "user_text_content" not in st.session_state:
 st.markdown("## 🛡️ AI So sánh văn bản với mẫu hướng dẫn")
 st.info("Giải pháp ứng dụng Trí tuệ nhân tạo So sánh và Đánh giá văn bản so với hướng dẫn mẫu.")
 
-# --- SIDEBAR: Cấu hình hệ thống ---
 # ==============================================================================
-# --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ (ĐÃ SỬA LỖI CÚ PHÁP & ĐỒNG BỘ) ---
+# --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ (CHUYỂN TỪ SIDEBAR VÀO TRANG CHÍNH) ---
 # ==============================================================================
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"].strip()
     # Gán vào biến môi trường hệ thống để thư viện tự động nạp
     os.environ["GEMINI_API_KEY"] = api_key_input
     
-    # Lựa chọn mô hình ngay trên thanh sidebar của app con nếu cần thay đổi nhanh
-    st.sidebar.header("⚙️ Cấu hình Mô hình")
-    model_name = st.sidebar.selectbox("Lựa chọn Mô hình", ["gemini-2.5-flash", "gemini-3.0-flash"])
-    audit_level = st.sidebar.radio("Mức độ rà soát", ["Toàn diện (Cấu trúc + Câu từ)", "Cấu trúc khung", "Từ khóa & Minh chứng"])
+    # --- VÙNG CẤU HÌNH TRÊN TRANG CHÍNH ---
+    st.markdown("### ⚙️ Cấu hình Hệ thống")
+    col_model, col_level = st.columns(2)
+    
+    with col_model:
+        model_name = st.selectbox("Lựa chọn Mô hình", ["gemini-2.5-flash", "gemini-3.0-flash"])
+    with col_level:
+        audit_level = st.radio("Mức độ rà soát", ["Toàn diện (Cấu trúc + Câu từ)", "Cấu trúc khung", "Từ khóa & Minh chứng"], horizontal=True)
+    
+    st.divider() # Vạch ngăn cách giữa phần cấu hình và nội dung Tabs
     
     # Khởi tạo hoặc cập nhật đối tượng AIEngine dùng chung
     if 'ai_engine' not in st.session_state or st.session_state.ai_engine is None:
@@ -63,6 +68,7 @@ else:
     st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
     st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
 # ==============================================================================
+
 # --- Giao diện Tabs chính ---
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "| 📋 1. Thư viện Mẫu Chuẩn", 
@@ -135,7 +141,6 @@ def export_audit_to_docx(audit_report, avg_score=None):
     doc.save(bio)
     bio.seek(0)
     return bio
-from docx.shared import RGBColor
 
 from docx.shared import RGBColor
 
@@ -174,7 +179,6 @@ def export_fixed_doc(uploaded_file, audit_report):
                 # Nếu tìm thấy đoạn văn (hoặc tiêu đề) chứa tên tiêu chí cần chỉnh sửa
                 if criteria_name in paragraph.text.lower() and len(paragraph.text) < 250:
                     # Thêm một đoạn văn mới ngay phía sau đoạn văn này để chèn nội dung AI
-                    # Sử dụng helper function hoặc tạo đoạn văn kế thừa style của đoạn văn gốc
                     p_fixed = doc.add_paragraph(style=paragraph.style)
                     
                     # Di chuyển đoạn văn mới tạo về ngay sau vị trí paragraph tìm thấy trong cấu trúc XML
@@ -222,12 +226,11 @@ with tab1:
             st.success(f"Đã trích xuất thành công {len(st.session_state.template_reqs)} tiêu chí cốt lõi.")
             st.json(st.session_state.template_reqs)
 
-# --- TAB 2: VĂN BẢN CẦN KIỂY TRA (Điểm mấu chốt xử lý lưu cache) ---
+# --- TAB 2: VĂN BẢN CẦN KIỂY TRA ---
 with tab2:
     st.markdown("### Tải lên tài liệu giáo viên cần thẩm định")
     uploaded_user_file = st.file_uploader("Tải lên Hồ sơ của bạn (DOCX/PDF)", type=["docx", "pdf"], key="user_doc")
     if uploaded_user_file:
-        # Đọc 1 lần duy nhất để tránh cạn luồng stream bytes và bọc xử lý lỗi
         raw_text = DocumentProcessor.read_file(uploaded_user_file)
         if raw_text.startswith("LỖI:"):
             st.error(raw_text)
@@ -251,7 +254,6 @@ with tab3:
     if st.session_state.audit_report:
         st.subheader("Bảng chi tiết thiếu sót và khuyến nghị hành động:")
         
-        # Khởi tạo danh sách lưu các tiêu chí được chọn áp dụng nếu chưa có
         if "accepted_fixes" not in st.session_state:
             st.session_state.accepted_fixes = []
             
@@ -262,7 +264,6 @@ with tab3:
                 
                 col_acc, col_rej = st.columns(2)
                 
-                # Khi bấm nút áp dụng, lưu tiêu chí này vào danh sách hàng đợi sửa trực tiếp
                 if col_acc.button("☑️ Áp dụng Đề xuất này", key=f"acc_{idx}"):
                     if item not in st.session_state.accepted_fixes:
                         st.session_state.accepted_fixes.append(item)
@@ -291,7 +292,6 @@ with tab3:
         with col_download_2:
             if uploaded_user_file:
                 with st.spinner("Hệ thống đang tích hợp nội dung AI đã duyệt vào đúng vị trí file gốc..."):
-                    # CHỈ TRUYỀN NHỮNG LỖI MÀ GIÁO VIÊN ĐÃ BẤM CHẤP NHẬN ÁP DỤNG
                     reports_to_fix = st.session_state.accepted_fixes if st.session_state.accepted_fixes else st.session_state.audit_report
                     fixed_docx_data = export_fixed_doc(uploaded_user_file, reports_to_fix)
                     
@@ -322,47 +322,38 @@ with tab4:
             excel_file = EvidenceGenerator.generate_survey_table("Bảng Thống Kê Điểm Số Khảo Sát Thực Nghiệm Sáng Kiến", ["Năng lực tư duy hình học", "Khả năng vận dụng Chuyển đổi số"])
             st.download_button("📥 Tải xuống Biểu mẫu Excel Minh chứng", data=excel_file, file_name="minh_chung_ai_generated.xlsx")
 
-# --- TAB 5: THẨM ĐỊNH AI NÂNG CAO (MODULE 8 & 9) ---
+# --- TAB 5: THẨM ĐỊNH AI NÂNG CAO ---
 with tab5:
     st.markdown("### 🔬 Phân Hệ Thẩm Định Ngôn Ngữ Biến Đổi Nâng Cao")
-    
     st.warning("""
     ⚠️ **CẢNH BÁO QUAN TRỌNG:**
     - Các kết quả về: *Tỷ lệ nghi ngờ AI*, *Tỷ lệ tương đồng trùng lặp*, và *Khả năng đạt giải* hoàn toàn chỉ mang tính chất hỗ trợ và tham khảo.
     - Quyết định phê duyệt cuối cùng thuộc về **Hội đồng thẩm định thực tế, Đơn vị xét duyệt và Các chuyên gia đánh giá**.
-    - Hệ thống tuyệt đối không đưa ra khẳng định chắc chắn mang tính quy chụp văn bản là đạo văn hay do máy tạo hoàn toàn.
     """)
     
     if st.session_state.user_text_content and ai_engine:
         col_m8, col_m9 = st.columns(2)
         
         with col_m8:
-            st.markdown(
-        """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #0369A1;">🤖 Module 8: Quét Dấu Hiệu AI Sinh Văn Bản</h4>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+            st.markdown("""
+            <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+                <h4 style="margin: 0; color: #0369A1;">🤖 Module 8: Quét Dấu Hiệu AI Sinh Văn Bản</h4>
+            </div>
+            """, unsafe_allow_html=True)
             if st.button("Chạy quét cấu trúc lặp LLM", type="primary"):
                 with st.spinner("Đang phân tích độ tự nhiên và mật độ phân phối từ..."):
                     ai_detect_res = AdvancedAuditor.detect_ai_generated(st.session_state.user_text_content, ai_engine)
                     st.write(f"**Kết luận chung:** `{ai_detect_res.get('summary', 'Cần rà soát')}`")
                     st.info(f"💡 **Gợi ý cá nhân hóa:** {ai_detect_res.get('advice', '')}")
-                    
                     df_ai = pd.DataFrame(ai_detect_res.get('sections', []))
                     st.table(df_ai)
                 
         with col_m9:
-            st.markdown(
-        """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #0369A1;">📚 Module 9: Kiểm Tra Đạo Văn & Trùng Lặp</h4>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+            st.markdown("""
+            <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+                <h4 style="margin: 0; color: #0369A1;">📚 Module 9: Kiểm Tra Đạo Văn & Trùng Lặp</h4>
+            </div>
+            """, unsafe_allow_html=True)
             if st.button("Đối chiếu hệ thống dữ liệu", type="primary"):
                 with st.spinner("Đang so sánh biểu mẫu ý tưởng diện rộng..."):
                     plag_res = AdvancedAuditor.check_plagiarism(st.session_state.user_text_content, ai_engine)
@@ -374,24 +365,19 @@ with tab5:
     else:
         st.info("Vui lòng cung cấp API Key và tải hồ sơ tại Tab 2.")
 
-# --- TAB 6: BẢNG ĐIỀU KHIỂN & PHẢN BIỆN (MODULE 11, 12, 13) ---
+# --- TAB 6: BẢNG ĐIỀU KHIỂN & PHẢN BIỆN ---
 with tab6:
     st.markdown("### 📊 Trung Tâm Điều Hành Thẩm Định & Dự Đoán")
     
     if st.session_state.user_text_content and ai_engine:
-        # Module 10: Dự đoán khả năng đạt giải
-        st.markdown(
-        """
+        st.markdown("""
         <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
             <h4 style="margin: 0; color: #0369A1;">🔮 Module 10: Dự Đoán Khả Năng Được Công Nhận</h4>
         </div>
-        """, 
-        unsafe_allow_html=True
-    )
+        """, unsafe_allow_html=True)
         if st.button("Phân tích xác suất Hội đồng thi đua", type="primary"):
             with st.spinner("Đang chạy mô hình đối chiếu thư viện giải thưởng..."):
                 pred_res = AdvancedAuditor.predict_success_rate(st.session_state.user_text_content, ai_engine)
-                
                 col1, col2, col3 = st.columns(3)
                 for rate in pred_res.get("rates", []):
                     if rate['level'] == "Cấp Trường": col1.metric("Xác suất Cấp Trường", f"{rate['probability']}%")
@@ -412,15 +398,11 @@ with tab6:
 
         st.divider()
         
-        # Module 11: Mô phỏng tranh biện phản biện hội đồng
-        st.markdown(
-        """
+        st.markdown("""
         <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
             <h4 style="margin: 0; color: #0369A1;">⚖️ Module 11: Góc Nhìn Phản Biện Hội Đồng Giả Lập</h4>
         </div>
-        """, 
-        unsafe_allow_html=True
-    )
+        """, unsafe_allow_html=True)
         if st.button("Kích hoạt Hội đồng phản biện", type="primary"):
             with st.spinner("Đang giả lập hội đồng thảo luận kín..."):
                 debates = DashboardPanel.simulate_committee_debate(st.session_state.user_text_content, ai_engine)
@@ -431,16 +413,11 @@ with tab6:
                     
         st.divider()
         
-        # Module 12: Cố vấn chiến lược đường dài
-        st.markdown(
-        """
+        st.markdown("""
         <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
             <h4 style="margin: 0; color: #0369A1;">🎯 Module 12: Cố Vấn Chiến Lược Hoàn Thiện</h4>
         </div>
-        """, 
-        unsafe_allow_html=True
-    )
-        st.caption("AI hoạch định lộ trình chuyển đổi nâng hạng giải thưởng dựa trên các điểm nghẽn.")
+        """, unsafe_allow_html=True)
         
         strat_query = st.selectbox(
             "Lựa chọn câu hỏi chiến lược:",
@@ -470,11 +447,9 @@ with tab7:
                 st.write(response.text)
         else:
             st.warning("Vui lòng tải tài liệu tại Tab 2 trước khi đặt câu hỏi tương tác.")
+
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
-st.markdown("---")
-
-# 5. Chân trang (Footer)
 col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
