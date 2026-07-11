@@ -61,21 +61,21 @@ if not current_api_key:
 
 st.markdown("---")
 
-# --- HÀM XỬ LÝ & CHUẨN HÓA DỮ LIỆU VNEDU / EXCEL ---
+# --- HÀM XỬ LÝ & CHUẨN HÓA DỮ LIỆU VNEDU / EXCEL AN TOÀN ---
 def parse_vnedu_file(uploaded_file):
     file_name = uploaded_file.name.lower()
     
-    # Đọc file thô không header
+    # 1. Đọc thô file
     if file_name.endswith('.csv'):
         df_raw = pd.read_csv(uploaded_file, header=None)
     else:
         df_raw = pd.read_excel(uploaded_file, header=None)
         
-    # Tìm dòng chứa thông tin cột (thường chứa 'mã học sinh' hoặc 'họ' và 'tên')
+    # 2. Tìm dòng header
     header_row_idx = None
     for idx, row in df_raw.iterrows():
         row_str = " ".join([str(v) for v in row.values]).lower()
-        if ("mã" in row_str and "học sinh" in row_str) or ("họ" in row_str and "tên" in row_str):
+        if ("mã" in row_str and "học sinh" in row_str) or ("họ" in row_str and "tên" in row_str) or ("ho" in row_str and "ten" in row_str):
             header_row_idx = idx
             break
             
@@ -88,48 +88,63 @@ def parse_vnedu_file(uploaded_file):
     # Làm sạch tên cột
     df.columns = [str(c).strip() for c in df.columns]
     
-    # Tìm và map tên cột chính xác về chuẩn CSDL (id, name, tx_scores, gk_score, ck_score)
-    col_map = {}
+    # 3. Phân loại cột
+    id_col = None
+    name_col = None
+    gk_col = None
+    ck_col = None
     tx_cols = []
     
     for c in df.columns:
         c_lower = c.lower()
-        if "mã" in c_lower or "id" in c_lower:
-            col_map[c] = "id"
-        elif "họ" in c_lower and "tên" in c_lower or "name" in c_lower:
-            col_map[c] = "name"
+        if ("mã" in c_lower or "id" in c_lower) and not id_col:
+            id_col = c
+        elif ("họ" in c_lower and "tên" in c_lower or "name" in c_lower) and not name_col:
+            name_col = c
         elif "tx" in c_lower or "đgtx" in c_lower or "thường xuyên" in c_lower:
             tx_cols.append(c)
-        elif "gk" in c_lower or "giữa kỳ" in c_lower or "ddggk" in c_lower:
-            col_map[c] = "gk_score"
-        elif "ck" in c_lower or "cuối kỳ" in c_lower or "ddgck" in c_lower:
-            col_map[c] = "ck_score"
+        elif ("gk" in c_lower or "giữa kỳ" in c_lower or "ddggk" in c_lower) and not gk_col:
+            gk_col = c
+        elif ("ck" in c_lower or "cuối kỳ" in c_lower or "ddgck" in c_lower) and not ck_col:
+            ck_col = c
 
-    df = df.rename(columns=col_map)
+    # Tạo DataFrame kết quả
+    res_df = pd.DataFrame()
     
-    # Gộp các cột điểm thường xuyên thành chuỗi cách nhau bởi dấu phẩy
+    # Gán ID
+    if id_col:
+        res_df['id'] = df[id_col].astype(str).str.strip()
+    else:
+        res_df['id'] = [f"HS{i+1:03d}" for i in range(len(df))]
+        
+    # Gán Tên
+    if name_col:
+        res_df['name'] = df[name_col].astype(str).str.strip()
+    else:
+        res_df['name'] = "Học sinh"
+
+    # Gán Chuỗi điểm thường xuyên
     if tx_cols:
-        def merge_tx(row):
-            vals = [str(row[c]).strip() for c in tx_cols if pd.notnull(row[c]) and str(row[c]).strip() not in ['', 'nan']]
+        def extract_tx(row):
+            vals = []
+            for col in tx_cols:
+                v = str(row[col]).strip()
+                if v and v.lower() != 'nan' and v.lower() != 'none':
+                    vals.append(v)
             return ",".join(vals)
-        df['tx_scores'] = df.apply(merge_tx, axis=1)
-    elif 'tx_scores' not in df.columns:
-        df['tx_scores'] = ""
+        res_df['tx_scores'] = df.apply(extract_tx, axis=1)
+    else:
+        res_df['tx_scores'] = ""
 
-    # Bổ sung các cột bắt buộc nếu thiếu
-    for req_col in ['id', 'name', 'gk_score', 'ck_score', 'ai_comment', 'evaluation_level']:
-        if req_col not in df.columns:
-            df[req_col] = ""
+    # Gán Điểm Giữa kỳ & Cuối kỳ
+    res_df['gk_score'] = df[gk_col] if gk_col else ""
+    res_df['ck_score'] = df[ck_col] if ck_col else ""
+    res_df['ai_comment'] = ""
+    res_df['evaluation_level'] = ""
 
-    # Nếu không tìm thấy ID, tự sinh ID
-    if df['id'].astype(str).str.strip().eq("").all():
-        df['id'] = [f"HS{i+1:03d}" for i in range(len(df))]
-
-    # Giữ đúng các cột định dạng chuẩn của CSDL
-    final_cols = ['id', 'name', 'tx_scores', 'gk_score', 'ck_score', 'ai_comment', 'evaluation_level']
-    df_result = df[final_cols].copy()
-    df_result = df_result.dropna(subset=['name']) # Bỏ các dòng rỗng tên
-    return df_result
+    # Lọc bỏ dòng rỗng tên hoặc tên tiêu đề
+    res_df = res_df[res_df['name'].notnull() & (res_df['name'] != "") & (res_df['name'] != "nan") & (res_df['name'] != "Họ và tên")]
+    return res_df
 
 # 5. ĐIỀU HƯỚNG TABS
 tabs = st.tabs(["📊 1. Tổng quan lớp học", "👥 2. Quản lý học sinh & Nhập điểm", "🤖 3. Trợ lý AI nhận xét"])
@@ -140,7 +155,7 @@ with tabs[0]:
         conn = db.get_connection()
         render_dashboard(conn, school_level)
         conn.close()
-    except Exception as e:
+    except Exception:
         st.info("Nhập hoặc khởi tạo dữ liệu ở Tab 2 để hiển thị thống kê.")
 
 # TAB 2: QUẢN LÝ HỌC SINH
@@ -218,30 +233,15 @@ with tabs[2]:
         student_id = selected_student_option.split(" - ")[0]
         student_row = df_eval[df_eval['id'] == student_id].iloc[0]
         
-        # Đọc prompt an toàn
+        # Prompt mẫu
         prompt_template = (
             "Hãy viết nhận xét học tập cho học sinh {name} (Cấp: {level}).\n"
             "Điểm TX: {tx_scores}, Giữa kỳ: {gk_score}, Cuối kỳ: {ck_score}, ĐTB: {final_score}.\n"
             "Xếp loại: {level_eval}. Phong cách: {style_mode}.\n"
             "Yêu cầu: Viết nhận xét khách quan, khích lệ. Sau đó thêm thẻ [GIAI_THICH] giải thích lý do sư phạm."
         )
-        
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        possible_paths = [
-            os.path.normpath(os.path.join(current_dir, "..", "prompts", "comment_prompt.txt")),
-            os.path.normpath(os.path.join(current_dir, "..", "ai_school_evaluator", "prompts", "comment_prompt.txt")),
-            os.path.normpath(os.path.join(current_dir, "prompts", "comment_prompt.txt"))
-        ]
-        for path in possible_paths:
-            if os.path.exists(path):
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        prompt_template = f.read()
-                    break
-                except Exception:
-                    pass
 
-        # Tính toán điểm trung bình
+        # Tính toán điểm
         tx_raw = str(student_row['tx_scores']) if pd.notnull(student_row['tx_scores']) else ""
         tx_list = [float(i.strip()) for i in tx_raw.split(',') if i.strip() != '' and i.strip().replace('.','',1).isdigit()]
         
