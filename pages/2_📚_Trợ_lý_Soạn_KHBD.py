@@ -191,17 +191,21 @@ if "processed_json" in st.session_state:
     st.markdown("---")
     st.subheader("💾 ĐÓNG GÓI VÀ XUẤT BẢN FILE ĐẦU RA")
     
-    # Gọi hàm đóng gói dữ liệu của python-docx để build file cấu trúc chuẩn
-    df_m_export, df_r_export = generate_matrices(lesson_data)
-    worksheet_export = generate_digital_worksheet(lesson_data)
-    
-    word_file_stream = export_lesson_to_word(lesson_data, df_m_export, df_r_export, worksheet_export)
-    
+    # Chỉ tạo file Word một lần và lưu vào session_state để tránh sinh lại mỗi khi di chuột/re-run
+    if "word_file_bytes" not in st.session_state or st.button("🔄 Tạo lại file Word"):
+        with st.spinner("Đang đóng gói file Word chuẩn hành chính..."):
+            df_m_export, df_r_export = generate_matrices(lesson_data)
+            worksheet_export = generate_digital_worksheet(lesson_data)
+            
+            # Tạo stream và lưu dạng bytes để không bị lock bộ nhớ
+            stream = export_lesson_to_word(lesson_data, df_m_export, df_r_export, worksheet_export)
+            st.session_state["word_file_bytes"] = stream.getvalue()
+
     filename_export = f"Giao_An_4.0_{lesson_data.get('thong_tin_chung',{}).get('ten_bai_hoc','Bai_Hoc')}.docx"
     
     st.download_button(
         label="📥 TẢI XUỐNG FILE WORD (.DOCX) CHUẨN HÀNH CHÍNH GIÁO DỤC",
-        data=word_file_stream,
+        data=st.session_state["word_file_bytes"],
         file_name=filename_export,
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         use_container_width=True
