@@ -33,9 +33,8 @@ api_key = st.session_state.get("api_key")
 rag_system = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, api_key) if api_key else None
 # 3. Giao diện Chính (Main Interface)
 # Tabs Chức năng
-tab_config, tab_dashboard, tab_process, tab_copilot, tab_templates = st.tabs([
+tab_config, tab_process, tab_copilot, tab_templates = st.tabs([
     "**⚙️ Cấu hình Hệ thống**",
-    "**📈 Dashboard**", 
     "**⚡ Xử lý Văn bản thông minh**", 
     "**💬 Document Copilot**", 
     "**📁 Thư viện Mẫu**"
@@ -64,19 +63,6 @@ with tab_config:
                     rag_sys.add_document(content, {"source": rag_upload.name})
                     st.toast(f"Đã nạp thành công {rag_upload.name} vào Tri thức ngành!", icon="✅")
 
-# --- TAB DASHBOARD ---
-with tab_dashboard:
-    UIManager.render_dashboard()
-    st.markdown("### 🕒 Lịch sử xử lý gần đây")
-    history_df = {
-        "Thời gian": ["10:15 08/07/2026", "09:30 08/07/2026", "16:20 07/07/2026"],
-        "Tên văn bản": ["Kế hoạch_HKPĐ_TruongTHCS.docx", "Giao_An_Toan_8_Chuong3.pdf", "Bao_Cao_SOT.docx"],
-        "Loại văn bản": ["Kế hoạch công tác/HKPĐ", "Kế hoạch giáo dục (KHBD)", "Báo cáo thành tích"],
-        "Kết quả": ["Chuẩn hóa 100%", "Đã sửa 4 lỗi thể thức", "Đã bổ sung căn cứ"]
-    }
-    st.table(history_df)
-
-# --- TAB XỬ LÝ VĂN BẢN ---
 with tab_process:
     st.subheader("📄 Tải lên & Điều khiển quy trình làm việc")
     
