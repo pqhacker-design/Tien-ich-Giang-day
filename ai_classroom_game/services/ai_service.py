@@ -1,23 +1,32 @@
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import json
 
 class AIService:
     def __init__(self, gemini_key=None):
         self.gemini_key = gemini_key
+        self.client = None
+        if self.gemini_key:
+            self.client = genai.Client(api_key=self.gemini_key)
 
     def generate_content(self, prompt: str, system_instruction: str = None) -> str:
-        """Gọi API sinh nội dung sử dụng duy nhất Google Gemini"""
-        if not self.gemini_key:
+        """Gọi API sinh nội dung sử dụng duy nhất Google Gemini (SDK google-genai)"""
+        if not self.gemini_key or not self.client:
             raise ValueError("Chưa thiết lập cấu hình Gemini API Key hợp lệ trong hệ thống.")
             
         try:
-            genai.configure(api_key=self.gemini_key)
-            model = genai.GenerativeModel(
-                model_name="gemini-2.5-flash",
-                generation_config={"response_mime_type": "application/json"} if "json" in prompt.lower() else None,
+            # Cấu hình JSON response và System Instruction nếu có
+            is_json = "json" in prompt.lower()
+            config = types.GenerateContentConfig(
+                response_mime_type="application/json" if is_json else "text/plain",
                 system_instruction=system_instruction
             )
-            response = model.generate_content(prompt)
+            
+            response = self.client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+                config=config
+            )
             return response.text
         except Exception as e:
             raise RuntimeError(f"[Critical Error] Lỗi kết nối Google Gemini API: {e}")
@@ -28,23 +37,20 @@ class AIService:
         Hãy tạo bộ câu hỏi tương tác và ô chữ cho bài học: '{topic}' với nội dung: '{content}'. Mục tiêu: '{goals}'.
         
         YÊU CẦU RIÊNG CHO Ô CHỮ:
-        - Chọn ra từ 4 đến 6 từ khóa cốt lõi xuất hiện trong bài học.
-        - Viết hoa toàn bộ từ khóa, KHÔNG CHỨA DẤU TIẾNG VIỆT, KHÔNG CÓ KHOẢNG TRẮNG (Ví dụ: "PITAGO", "DIENTICH", "LUYENTAP").
-        - Tạo câu hỏi gợi ý ngắn gọn, rõ ràng cho từng từ khóa đó.
-
-        Trả về định dạng JSON thuần túy theo cấu trúc mẫu sau (không chứa markdown ```json):
+        - Chọn ra từ 4 đến 6 từ khóa cốt lõi xuất hiện trong bài.
+        
+        Bạn PHẢI trả về định dạng JSON cấu trúc chính xác như sau (Không bọc trong ký tự markdown ```json):
         {{
           "trac_nghiem": [
             {{
-              "cau_hoi": "Nội dung câu hỏi?",
+              "cau_hoi": "Nội dung câu hỏi 1?",
               "options": ["A", "B", "C", "D"],
               "dap_an": "A",
-              "giai_thich": "Lý do"
+              "giai_thich": "Giải thích chi tiết"
             }}
           ],
           "o_chu": [
             {{
-              "hang": 1,
               "tu_khoa": "TUKHOAONE",
               "goi_y": "Gợi ý cho từ khóa số 1"
             }}
@@ -69,12 +75,6 @@ class AIService:
               "options": ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
               "dap_an": "Phương án A",
               "giai_thich": "Giải thích ngắn gọn"
-            }},
-            {{
-              "cau_hoi": "Câu hỏi trắc nghiệm số 2?",
-              "options": ["A", "B", "C", "D"],
-              "dap_an": "B",
-              "giai_thich": "Giải thích"
             }}
           ]
         }}
