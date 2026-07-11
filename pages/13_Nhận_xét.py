@@ -78,18 +78,56 @@ with tabs[0]:
         st.error(f"Lỗi hiển thị bảng điều khiển: {e}")
 
 # TAB 2: QUẢN LÝ HỌC SINH
+# --- HÀM CHUẨN HÓA DỮ LIỆU IMPORT TỪ VNEDU / SMAS ---
+def process_vnedu_file(uploaded_file):
+    """Tự động phát hiện và đọc đúng định dạng file sổ điểm vnEdu/SMAS"""
+    file_name = uploaded_file.name.lower()
+    
+    # 1. Đọc file thô
+    if file_name.endswith('.csv'):
+        df_raw = pd.read_csv(uploaded_file, header=None)
+    else:
+        df_raw = pd.read_excel(uploaded_file, header=None)
+        
+    # 2. Tìm dòng chứa danh sách học sinh (thường chứa cột Họ tên hoặc Mã học sinh)
+    header_idx = None
+    for idx, row in df_raw.iterrows():
+        row_str = " ".join([str(val) for val in row.values]).lower()
+        if "họ" in row_str and "tên" in row_str or "mã học sinh" in row_str or "mã hs" in row_str:
+            header_idx = idx
+            break
+            
+    if header_idx is not None:
+        # Đọc lại từ dòng tiêu đề thực sự
+        uploaded_file.seek(0)
+        if file_name.endswith('.csv'):
+            df = pd.read_csv(uploaded_file, skiprows=header_idx)
+        else:
+            df = pd.read_excel(uploaded_file, skiprows=header_idx)
+    else:
+        # Nếu không tìm thấy dòng tiêu đề đặc trưng, đọc mặc định
+        uploaded_file.seek(0)
+        df = pd.read_csv(uploaded_file) if file_name.endswith('.csv') else pd.read_excel(uploaded_file)
+        
+    # 3. Làm sạch tên cột & lọc bỏ các dòng rỗng/dòng tổng kết
+    df.columns = [str(c).strip() for c in df.columns]
+    df = df.dropna(how='all')
+    
+    return df
+
+# --- XỬ LÝ TRONG TAB 2 (QUẢN LÝ & NHẬP ĐIỂM) ---
 with tabs[1]:
     st.markdown("### 👥 Quản lý & Nhập điểm học sinh")
     
-    uploaded_file = st.file_uploader("Import danh sách học sinh (File Excel, CSV)", type=["csv", "xlsx"])
+    uploaded_file = st.file_uploader("Import danh sách học sinh (File Excel, CSV xuất từ vnEdu / SMAS)", type=["csv", "xlsx"])
     if uploaded_file:
         try:
-            if uploaded_file.name.endswith('.csv'):
-                df_upload = pd.read_csv(uploaded_file)
-            else:
-                df_upload = pd.read_excel(uploaded_file)
+            # Gọi hàm xử lý tự động lọc bỏ tiêu đề hành chính
+            df_upload = process_vnedu_file(uploaded_file)
+            
+            # Lưu/Đồng bộ vào CSDL
             db.import_dataframe(df_upload)
-            st.success("🎉 Import dữ liệu học sinh thành công!")
+            st.success(f"🎉 Import thành công dữ liệu từ file {uploaded_file.name}!")
             st.rerun()
         except Exception as e:
             st.error(f"Lỗi định dạng file import: {e}")
