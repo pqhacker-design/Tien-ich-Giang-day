@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from database.connection import init_db
-from services.gemini_service import GeminiService
-from modules.import_wizard import AIImportWizard
-from modules.ai_anomaly import AIAnomalyDetector
-from utils.exporters import ExportEngine
+from student_comment.database.connection import init_db
+from student_comment.services.gemini_service import GeminiService
+from student_comment.modules.import_wizard import AIImportWizard
+from student_comment.modules.ai_anomaly import AIAnomalyDetector
+from student_comment.utils.exporters import ExportEngine
 
 # 1. Cấu hình Trang & Giao diện
 st.set_page_config(
