@@ -11,14 +11,21 @@ from edu_ai_assistant.modules.word_export import WordExportEngine
 # 1. Khởi tạo Giao diện
 UIManager.setup_theme()
 
-# 2. Khởi tạo Session State (Sử dụng trực tiếp API Key từ hệ thống, ẩn ô nhập liệu)
+# 2. Khởi tạo & Kiểm tra Session State
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
-            api_key = st.session_state["gemini_api_key"]
-            st.success("🔑 **Trạng thái API Key:** Đã nhận diện thành công từ Trang chủ.")
-        else:
-            st.warning("⚠️ **Chưa tìm thấy API Key:** Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key.")
-            st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
-            st.stop() # Dừng chạy các dòng code phía dưới nếu chưa có key
+    # Đồng bộ key vào "api_key" để các module phía dưới sử dụng thống nhất
+    st.session_state["api_key"] = st.session_state["gemini_api_key"]
+    st.success("🔑 **Trạng thái API Key:** Đã nhận diện thành công từ Trang chủ.")
+else:
+    st.warning("⚠️ **Chưa tìm thấy API Key:** Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key.")
+    st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
+    st.stop()  # Dừng chạy các dòng code phía dưới nếu chưa có key
+
+# Khởi tạo các biến lưu trữ trạng thái nếu chưa có
+if "processed_doc" not in st.session_state:
+    st.session_state["processed_doc"] = None
+if "parsed_text" not in st.session_state:
+    st.session_state["parsed_text"] = ""
 
 # Khởi tạo RAG System
 rag_system = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, st.session_state["api_key"]) if st.session_state["api_key"] else None
@@ -26,7 +33,7 @@ rag_system = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, st.session_state["api_ke
 # 3. Giao diện Chính (Main Interface)
 UIManager.render_header()
 
-# Tabs Chức năng (Thêm Tab Cấu hình vào trang chính)
+# Tabs Chức năng
 tab_config, tab_dashboard, tab_process, tab_copilot, tab_templates = st.tabs([
     "**⚙️ Cấu hình Hệ thống**",
     "**📈 Dashboard**", 
@@ -34,6 +41,29 @@ tab_config, tab_dashboard, tab_process, tab_copilot, tab_templates = st.tabs([
     "**💬 Document Copilot**", 
     "**📁 Thư viện Mẫu**"
 ])
+
+# --- TAB CẤU HÌNH HỆ THỐNG ---
+with tab_config:
+    st.subheader("⚙️ Cấu hình Hệ thống & Tri thức ngành")
+    
+    col_c1, col_c2 = st.columns([1, 2])
+    
+    with col_c1:
+        st.markdown("#### 👤 Người dùng")
+        user_role = st.selectbox("Vai trò người dùng", [config.ROLE_TEACHER, config.ROLE_ADMIN, config.ROLE_GUEST])
+        st.info(f"Quyền hiện tại: **{user_role}**")
+        st.caption("🔑 *API Key: Đã được cấu hình dùng chung tự động từ trang chủ.*")
+        
+    with col_c2:
+        st.markdown("#### 📚 Knowledge Hub (RAG)")
+        rag_upload = st.file_uploader("**Nạp Thông tư/Nghị định mẫu vào cơ sở dữ liệu:**", type=["docx", "pdf", "txt"], key="rag_file")
+        if rag_upload:
+            if st.button("📥 Lưu vào Vector DB", type="secondary"):
+                with st.spinner("Đang phân tích & sinh Vector Embedding..."):
+                    content, meta = DocumentParser.parse_file(rag_upload)
+                    rag_sys = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, st.session_state["api_key"])
+                    rag_sys.add_document(content, {"source": rag_upload.name})
+                    st.toast(f"Đã nạp thành công {rag_upload.name} vào Tri thức ngành!", icon="✅")
 
 # --- TAB DASHBOARD ---
 with tab_dashboard:
@@ -85,8 +115,8 @@ with tab_process:
             user_prompt = st.text_area("Nhập yêu cầu chi tiết cho AI Agent:", placeholder="Ví dụ: Bổ sung mục kinh phí và căn cứ Nghị định mới nhất...")
 
         if st.button("🚀 KÍCH HOẠT MULTI-AGENT WORKFLOW", type="primary", use_container_width=True):
-            if not st.session_state["api_key"]:
-                st.error("🔑 Hệ thống chưa cấu hình Gemini API Key. Vui lòng kiểm tra lại file config.")
+            if not st.session_state.get("api_key"):
+                st.error("🔑 Hệ thống chưa cấu hình Gemini API Key. Vui lòng kiểm tra lại trang chủ.")
             else:
                 progress_bar = st.progress(0)
                 status_text = st.empty()
@@ -166,26 +196,3 @@ with tab_templates:
         #### 4. Biên bản & Công văn Hành chính
         - Chuẩn Nghị định 30/2020/NĐ-CP về Thể thức văn bản.
         """)
-
-# --- TAB CẤU HÌNH HỆ THỐNG (MỚI CHUYỂN TỪ SIDEBAR) ---
-with tab_config:
-    st.subheader("⚙️ Cấu hình Hệ thống & Tri thức ngành")
-    
-    col_c1, col_c2 = st.columns([1, 2])
-    
-    with col_c1:
-        st.markdown("#### 👤 Người dùng")
-        user_role = st.selectbox("Vai trò người dùng", [config.ROLE_TEACHER, config.ROLE_ADMIN, config.ROLE_GUEST])
-        st.info(f" Quyền hiện tại: **{user_role}**")
-        st.caption("🔑 *API Key: Đã được cấu hình dùng chung tự động từ hệ thống.*")
-        
-    with col_c2:
-        st.markdown("#### 📚 Knowledge Hub (RAG)")
-        rag_upload = st.file_uploader("**Nạp Thông tư/Nghị định mẫu vào cơ sở dữ liệu:**", type=["docx", "pdf", "txt"], key="rag_file")
-        if rag_upload:
-            if st.button("📥 Lưu vào Vector DB", type="secondary"):
-                with st.spinner("Đang phân tích & sinh Vector Embedding..."):
-                    content, meta = DocumentParser.parse_file(rag_upload)
-                    rag_sys = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, st.session_state["api_key"])
-                    rag_sys.add_document(content, {"source": rag_upload.name})
-                    st.toast(f"Đã nạp thành công {rag_upload.name} vào Tri thức ngành!", icon="✅")
