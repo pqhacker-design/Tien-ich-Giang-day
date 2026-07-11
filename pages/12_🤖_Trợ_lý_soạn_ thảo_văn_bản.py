@@ -34,10 +34,10 @@ rag_system = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, api_key) if api_key else
 # 3. Giao diện Chính (Main Interface)
 # Tabs Chức năng
 tab_config, tab_process, tab_copilot, tab_templates = st.tabs([
-    "**⚙️ Cấu hình Hệ thống**",
-    "**⚡ Xử lý Văn bản thông minh**", 
-    "**💬 Document Copilot**", 
-    "**📁 Thư viện Mẫu**"
+    "**| ⚙️ Cấu hình Hệ thống**",
+    "**| ⚡ Xử lý Văn bản thông minh**", 
+    "**| 💬 Document Copilot**", 
+    "**| 📁 Thư viện Mẫu**"
 ])
 
 # --- TAB CẤU HÌNH HỆ THỐNG ---
@@ -48,9 +48,8 @@ with tab_config:
     
     with col_c1:
         st.markdown("#### 👤 Người dùng")
-        user_role = st.selectbox("Vai trò người dùng", [config.ROLE_TEACHER, config.ROLE_ADMIN, config.ROLE_GUEST])
+        user_role = st.selectbox("**Vai trò người dùng**", [config.ROLE_TEACHER, config.ROLE_ADMIN, config.ROLE_GUEST])
         st.info(f"Quyền hiện tại: **{user_role}**")
-        st.caption("🔑 *API Key: Đã được cấu hình dùng chung tự động từ trang chủ.*")
         
     with col_c2:
         st.markdown("#### 📚 Knowledge Hub (RAG)")
@@ -170,8 +169,8 @@ with tab_templates:
         - Cấu trúc 4 bước theo Công văn 5112/BGDĐT.
         - Khung thiết kế ma trận & bảng đặc tả đề kiểm tra.
         
-        #### 2. Kế hoạch Hội khỏe Phù Đổng (HKPĐ)
-        - Đầy đủ mục Mục đích, Nội dung, Kinh phí, Tổ chức thực hiện.
+        #### 2. Báo cáo, thống kê
+        - Đầy đủ mục Căn cứ, số liệu, biểu đồ.
         """)
     with col_t2:
         st.markdown("""
