@@ -62,6 +62,7 @@ with tabs[1]:
                 df_upload = pd.read_excel(uploaded_file)
             db.import_dataframe(df_upload)
             st.success("🎉 Import dữ liệu học sinh thành công!")
+            st.rerun()
         except Exception as e:
             st.error(f"Lỗi định dạng file import: {e}")
             
@@ -76,6 +77,7 @@ with tabs[1]:
             with db.get_connection() as c:
                 edited_df.to_sql("students", c, if_exists="replace", index=False)
             st.success("Đã đồng bộ dữ liệu vào SQLite database!")
+            st.rerun()
     else:
         # Dữ liệu demo để kiểm thử ngay nếu chưa có file import
         if st.button("✨ Khởi tạo dữ liệu mẫu lớp học để test"):
@@ -100,39 +102,67 @@ with tabs[2]:
     df_eval = pd.read_sql_query("SELECT * FROM students", conn)
     
     if not df_eval.empty:
-        selected_student_id = st.selectbox("Chọn học sinh cần xử lý nhận xét:", df_eval['id'] + " - " + df_eval['name'])
-        student_id = selected_student_id.split(" - ")[0]
+        # Xử lý chọn học sinh an toàn
+        student_options = [f"{row['id']} - {row['name']}" for _, row in df_eval.iterrows()]
+        selected_student_option = st.selectbox("Chọn học sinh cần xử lý nhận xét:", student_options)
+        
+        student_id = selected_student_option.split(" - ")[0]
         student_row = df_eval[df_eval['id'] == student_id].iloc[0]
         
-        # Lấy đường dẫn tuyệt đối đến thư mục chứa file hiện tại (pages/)
+        # --- FIX LỖI TÌM FILE PROMPT SẮC NẮC ---
         current_dir = os.path.dirname(os.path.abspath(__file__))
+        possible_paths = [
+            os.path.normpath(os.path.join(current_dir, "..", "prompts", "comment_prompt.txt")),
+            os.path.normpath(os.path.join(current_dir, "..", "ai_school_evaluator", "prompts", "comment_prompt.txt")),
+            os.path.normpath(os.path.join(current_dir, "prompts", "comment_prompt.txt")),
+            "prompts/comment_prompt.txt"
+        ]
         
-        # Đi ngược lên thư mục dự án (ai_school_evaluator) rồi trỏ tới prompts/comment_prompt.txt
-        prompt_path = os.path.normpath(os.path.join(current_dir, "..", "prompts", "comment_prompt.txt"))
+        prompt_template = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        prompt_template = f.read()
+                    break
+                except Exception:
+                    pass
         
-        # Kiểm tra an toàn trước khi mở file
-        if not os.path.exists(prompt_path):
-            # Nếu cấu trúc thư mục của thầy là ai_school_evaluator/prompts/...
-            prompt_path = os.path.normpath(os.path.join(current_dir, "..", "ai_school_evaluator", "prompts", "comment_prompt.txt"))
-        
-        with open(prompt_path, "r", encoding="utf-8") as f:
-            prompt_template = f.read()
+        # Prompt dự phòng an toàn tuyệt đối nếu không tìm thấy bất kỳ file nào
+        if not prompt_template:
+            prompt_template = (
+                "Hãy viết nhận xét học tập cho học sinh {name} (Cấp: {level}).\n"
+                "Điểm TX: {tx_scores}, Giữa kỳ: {gk_score}, Cuối kỳ: {ck_score}, ĐTB: {final_score}.\n"
+                "Xếp loại: {level_eval}. Phong cách: {style_mode}.\n"
+                "Yêu cầu: Viết nhận xét khách quan, khích lệ. Sau đó thêm thẻ [GIAI_THICH] giải thích lý do sư phạm."
+            )
+        # ----------------------------------------
             
         # Tính toán điểm trung bình động bằng Rule Engine trước khi đưa vào Prompt
-        tx_list = [float(i) for i in str(student_row['tx_scores']).split(',') if i.strip() != '']
-        final_calculated_score = engine.calculate_average(school_level, tx_list, student_row['gk_score'], student_row['ck_score'])
+        tx_raw = str(student_row['tx_scores']) if pd.notnull(student_row['tx_scores']) else ""
+        tx_list = [float(i.strip()) for i in tx_raw.split(',') if i.strip() != '' and i.strip().replace('.','',1).isdigit()]
+        
+        gk_val = float(student_row['gk_score']) if pd.notnull(student_row['gk_score']) else None
+        ck_val = float(student_row['ck_score']) if pd.notnull(student_row['ck_score']) else None
+        
+        final_calculated_score = engine.calculate_average(school_level, tx_list, gk_val, ck_val)
         suggested_rank = engine.suggest_level(school_level, final_calculated_score)
         
-        formatted_prompt = prompt_template.format(
-            name=student_row['name'],
-            level=school_level,
-            tx_scores=student_row['tx_scores'],
-            gk_score=student_row['gk_score'],
-            ck_score=student_row['ck_score'],
-            final_score=final_calculated_score,
-            level_eval=suggested_rank,
-            style_mode=style_mode
-        )
+        # Safe format prompt
+        try:
+            formatted_prompt = prompt_template.format(
+                name=student_row['name'],
+                level=school_level,
+                tx_scores=tx_raw,
+                gk_score=gk_val if gk_val is not None else "Chưa có",
+                ck_score=ck_val if ck_val is not None else "Chưa có",
+                final_score=final_calculated_score,
+                level_eval=suggested_rank,
+                style_mode=style_mode
+            )
+        except Exception as e:
+            st.error(f"Lỗi khi định dạng Prompt: {e}")
+            formatted_prompt = f"Viết nhận xét cho học sinh {student_row['name']} đạt điểm trung bình {final_calculated_score} ({suggested_rank})."
         
         if st.button("🔮 Kích hoạt Gemini Sinh Nhận Xét & Đề xuất biện pháp"):
             with st.spinner("Gemini đang phân tích bảng điểm số học tập..."):
@@ -140,7 +170,8 @@ with tabs[2]:
                 
                 # Tách phần nhận xét học bạ và phần giải thích sư phạm ẩn
                 st.markdown("### 📝 Kết quả nhận xét học bạ đề xuất:")
-                st.info(ai_result.split("[GIAI_THICH]")[0])
+                comment_main = ai_result.split("[GIAI_THICH]")[0]
+                st.info(comment_main)
                 
                 if "[GIAI_THICH]" in ai_result:
                     with st.expander("🔬 Lý do sư phạm & Minh chứng đánh giá (AI Engine Explained)"):
@@ -148,6 +179,9 @@ with tabs[2]:
                         
                 # Cập nhật kết quả ngược lại DB
                 with db.get_connection() as c:
-                    c.execute("UPDATE students SET ai_comment = ?, evaluation_level = ? WHERE id = ?", (ai_result.split("[GIAI_THICH]")[0], suggested_rank, student_id))
+                    cursor = c.cursor()
+                    cursor.execute("UPDATE students SET ai_comment = ?, evaluation_level = ? WHERE id = ?", (comment_main.strip(), suggested_rank, student_id))
+                    c.commit()
+                st.success("Đã ghi nhận xét vào Cơ sở dữ liệu!")
     else:
         st.warning("Vui lòng khởi tạo dữ liệu học sinh ở Tab 2 trước.")
