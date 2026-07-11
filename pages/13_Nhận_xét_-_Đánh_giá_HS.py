@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import os
 from ai_school_evaluator.database.db_manager import DBManager
 from ai_school_evaluator.services.rule_engine import RuleEngine
 from ai_school_evaluator.services.gemini_service import GeminiService
@@ -103,8 +104,18 @@ with tabs[2]:
         student_id = selected_student_id.split(" - ")[0]
         student_row = df_eval[df_eval['id'] == student_id].iloc[0]
         
-        # Đọc cấu trúc Prompt mẫu
-        with open("prompts/comment_prompt.txt", "r", encoding="utf-8") as f:
+        # Lấy đường dẫn tuyệt đối đến thư mục chứa file hiện tại (pages/)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Đi ngược lên thư mục dự án (ai_school_evaluator) rồi trỏ tới prompts/comment_prompt.txt
+        prompt_path = os.path.normpath(os.path.join(current_dir, "..", "prompts", "comment_prompt.txt"))
+        
+        # Kiểm tra an toàn trước khi mở file
+        if not os.path.exists(prompt_path):
+            # Nếu cấu trúc thư mục của thầy là ai_school_evaluator/prompts/...
+            prompt_path = os.path.normpath(os.path.join(current_dir, "..", "ai_school_evaluator", "prompts", "comment_prompt.txt"))
+        
+        with open(prompt_path, "r", encoding="utf-8") as f:
             prompt_template = f.read()
             
         # Tính toán điểm trung bình động bằng Rule Engine trước khi đưa vào Prompt
