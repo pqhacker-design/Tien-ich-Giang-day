@@ -1,11 +1,28 @@
+import sys
+import os
+
+# --- TỰ ĐỘNG THÊM THƯ MỤC GỐC VÀO SYS.PATH TRÁNH KEYERROR KHI RELOAD ---
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
 import streamlit as st
 import pandas as pd
-import os
 import re
-from ai_school_evaluator.database.db_manager import DBManager
-from ai_school_evaluator.services.rule_engine import RuleEngine
-from ai_school_evaluator.services.gemini_service import GeminiService
-from ai_school_evaluator.components.dashboard_view import render_dashboard
+
+# Import an toàn tuyệt đối
+try:
+    from ai_school_evaluator.database.db_manager import DBManager
+    from ai_school_evaluator.services.rule_engine import RuleEngine
+    from ai_school_evaluator.services.gemini_service import GeminiService
+    from ai_school_evaluator.components.dashboard_view import render_dashboard
+except ImportError:
+    # Fallback import trực tiếp nếu module bị cache lỗi
+    from ai_school_evaluator.database.db_manager import DBManager
+    from ai_school_evaluator.services.rule_engine import RuleEngine
+    from ai_school_evaluator.services.gemini_service import GeminiService
+    from ai_school_evaluator.components.dashboard_view import render_dashboard
 
 # 1. Cấu hình trang Streamlit
 st.set_page_config(page_title="AI School Evaluator Pro", page_icon="🎓", layout="wide")
@@ -27,6 +44,8 @@ ai_service = st.session_state.ai_service_instance
 # --- Tiêu đề ứng dụng ---
 st.markdown("## 🎓 13. AI Nhận xét & Đánh giá Học sinh")
 st.caption("Ứng dụng phân tích điểm số, tự động tạo nhận xét học bạ cá nhân hóa bám sát Thông tư 27 & Thông tư 22.")
+
+# (Phần code bên dưới giữ nguyên)
 
 # 4. KHU VỰC CẤU HÌNH GIAO DIỆN CHÍNH
 with st.expander("⚙️ CẤU HÌNH THÔNG TIN LỚP HỌC & TÀI KHOẢN", expanded=False):
