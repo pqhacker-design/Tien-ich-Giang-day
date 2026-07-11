@@ -12,12 +12,13 @@ from edu_ai_assistant.modules.word_export import WordExportEngine
 UIManager.setup_theme()
 
 # 2. Khởi tạo Session State (Sử dụng trực tiếp API Key từ hệ thống, ẩn ô nhập liệu)
-if "api_key" not in st.session_state:
-    st.session_state["api_key"] = config.GEMINI_API_KEY
-if "processed_doc" not in st.session_state:
-    st.session_state["processed_doc"] = None
-if "parsed_text" not in st.session_state:
-    st.session_state["parsed_text"] = ""
+if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
+            api_key = st.session_state["gemini_api_key"]
+            st.success("🔑 **Trạng thái API Key:** Đã nhận diện thành công từ Trang chủ.")
+        else:
+            st.warning("⚠️ **Chưa tìm thấy API Key:** Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key.")
+            st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
+            st.stop() # Dừng chạy các dòng code phía dưới nếu chưa có key
 
 # Khởi tạo RAG System
 rag_system = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, st.session_state["api_key"]) if st.session_state["api_key"] else None
