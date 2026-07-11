@@ -1,4 +1,4 @@
-import google.generativeai as genai
+from google import genai
 import json
 import streamlit as st
 import re
@@ -8,9 +8,12 @@ def get_ai_response(prompt):
     if not api_key:
         return ""
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        response = model.generate_content(prompt)
+        # Khởi tạo Client từ gói google-genai mới
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
         return response.text if response else ""
     except Exception as e:
         st.error(f"⚠️ Lỗi kết nối Gemini AI: {str(e)}")
