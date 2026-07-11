@@ -1,20 +1,24 @@
-import google.generativeai as genai
+from google import genai
 import os
 
 class GeminiService:
     def __init__(self, api_keys: list):
-        # Lọc bỏ các key rỗng nếu có
-        self.api_keys = [k for k in api_keys if k and k.strip()]
+        # Lọc các key hợp lệ
+        self.api_keys = [k.strip() for k in api_keys if k and isinstance(k, str) and k.strip()]
         self.current_key_index = 0
-        self.is_configured = False
+        self.client = None
         self.setup_client()
 
     def setup_client(self):
         if self.api_keys:
-            genai.configure(api_key=self.api_keys[self.current_key_index])
-            self.is_configured = True
+            try:
+                current_key = self.api_keys[self.current_key_index]
+                # Sử dụng SDK chính thức mới nhất google-genai
+                self.client = genai.Client(api_key=current_key)
+            except Exception:
+                self.client = None
         else:
-            self.is_configured = False
+            self.client = None
 
     def rotate_key(self):
         if len(self.api_keys) > 1:
@@ -24,15 +28,19 @@ class GeminiService:
         return False
 
     def generate_response(self, prompt: str) -> str:
-        if not self.is_configured:
-            return "⚠️ Chưa cấu hình Gemini API Key! Vui lòng nhập API Key ở phần Cấu hình hoặc Trang chủ."
+        if not self.client:
+            return "⚠️ Chưa cấu hình Gemini API Key! Vui lòng quay về Trang Chủ để nhập API Key."
 
         try:
-            model = genai.GenerativeModel("gemini-2.5-flash")
-            response = model.generate_content(prompt)
+            # Gọi model gemini-2.5-flash chuẩn SDK mới
+            response = self.client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
             return response.text
         except Exception as e:
-            if "quota" in str(e).lower() or "429" in str(e):
+            err_msg = str(e).lower()
+            if "quota" in err_msg or "429" in err_msg or "resource_exhausted" in err_msg:
                 if self.rotate_key():
-                    return self.generate_response(prompt) # Thử lại với key tiếp theo
+                    return self.generate_response(prompt)
             return f"❌ Lỗi AI: {str(e)}"
