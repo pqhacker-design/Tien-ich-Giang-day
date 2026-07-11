@@ -13,12 +13,12 @@ st.set_page_config(page_title="AI School Evaluator Pro", page_icon="🎓", layou
 db = DBManager()
 engine = RuleEngine()
 
-# 3. LẤY & ĐỒNG BỘ API KEY TỪ TRANG CHỦ (session_state)
-if "saved_api_key" not in st.session_state:
-    st.session_state["saved_api_key"] = ""
+# 3. LẤY API KEY TRỰC TIẾP TỪ TRANG CHỦ (KHÔNG NHẬP LẠI TẠI ĐÂY)
+current_api_key = st.session_state.get("gemini_api_key") or st.session_state.get("saved_api_key") or ""
 
-# Ưu tiên lấy API key đã lưu ở trang chủ
-shared_api_key = st.session_state.get("gemini_api_key") or st.session_state.get("saved_api_key") or ""
+# Khởi tạo AI Service an toàn
+api_keys_list = [current_api_key] if current_api_key else []
+ai_service = GeminiService(api_keys_list)
 
 if "user_role" not in st.session_state:
     st.session_state.user_role = "Giáo viên"
@@ -27,8 +27,8 @@ if "user_role" not in st.session_state:
 st.markdown("## 🎓 13. AI Nhận xét & Đánh giá Học sinh")
 st.caption("Ứng dụng phân tích điểm số, tự động tạo nhận xét học bạ cá nhân hóa bám sát Thông tư 27 (Tiểu học) & Thông tư 22 (THCS/THPT).")
 
-# 4. CHUYỂN TOÀN BỘ CẤU HÌNH TỪ SIDEBAR VÀO GIAO DIỆN CHÍNH (EXPANDER)
-with st.expander("⚙️ CẤU HÌNH HỆ THỐNG & THÔNG TIN LỚP HỌC", expanded=False):
+# 4. CẤU HÌNH THÔNG TIN LỚP HỌC TRÊN GIAO DIỆN CHÍNH (Đã bỏ nhập API Key)
+with st.expander("⚙️ CẤU HÌNH THÔNG TIN LỚP HỌC & TÀI KHOẢN", expanded=False):
     col_cfg1, col_cfg2, col_cfg3 = st.columns(3)
     
     with col_cfg1:
@@ -46,27 +46,21 @@ with st.expander("⚙️ CẤU HÌNH HỆ THỐNG & THÔNG TIN LỚP HỌC", exp
         subject_name = st.text_input("Môn học", "Toán học")
 
     with col_cfg3:
-        st.markdown("##### 👤 Tải khoản & AI Config")
-        st.session_state.user_role = st.selectbox("Vai trò người dùng", ["Giáo viên", "Tổ trưởng", "Hiệu trưởng", "Admin"])
+        st.markdown("##### 👤 Vai trò người dùng")
+        st.session_state.user_role = st.selectbox("Vai trò", ["Giáo viên", "Tổ trưởng", "Hiệu trưởng", "Admin"])
         
-        # Ô nhập API Key đồng bộ 2 chiều với Trang chủ
-        user_key = st.text_input(
-            "Gemini API Key (Dùng chung toàn hệ thống)", 
-            value=shared_api_key, 
-            type="password", 
-            help="API Key được tự động lấy từ Trang chủ. Bạn có thể thay đổi tại đây."
-        )
-        if user_key != shared_api_key:
-            st.session_state["saved_api_key"] = user_key
-            st.session_state["gemini_api_key"] = user_key
-            st.success("✔️ Đã cập nhật API Key cho toàn bộ hệ thống!")
+        # Hiển thị trạng thái kết nối API Key từ Trang chủ
+        if current_api_key:
+            st.success("🟢 API Key: Đã kết nối từ Trang chủ")
+        else:
+            st.warning("🔴 API Key: Chưa có (Vui lòng nhập tại Trang chủ)")
 
-# Lấy key hiện tại để khởi tạo AI Service
-current_api_key = st.session_state.get("gemini_api_key") or st.session_state.get("saved_api_key") or ""
+# Thêm cảnh báo nếu chưa có API Key
+if not current_api_key:
+    st.warning("⚠️ **Lưu ý:** Bạn chưa cấu hình Gemini API Key. Hãy quay về **Trang Chủ** nhập API Key một lần để kích hoạt tính năng AI cho tất cả ứng dụng.")
+    if st.button("🏠 Đến Trang Chủ nhập API Key"):
+        st.switch_page("🏠_Trang_Chủ.py")
 
-# Khởi tạo an toàn (nếu current_api_key rỗng thì truyền danh sách rỗng, GeminiService mới sẽ không bị crash nữa)
-api_keys_list = [current_api_key] if current_api_key else []
-ai_service = GeminiService(api_keys_list)
 st.markdown("---")
 
 # 5. GIAO DIỆN CHÍNH (ĐIỀU HƯỚNG TABS)
@@ -190,7 +184,7 @@ with tabs[2]:
         
         if st.button("🔮 Kích hoạt Gemini Sinh Nhận Xét & Đề xuất biện pháp", use_container_width=True):
             if not current_api_key:
-                st.error("⚠️ Chưa có API Key! Vui lòng nhập Gemini API Key ở phần Cấu hình đầu trang hoặc ở Trang chủ.")
+                st.error("⚠️ Chưa có API Key! Vui lòng quay về Trang chủ nhập Gemini API Key để sử dụng tính năng này.")
             else:
                 with st.spinner("Gemini đang phân tích bảng điểm số học tập..."):
                     ai_result = ai_service.generate_response(formatted_prompt)
