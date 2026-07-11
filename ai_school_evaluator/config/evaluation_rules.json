@@ -1,0 +1,20 @@
+{
+  "PRIMARY": {
+    "circular": "27/2020/TT-BGDĐT",
+    "evaluation_types": ["Định kỳ", "Thường xuyên"],
+    "performance_levels": ["Hoàn thành xuất sắc", "Hoàn thành tốt", "Hoàn thành", "Chưa hoàn thành"],
+    "qualities": ["Yêu nước", "Nhân ái", "Chăm chỉ", "Trung thực", "Trách nhiệm"],
+    "competencies": ["Tự chủ và tự học", "Giao tiếp và hợp tác", "Giải quyết vấn đề và sáng tạo"]
+  },
+  "SECONDARY_HIGH": {
+    "circular": "22/2021/TT-BGDĐT",
+    "evaluation_types": ["ĐG_Thường_Xuyên", "ĐG_Giữa_Kỳ", "ĐG_Cuối_Kỳ"],
+    "performance_levels": ["Tốt", "Khá", "Đạt", "Chưa đạt"],
+    "grading_formula": "((sum(tx) + gk * 2 + ck * 3) / (len(tx) + 5))",
+    "title_conditions": {
+      "Tốt": "ĐTBmón >= 8.0 và tất cả các môn đánh giá bằng nhận xét đạt loại Đạt",
+      "Khá": "ĐTBmón >= 6.5 và không có môn nào dưới 5.0",
+      "Đạt": "ĐTBmón >= 5.0 và không có môn nào dưới 3.5"
+    }
+  }
+}
