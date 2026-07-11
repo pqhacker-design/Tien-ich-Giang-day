@@ -31,13 +31,3 @@ class UIManager:
         with col2:
             st.write("")
             st.success("🟢 System Online")
-
-    @staticmethod
-    def render_dashboard():
-        st.subheader("📊 Tổng quan Hệ thống")
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Tổng văn bản xử lý", "1,248", "+12% tháng này")
-        col2.metric("Đã xử lý hôm nay", "24 văn bản", "+5 hôm nay")
-        col3.metric("Tỷ lệ chuẩn Thể thức", "98.5%", "+1.2%")
-        col4.metric("Dung lượng RAG Database", "45 Tài liệu", "Cập nhật hôm nay")
-        st.divider()
