@@ -16,7 +16,9 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import nsdecls, qn
 
-import google.generativeai as genai
+# Import Google GenAI SDK mới
+from google import genai
+from google.genai import types
 
 # ==========================================
 # CẤU HÌNH TRANG & GIAO DIỆN
@@ -158,13 +160,14 @@ def generate_shuffled_bundle(original_data, start_code, num_codes):
 
 def init_gemini_client(api_key):
     try:
-        genai.configure(api_key=api_key)
-        return genai.GenerativeModel('gemini-2.5-flash')
+        # Khởi tạo Client mới của SDK google-genai
+        client = genai.Client(api_key=api_key)
+        return client
     except Exception as e:
         st.error(f"Lỗi API Key hoặc cấu hình kết nối: {e}")
         return None
 
-def generate_step1_matrix(model, config, raw_input_data):
+def generate_step1_matrix(client, config, raw_input_data):
     prompt_text = f"""
     Bạn là chuyên gia khảo thí cấp cao của Bộ Giáo dục. Hãy lập Ma trận và Bản đặc tả đề kiểm tra môn {config['subject']} - Khối Lớp {config['grade']}.
     Độ khó mục tiêu: {config['difficulty']}.
@@ -213,20 +216,29 @@ def generate_step1_matrix(model, config, raw_input_data):
 
     contents_to_send = []
     if isinstance(raw_input_data, dict) and "mime_type" in raw_input_data:
-        contents_to_send.append(raw_input_data)
+        # Sử dụng types.Part.from_bytes cho dữ liệu tệp trong google-genai
+        media_part = types.Part.from_bytes(
+            data=raw_input_data["data"],
+            mime_type=raw_input_data["mime_type"]
+        )
+        contents_to_send.append(media_part)
         contents_to_send.append(prompt_text)
     else:
         prompt_text += f"\nNGUỒN DỮ LIỆU KIẾN THỨC BẮT BUỘC:\n\"\"\"\n{raw_input_data}\n\"\"\""
         contents_to_send.append(prompt_text)
 
-    response = model.generate_content(
-        contents_to_send,
-        generation_config={"response_mime_type": "application/json"}
+    # Gọi API bằng SDK mới client.models.generate_content
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=contents_to_send,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json"
+        )
     )
     raw = response.text.strip()
     return json.loads(raw, strict=False)
 
-def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input_data):
+def generate_step2_questions(client, config, matrix_data, subject_rule, raw_input_data):
     dac_ta_str = json.dumps(matrix_data.get('bang_dac_ta', []), ensure_ascii=False)
     prompt_text = f"""
     Bạn là chuyên gia soạn đề thi bám sát cấu trúc đề minh họa mới của Bộ Giáo dục. Dựa trên Bản đặc tả sau: {dac_ta_str}
@@ -277,13 +289,24 @@ def generate_step2_questions(model, config, matrix_data, subject_rule, raw_input
     """
     contents_to_send = []
     if isinstance(raw_input_data, dict) and "mime_type" in raw_input_data:
-        contents_to_send.append(raw_input_data)
+        media_part = types.Part.from_bytes(
+            data=raw_input_data["data"],
+            mime_type=raw_input_data["mime_type"]
+        )
+        contents_to_send.append(media_part)
         contents_to_send.append(prompt_text)
     else:
         prompt_text += f"\nNGUỒN KIẾN THỨC BẮT BUỘC ĐỂ SOẠN CÂU HỎI:\n\"\"\"\n{raw_input_data}\n\"\"\""
         contents_to_send.append(prompt_text)
 
-    response = model.generate_content(contents_to_send)
+    # Gọi API bằng SDK mới client.models.generate_content
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=contents_to_send,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json"
+        )
+    )
     raw = response.text.strip()
     raw = re.sub(r'^```json\s*|```$', '', raw, flags=re.IGNORECASE).strip()
     return json.loads(raw, strict=False)
@@ -534,7 +557,8 @@ else:
     st.warning("⚠️ Vui lòng cấu hình Google Gemini API Key tại Trang chủ trước khi vận hành.")
     st.stop()
 
-model = init_gemini_client(api_key_input)
+# Khởi tạo client mới
+client = init_gemini_client(api_key_input)
 
 if 'current_document_content' not in st.session_state: 
     st.session_state.current_document_content = ""
@@ -737,7 +761,7 @@ with tab2:
                 }
                 with st.spinner("AI đang tính toán khung ma trận đặc tả..."):
                     try:
-                        st.session_state.step1_data = generate_step1_matrix(model, config_pkg, st.session_state.current_document_content)
+                        st.session_state.step1_data = generate_step1_matrix(client, config_pkg, st.session_state.current_document_content)
                         st.success("✅ Đã thiết lập xong Khung đặc tả bộ môn!")
                     except Exception as e:
                         st.error(f"Lỗi phân tích kết nối: {e}")
@@ -756,7 +780,7 @@ with tab2:
                 with st.spinner("AI đang bám sát Khung đặc tả để soạn nội dung câu hỏi kiểm tra..."):
                     try:
                         rule = SUBJECTS_CONFIG[subject]
-                        step2_data = generate_step2_questions(model, config_pkg, st.session_state.step1_data, rule, st.session_state.current_document_content)
+                        step2_data = generate_step2_questions(client, config_pkg, st.session_state.step1_data, rule, st.session_state.current_document_content)
                         
                         full_data = {
                             "ma_tran": st.session_state.step1_data["ma_tran"],
