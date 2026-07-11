@@ -13,8 +13,9 @@ UIManager.setup_theme()
 
 # 2. Khởi tạo & Kiểm tra Session State
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
-    api_key_input = st.session_state["gemini_api_key"]
-else:
+    # Đồng bộ hóa key để dùng thống nhất trong app
+    st.session_state["api_key"] = st.session_state["gemini_api_key"]
+elif "api_key" not in st.session_state or not st.session_state["api_key"].strip():
     # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
     st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
@@ -28,8 +29,8 @@ if "parsed_text" not in st.session_state:
     st.session_state["parsed_text"] = ""
 
 # Khởi tạo RAG System
-rag_system = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, st.session_state["api_key"]) if st.session_state["api_key"] else None
-
+api_key = st.session_state.get("api_key")
+rag_system = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, api_key) if api_key else None
 # 3. Giao diện Chính (Main Interface)
 UIManager.render_header()
 
