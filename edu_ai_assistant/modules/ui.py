@@ -26,7 +26,7 @@ class UIManager:
     def render_header():
         col1, col2 = st.columns([4, 1])
         with col1:
-            st.markdoen("##🎓 AI Trợ lý Xử lý Văn bản Giáo dục")
+            st.markdown("##🎓 AI Trợ lý Xử lý Văn bản Giáo dục")
             st.info("Thế hệ Multi-Agent AI | Chuẩn Nghị định 30 & Bộ Giáo dục và Đào tạo")
         with col2:
             st.write("")
