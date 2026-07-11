@@ -1,21 +1,13 @@
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import json
 
 def generate_powerpoint_data_ai(api_key, raw_text, metadata, style_choice):
-    """Gọi Gemini API để phân tách giáo án thô thành cấu trúc dữ liệu Slide JSON"""
-    genai.configure(api_key=api_key)
-    
-    generation_config = {
-        "temperature": 0.4,
-        "top_p": 0.95,
-        "max_output_tokens": 8192,
-        "response_mime_type": "application/json"
-    }
-    
-    model = genai.GenerativeModel(
-        model_name="models/gemini-2.5-flash",
-        generation_config=generation_config
-    )
+    """Gọi Gemini API để phân tách giáo án thô thành cấu trúc dữ liệu Slide JSON (dùng SDK google-genai mới)"""
+    if not api_key or not isinstance(api_key, str) or not api_key.strip():
+        raise ValueError("Chưa cấu hình Gemini API Key hợp lệ.")
+
+    client = genai.Client(api_key=api_key.strip())
     
     system_prompt = (
         "Bạn là chuyên gia thiết kế bài giảng điện tử và slide sư phạm tiên tiến.\n"
@@ -26,25 +18,10 @@ def generate_powerpoint_data_ai(api_key, raw_text, metadata, style_choice):
         "  'slides': [\n"
         "    {\n"
         "      'type': 'title', 'title': '', 'subtitle': '', 'teacher': '', 'school': '', 'notes': ''\n"
-        "    },\n"
-        "    {\n"
-        "      'type': 'objectives', 'title': 'Mục tiêu bài học', 'content': [], 'notes': ''\n"
-        "    },\n"
-        "    {\n"
-        "      'type': 'activity', 'title': 'Hoạt động 1: Khởi động', 'body': '', 'prompt_image': '', 'notes': ''\n"
-        "    },\n"
-        "    {\n"
-        "      'type': 'content', 'title': 'Khái niệm cốt lõi', 'bullets': [], 'prompt_image': '', 'notes': ''\n"
-        "    },\n"
-        "    {\n"
-        "      'type': 'quiz', 'title': 'Luyện tập tương tác', 'question': '', 'options': [], 'correct': '', 'notes': ''\n"
-        "    },\n"
-        "    {\n"
-        "      'type': 'ending', 'title': 'Cảm ơn & Dặn dò', 'content': [], 'notes': ''\n"
         "    }\n"
         "  ]\n"
-        "}"
-        "BẮT BUỘC: Không được sử dụng ký hiệu toán học dạng mã LaTeX (như $...$ hoặc $$...$$). "
+        "}\n"
+        "Lưu ý quan trọng: Trong nội dung hiển thị trên Slide, Tuyệt đối KHÔNG sử dụng ký hiệu toán học dạng mã LaTeX (như $...$ hoặc $$...$$). "
         "Hãy sử dụng các ký tự Unicode toán học thông thường (ví dụ: dùng ², ³, √, ±, ∈, →) "
         "để đảm bảo PowerPoint hiển thị được trực quan, không bị lỗi font."
     )
@@ -62,14 +39,27 @@ def generate_powerpoint_data_ai(api_key, raw_text, metadata, style_choice):
     5. Phần 'notes' (Ghi chú giáo viên) phải ghi rõ mục tiêu slide, câu hỏi gợi mở và thời lượng dự kiến trình bày.
     """
     
-    response = model.generate_content([system_prompt, user_content])
+    config = types.GenerateContentConfig(
+        temperature=0.4,
+        top_p=0.95,
+        max_output_tokens=8192,
+        response_mime_type="application/json",
+        system_instruction=system_prompt
+    )
+    
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=user_content,
+        config=config
+    )
     
     try:
         clean_text = response.text.strip()
         if clean_text.startswith("```json"):
-            clean_text = clean_text[7:]
-        if clean_text.endswith("```"):
-            clean_text = clean_text[:-3]
-        return json.loads(clean_text.strip())
+            clean_text = clean_text.split("```json")[1].split("```")[0].strip()
+        elif clean_text.startswith("```"):
+            clean_text = clean_text.split("```")[1].split("```")[0].strip()
+            
+        return json.loads(clean_text)
     except Exception as e:
-        return {"error": f"Lỗi phân tích cú pháp AI Slide: {str(e)}", "raw_response": response.text}
+        raise ValueError(f"Lỗi phản hồi JSON từ Gemini API: {e}\nNội dung thô: {response.text}")
