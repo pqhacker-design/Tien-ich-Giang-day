@@ -32,3 +32,4 @@ chromadb
 pydantic
 langchain-text-splitters
 langchain-core
+google-api-core
