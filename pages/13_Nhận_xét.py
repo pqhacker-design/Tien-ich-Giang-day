@@ -63,8 +63,10 @@ with st.expander("⚙️ CẤU HÌNH HỆ THỐNG & THÔNG TIN LỚP HỌC", exp
 
 # Lấy key hiện tại để khởi tạo AI Service
 current_api_key = st.session_state.get("gemini_api_key") or st.session_state.get("saved_api_key") or ""
-ai_service = GeminiService([current_api_key] if current_api_key else [])
 
+# Khởi tạo an toàn (nếu current_api_key rỗng thì truyền danh sách rỗng, GeminiService mới sẽ không bị crash nữa)
+api_keys_list = [current_api_key] if current_api_key else []
+ai_service = GeminiService(api_keys_list)
 st.markdown("---")
 
 # 5. GIAO DIỆN CHÍNH (ĐIỀU HƯỚNG TABS)
