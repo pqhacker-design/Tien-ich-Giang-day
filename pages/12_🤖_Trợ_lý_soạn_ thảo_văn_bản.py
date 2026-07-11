@@ -10,7 +10,7 @@ from edu_ai_assistant.modules.word_export import WordExportEngine
 
 # 1. Khởi tạo Giao diện
 UIManager.setup_theme()
-
+UIManager.render_header()
 # 2. Khởi tạo & Kiểm tra Session State
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     # Đồng bộ hóa key để dùng thống nhất trong app
@@ -32,8 +32,6 @@ if "parsed_text" not in st.session_state:
 api_key = st.session_state.get("api_key")
 rag_system = KnowledgeHubRAG(config.CHROMA_PERSIST_DIR, api_key) if api_key else None
 # 3. Giao diện Chính (Main Interface)
-UIManager.render_header()
-
 # Tabs Chức năng
 tab_config, tab_dashboard, tab_process, tab_copilot, tab_templates = st.tabs([
     "**⚙️ Cấu hình Hệ thống**",
