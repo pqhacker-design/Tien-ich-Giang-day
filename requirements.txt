@@ -33,3 +33,7 @@ pydantic
 langchain-text-splitters
 langchain-core
 google-api-core
+sqlalchemy
+bcrypt
+pyjwt
+pydantic
