@@ -13,13 +13,13 @@ UIManager.setup_theme()
 
 # 2. Khởi tạo & Kiểm tra Session State
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
-    # Đồng bộ key vào "api_key" để các module phía dưới sử dụng thống nhất
-    st.session_state["api_key"] = st.session_state["gemini_api_key"]
-    st.success("🔑 **Trạng thái API Key:** Đã nhận diện thành công từ Trang chủ.")
+    api_key_input = st.session_state["gemini_api_key"]
 else:
-    st.warning("⚠️ **Chưa tìm thấy API Key:** Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key.")
+    # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
+    st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
+    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
     st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
-    st.stop()  # Dừng chạy các dòng code phía dưới nếu chưa có key
+    st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
 
 # Khởi tạo các biến lưu trữ trạng thái nếu chưa có
 if "processed_doc" not in st.session_state:
