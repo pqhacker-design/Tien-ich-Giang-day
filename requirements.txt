@@ -1,20 +1,20 @@
-streamlit
+streamlit>=1.35.0
 streamlit-option-menu
 streamlit-extras
 python-docx
 python-pptx
 reportlab
-numpy
+numpy>=1.24.0, <2.0.0
 docxcompose
 mammoth
-pandas
-openpyxl
+pandas>=2.0.0, <2.2.0
+openpyxl>=3.1.2
 pypdf
 lxml
 underthesea
 altair
 matplotlib
-plotly
+plotly>=5.18.0
 scipy
 python-dotenv
 httpx
@@ -22,7 +22,7 @@ pdfplumber
 sympy
 shapely
 pillow
-google-genai
+google-genai>=0.1.0
 openai
 latex2mathml
 langchain
