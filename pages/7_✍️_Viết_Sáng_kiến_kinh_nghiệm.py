@@ -36,7 +36,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.markdown("## 📝 Viết SKKN và nghiên cứu Khoa học")
+st.markdown("## ✍️ Viết SKKN và nghiên cứu Khoa học")
 st.info("Hỗ trợ, chỉnh sửa, đóng góp và gợi ý GV viết SKKN. Chọn các tab bên dưới để sử dụng từng chức năng.")
 
 # --- 🔑 KIỂM TRA VÀ ÉP ĐỒNG BỘ API KEY TỪ TRANG CHỦ ---
