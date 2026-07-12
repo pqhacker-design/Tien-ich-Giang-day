@@ -76,7 +76,7 @@ if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].s
 else:
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
     st.info("💡 Mẹo: Nếu bạn là HS thì nhờ thầy cô hoặc ba mẹ giúp nhập API key nhé!")
-    st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
+    st.page_link("🏠_Trang_Chủ.py", label="**Nhấn vào đây để Quay lại Trang chủ**", icon="🔄")
     st.stop() 
 
 # Khởi tạo hoặc tái sử dụng client tập trung
