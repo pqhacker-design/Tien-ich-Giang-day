@@ -6,12 +6,6 @@ from word_processor import WordProcessor
 st.markdown(
     """
     <style>
-    /* Căn giữa container chứa st.page_link */
-    div[data-testid="stPageLink"] {
-        display: flex !important;
-        justify-content: center !important;
-        width: 100% !important;
-    }
     /* Tuỳ chỉnh kiểu dáng cho tất cả các nút st.page_link */
     div[data-testid="stPageLink"] a {
         background-color: #0284C7 !important; /* Màu nền (Xanh dương) */
@@ -60,7 +54,9 @@ with st.expander("⚙️ **CẤU HÌNH HỆ THỐNG:**", expanded=False):
             st.success("🔑 **Trạng thái API Key:** Đã nhận diện thành công từ Trang chủ.")
         else:
             st.warning("⚠️ **Chưa tìm thấy API Key:** Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key.")
-            st.page_link("🏠_Trang_Chủ.py", label="**Nhấn vào đây để Quay lại Trang chủ**", icon="🔄")
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄", use_container_width=True)
             st.stop() # Dừng chạy các dòng code phía dưới nếu chưa có key
 
     with col_cfg2:
