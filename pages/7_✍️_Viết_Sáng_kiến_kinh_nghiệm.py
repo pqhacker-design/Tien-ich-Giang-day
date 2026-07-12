@@ -2,6 +2,36 @@ import streamlit as st
 import os
 import sys
 
+# 1. Đoạn CSS tùy chỉnh màu sắc cho st.page_link
+st.markdown(
+    """
+    <style>
+    /* Tuỳ chỉnh kiểu dáng cho tất cả các nút st.page_link */
+    div[data-testid="stPageLink"] a {
+        background-color: #0284C7 !important; /* Màu nền (Xanh dương) */
+        color: white !important;              /* Màu chữ */
+        border-radius: 8px !important;         /* Bo góc */
+        padding: 8px 16px !important;          /* Khoảng cách lề trong */
+        text-decoration: none !important;      /* Bỏ gạch chân */
+        font-weight: bold !important;          /* Chữ in đậm */
+        border: 1px solid #0369A1 !important;  /* Màu viền */
+        display: inline-flex !important;
+        align-items: center !important;
+        transition: all 0.3s ease !important;  /* Hiệu ứng chuyển mượt */
+    }
+
+    /* Hiệu ứng khi rê chuột (Hover) vào nút */
+    div[data-testid="stPageLink"] a:hover {
+        background-color: #0369A1 !important; /* Màu nền đậm hơn khi hover */
+        color: #F0F9FF !important;              /* Màu chữ khi hover */
+        border-color: #075985 !important;
+        transform: translateY(-2px);           /* Hiệu ứng nổi nhẹ */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # Tự động cấu hình sys.path để nhận diện các module ở thư mục cha nếu chạy trong thư mục pages/
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
