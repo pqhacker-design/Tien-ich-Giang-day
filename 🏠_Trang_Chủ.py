@@ -98,14 +98,14 @@ with col1:
 
 with col2:
     with st.container(border=True):
-        st.markdown("### 📚 2. Trợ lý Soạn KHBD")
+        st.markdown("#### 📚 2. Trợ lý Soạn KHBD")
         st.write("Trợ lý AI thông minh giúp giáo viên Tạo mới hoặc Chỉnh sửa Kế hoạch bài dạy theo CV 5512, tích hợp KNS và xuất ra Word.")
         if st.button("🚀 Mở ứng dụng Soạn KHBD", key="btn_soan_khbd", use_container_width=True):
             st.switch_page("pages/2_📚_Trợ_lý_Soạn_KHBD.py")
 
 with col3:
     with st.container(border=True):
-        st.markdown("### 🎯 3. Gọi học sinh ngẫu nhiên")
+        st.markdown("#### 🎯 3. Gọi học sinh ngẫu nhiên")
         st.write("Công cụ tạo trò chơi vòng quay may mắn, lưới ảnh học sinh để tương tác, gọi tên ngẫu nhiên trong các hoạt động trên lớp học.")
         if st.button("🚀 Mở ứng dụng Gọi học sinh", key="btn_goi_ten", use_container_width=True):
             st.switch_page("pages/3_🎯_Gọi_HS_ngẫu_nhiên.py")
@@ -115,21 +115,21 @@ col4, col5, col6 = st.columns(3)
 
 with col4:
     with st.container(border=True):
-        st.markdown("### 📝 4. Sửa lỗi chính tả văn bản")
+        st.markdown("#### 📝 4. Sửa lỗi chính tả văn bản")
         st.write("Ứng dụng Kiểm tra và Sửa lỗi Chính tả và xuất ra định dạng chuẩn văn bản hành chính")
         if st.button("🚀 Mở ứng dụng Sửa lỗi chính tả", key="btn_sua_loi_chinh_ta", use_container_width=True):
             st.switch_page("pages/4_📝_Sửa_lỗi_chính_tả.py")
 
 with col5:
     with st.container(border=True):
-        st.markdown("### 📊 5. Ra đề kiểm tra")
+        st.markdown("#### 📊 5. Ra đề kiểm tra")
         st.write("Ứng dụng hỗ trợ tạo ma trận, đặc tả và sinh đề kiểm tra định kỳ nhanh chóng, bám sát thông tư hướng dẫn mới.")
         if st.button("🚀 Mở ứng dụng Ra đề kiểm tra", key="btn_ra_de_kt", use_container_width=True):
             st.switch_page("pages/5_📊_Ra_đề_kiểm_tra.py")
 
 with col6:
     with st.container(border=True):
-        st.markdown("### 🎮 6. Trò chơi học tập")
+        st.markdown("#### 🎮 6. Trò chơi học tập")
         st.write("Thiết kế nhanh các câu hỏi tương tác, kịch bản trò chơi khởi động và ôn tập bài học sinh động.")
         if st.button("🚀 Mở ứng dụng Thiết kế Game", key="btn_game_hoc_tap", use_container_width=True):
             st.switch_page("pages/6_🎮_Trò_chơi_học_tập.py")
@@ -139,19 +139,19 @@ col7, col8, col9 = st.columns(3)
 
 with col7:
     with st.container(border=True):
-        st.markdown("### ✍️ 7. Trợ lý viết SKKN")
+        st.markdown("#### ✍️ 7. Trợ lý viết SKKN")
         st.write("Hệ thống Trợ lý AI Hỗ trợ viết Sáng kiến kinh nghiệm và Nghiên cứu Khoa học Sư phạm Toàn diện")
         if st.button("🚀 Mở ứng dụng Viết SKKN", key="btn_sang_kien_kinh_nghiem", use_container_width=True):
             st.switch_page("pages/7_✍️_Viết_Sáng_kiến_kinh_nghiệm.py")
 with col8:
     with st.container(border=True):
-        st.markdown("### 🎓 8. Gia sư AI - Hỗ trợ HS học tập")
+        st.markdown("#### 🎓 8. Gia sư AI - Hỗ trợ HS học tập")
         st.write("Hỗ trợ HS và hướng dẫn các em làm bài tập Tất cả các môn học từ TH đến THPT.")
         if st.button("🚀 Mở ứng dụng Gia sư", key="btn_gia_su_ai", use_container_width=True):
             st.switch_page("pages/8_🎓_Gia_Sư_AI.py")
 with col9:
     with st.container(border=True):
-        st.markdown("### 9_🔄_Chuyển đổi file .Pdf thành Word (.docx)")
+        st.markdown("#### 🔄 9. Chuyển đổi file .Pdf thành Word (.docx)")
         st.write("Ứng dụng trích xuất văn bản từ file .pdf, .png, .jpg và xuất bản thành file Word.")
         if st.button("🚀 Mở ứng dụng Pdf to Word", key="btn_pdf_to_word", use_container_width=True):
             st.switch_page("pages/9_🔄_Chuyển_đổi_Pdf_to_Word.py")
@@ -161,19 +161,19 @@ col10, col11, col12 = st.columns(3)
 
 with col10:
     with st.container(border=True):
-        st.markdown("### 📐 10. Trợ lý giúp vẽ hình Hình học")
+        st.markdown("#### 📐 10. Trợ lý giúp vẽ hình Hình học")
         st.write("Trợ lý AI giúp GV vẽ hình hình học theo đề bài ra để chèn vào KHBD hoặc lời giải trong đề bài.")
         if st.button("🚀 Mở ứng dụng Vẽ hình HH", key="btn_ve_hinh_hoc", use_container_width=True):
             st.switch_page("pages/10_📐_Vẽ_Hình_học_và_Đồ_thị.py")
 with col11:
     with st.container(border=True):
-        st.markdown("### 🛡️ 11. So sánh văn bản")
+        st.markdown("#### 🛡️ 11. So sánh văn bản")
         st.write("Giúp người dùng so sánh, đối chiếu, đánh giá chất lượng văn bản so với mẫu và áp dụng chỉnh sửa.")
         if st.button("🚀 Mở ứng dụng So sánh VB", key="btn_so_sanh_van_ban", use_container_width=True):
             st.switch_page("pages/11_🛡️_So_sánh_văn_bản.py")
 with col12:
     with st.container(border=True):
-        st.markdown("### ✍️ 12. Trợ lý soạn thảo văn bản")
+        st.markdown("#### ✍️ 12. Trợ lý soạn thảo văn bản")
         st.write("Giúp GV soạn thảo và chỉnh sửa văn bản theo yêu cầu")
         if st.button("🚀 Mở Trợ lý soạn thảo VB", key="btn_tro_ly_vb", use_container_width=True):
             st.switch_page("pages/12_✍️_Trợ_lý_soạn_ thảo_văn_bản.py")            
