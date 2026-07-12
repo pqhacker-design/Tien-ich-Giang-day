@@ -56,7 +56,7 @@ with st.expander("**🔑 Cấu hình kết nối AI (Nhập API key của bạn 
 
     col_btn, _ = st.columns([1, 3])
     with col_btn:
-        verify_clicked = st.button("🔍 Kiểm tra & Lưu Key", use_container_width=True)
+        verify_clicked = st.button("🔍 Kiểm tra & Lưu Key", type="primary", use_container_width=True)
 
     # Thực hiện kiểm tra khi bấm nút hoặc khi giá trị input thay đổi
     if verify_clicked or (input_key and input_key != st.session_state["saved_api_key"]):
