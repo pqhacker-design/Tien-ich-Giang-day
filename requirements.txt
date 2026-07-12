@@ -1,7 +1,6 @@
 streamlit
 streamlit-option-menu
 streamlit-extras
-python=3.11
 python-docx
 python-pptx
 reportlab
