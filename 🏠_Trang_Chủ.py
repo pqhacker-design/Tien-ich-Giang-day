@@ -46,7 +46,7 @@ def check_gemini_api_key(api_key: str) -> tuple[bool, str]:
     except Exception as e:
         return False, f"Lỗi kết nối: {str(e)}"
 
-with st.expander("*🔑 Cấu hình kết nối AI (Nhập API key của bạn để sử dụng các tiện ích)*", expanded=not st.session_state["api_key_valid"]):
+with st.expander("**🔑 Cấu hình kết nối AI (Nhập API key của bạn để sử dụng các tiện ích)**", expanded=False st.session_state["api_key_valid"]):
     input_key = st.text_input(
         "**Nhập Google Gemini API Key của bạn tại đây:**",
         value=st.session_state["saved_api_key"],
