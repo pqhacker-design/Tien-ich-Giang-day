@@ -49,6 +49,7 @@ if "classes" not in st.session_state.db:
 db = st.session_state.db
 
 # --- CHIA 2 TAB CHÍNH TẠI GIAO DIỆN PHẦN THÂN ---
+st.markdown("## 🎯 Gọi HS lên bảng ngẫu nhiên")
 tab_game, tab_config = st.tabs(["🎯 Trò Chơi & Lựa Chọn", "⚙️ Cấu Hình & Quản Lý Lớp"])
 
 # ==========================================
