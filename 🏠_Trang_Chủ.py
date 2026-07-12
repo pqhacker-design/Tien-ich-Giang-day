@@ -79,7 +79,7 @@ with col4:
 
 with col5:
     with st.container(border=True):
-        st.markdown("### 📝 5. Ra đề kiểm tra")
+        st.markdown("### 📊 5. Ra đề kiểm tra")
         st.write("Ứng dụng hỗ trợ tạo ma trận, đặc tả và sinh đề kiểm tra định kỳ nhanh chóng, bám sát thông tư hướng dẫn mới.")
         if st.button("🚀 Mở ứng dụng Ra đề kiểm tra", key="btn_ra_de_kt", use_container_width=True):
             st.switch_page("pages/5_📊_Ra_đề_kiểm_tra.py")
