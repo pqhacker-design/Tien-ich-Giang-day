@@ -1,4 +1,6 @@
 import streamlit as st
+from google import genai  # Thư viện google-genai mới
+from google.genai.errors import APIError
 
 # 1. Cấu hình trang chủ
 st.set_page_config(
@@ -7,33 +9,74 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. Tiêu đề chính tối ưu siêu gọn (Kết hợp H2 và Caption để tiết kiệm dòng)
+# 2. Tiêu đề chính
 st.markdown("## 🎓 Hệ sinh thái Trợ lý Giáo dục AI  ([Get API key](https://aistudio.google.com/api-keys))")
 st.caption("Nền tảng CNTT và AI hỗ trợ giảng dạy và học tập bám sát Chương trình GDPT 2018. (LƯU Ý: AI không làm giúp bạn, AI chỉ hỗ trợ cho bạn.)")
 
-# --- 3. QUẢN LÝ API KEY TẬP TRUNG (SỬA LỖI MẤT BIẾN KHI CHUYỂN TRANG) ---
+# --- 3. QUẢN LÝ & KIỂM TRA API KEY TẬP TRUNG (Dùng google-genai) ---
 if "saved_api_key" not in st.session_state:
     st.session_state["saved_api_key"] = ""
+if "api_key_valid" not in st.session_state:
+    st.session_state["api_key_valid"] = False
 
-with st.expander("**🔑 Cấu hình kết nối AI (Nhập API key của bạn để sử dụng các tiện ích)**", expanded=False):
-    # Dùng giá trị mặc định lấy từ saved_api_key để không bị mất khi reload
-    gemini_api_key = st.text_input(
+def check_gemini_api_key(api_key: str) -> tuple[bool, str]:
+    """Kiểm tra tính hợp lệ của API Key bằng Client của thư viện google-genai."""
+    clean_key = api_key.strip()
+    if not clean_key:
+        return False, "Vui lòng không để trống API Key."
+    
+    try:
+        # Khởi tạo Client từ google.genai
+        client = genai.Client(api_key=clean_key)
+        
+        # Gửi request nhẹ để kiểm tra kết nối (sử dụng gemini-2.5-flash)
+        client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents="ping"
+        )
+        return True, "API Key hợp lệ và sẵn sàng sử dụng!"
+        
+    except APIError as e:
+        error_str = str(e)
+        if "API_KEY_INVALID" in error_str or "400" in error_str:
+            return False, "API Key không chính xác. Vui lòng kiểm tra lại!"
+        elif "RESOURCE_EXHAUSTED" in error_str or "429" in error_str:
+            return False, "API Key đã vượt quá giới hạn (Quota Exceeded)."
+        return False, f"Lỗi Google AI API: {e.message}"
+    except Exception as e:
+        return False, f"Lỗi kết nối: {str(e)}"
+
+with st.expander("**🔑 Cấu hình kết nối AI (Nhập API key của bạn để sử dụng các tiện ích)**", expanded=not st.session_state["api_key_valid"]):
+    input_key = st.text_input(
         "**Nhập Google Gemini API Key của bạn tại đây:**",
         value=st.session_state["saved_api_key"],
         type="password",
-        help="Nhập một lần tại đây, tất cả các ứng dụng thành phần sẽ tự động sử dụng chung."
+        help="Lấy API Key miễn phí từ Google AI Studio để kích hoạt hệ thống."
     )
 
-    if gemini_api_key:
-        st.session_state["saved_api_key"] = gemini_api_key
-        st.session_state["gemini_api_key"] = gemini_api_key
-        st.success("✔️ Đã đồng bộ API Key vào hệ thống phiên làm việc!")
-    else:
-        if "gemini_api_key" in st.session_state:
-            st.info("ℹ️ Hệ thống đang sử dụng API Key đã lưu từ trước.")
-        else:
-            st.warning("⚠️ Vui lòng nhập Gemini API Key để kích hoạt các tính năng AI trong các ứng dụng con.")
+    col_btn, _ = st.columns([1, 3])
+    with col_btn:
+        verify_clicked = st.button("🔍 Kiểm tra & Lưu Key", use_container_width=True)
 
+    # Thực hiện kiểm tra khi bấm nút hoặc khi giá trị input thay đổi
+    if verify_clicked or (input_key and input_key != st.session_state["saved_api_key"]):
+        with st.spinner("Đang kết nối tới Google AI Studio..."):
+            is_valid, message = check_gemini_api_key(input_key)
+            
+            if is_valid:
+                st.session_state["saved_api_key"] = input_key
+                st.session_state["gemini_api_key"] = input_key
+                st.session_state["api_key_valid"] = True
+                st.success(f"✔️ {message}")
+            else:
+                st.session_state["api_key_valid"] = False
+                st.session_state.pop("gemini_api_key", None)
+                st.error(f"❌ {message}")
+    elif st.session_state.get("api_key_valid"):
+        st.info("ℹ️ Hệ thống đang sử dụng API Key đã xác thực thành công.")
+    else:
+        st.warning("⚠️ Vui lòng nhập API Key để bắt đầu sử dụng.")
+        
 # 4. DANH SÁCH ỨNG DỤNG THÀNH PHẦN (Được đẩy lên sát bên trên)
 st.markdown(
     """
