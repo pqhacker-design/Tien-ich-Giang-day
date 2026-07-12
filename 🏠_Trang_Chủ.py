@@ -96,10 +96,10 @@ col7, col8, col9 = st.columns(3)
 
 with col7:
     with st.container(border=True):
-        st.markdown("### 🎓 7. Trợ lý viết SKKN")
+        st.markdown("### ✍️ 7. Trợ lý viết SKKN")
         st.write("Hệ thống Trợ lý AI Hỗ trợ viết Sáng kiến kinh nghiệm và Nghiên cứu Khoa học Sư phạm Toàn diện")
         if st.button("🚀 Mở ứng dụng Viết SKKN", key="btn_sang_kien_kinh_nghiem", use_container_width=True):
-            st.switch_page("pages/7_🎓_Viết_Sáng_kiến_kinh_nghiệm.py")
+            st.switch_page("pages/7_✍️_Viết_Sáng_kiến_kinh_nghiệm.py")
 with col8:
     with st.container(border=True):
         st.markdown("### 🎓 8. Gia sư AI - Hỗ trợ HS học tập")
@@ -130,7 +130,7 @@ with col11:
             st.switch_page("pages/11_🛡️_So_sánh_văn_bản.py")
 with col12:
     with st.container(border=True):
-        st.markdown("### 12. Trợ lý soạn thảo văn bản")
+        st.markdown("### ✍️ 12. Trợ lý soạn thảo văn bản")
         st.write("Giúp GV soạn thảo và chỉnh sửa văn bản theo yêu cầu")
         if st.button("🚀 Mở Trợ lý soạn thảo VB", key="btn_tro_ly_vb", use_container_width=True):
             st.switch_page("pages/12_✍️_Trợ_lý_soạn_ thảo_văn_bản.py")            
