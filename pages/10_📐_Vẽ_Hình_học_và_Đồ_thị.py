@@ -38,7 +38,7 @@ else:
     # Nếu thực sự chưa có key, hiển thị thông báo và chặn đứng giao diện phía dưới
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
     st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ ở thanh bên trái sẽ tự động kích hoạt.")
-    st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ nhập API Key", icon="🔄")
+    st.page_link("🏠_Trang_Chủ.py", label="**Nhấn vào đây để Quay lại Trang chủ**", icon="🔄")
     st.stop() 
 
 # Khởi tạo bộ nhớ dữ liệu hình vẽ
