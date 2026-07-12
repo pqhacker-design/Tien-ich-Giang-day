@@ -1,32 +1,48 @@
 import pandas as pd
 import io
+import re
 from typing import Tuple, Dict
 
 class AIImportWizard:
     @staticmethod
     def auto_detect_and_parse(uploaded_file) -> Tuple[pd.DataFrame, Dict[str, str]]:
-        # 1. Đọc tất cả dòng dưới dạng text thuần để tránh lỗi parse C-engine
+        # 1. Đọc tất cả nội dung thành danh sách các dòng text
         content = uploaded_file.getvalue().decode('utf-8-sig', errors='ignore')
         lines = content.splitlines()
 
+        # 2. Tìm dòng chứa tiêu đề cột điểm (DDGTX_TinhDiem / TBM_HKI)
         header_idx = -1
         for idx, line in enumerate(lines[:25]):
-            if "DDGTX_TinhDiem" in line or "TBM_HKI" in line:
+            if "DDGTX_TinhDiem" in line or "TBM_HKI" in line or "DDGGK_TinhDiem" in line:
                 header_idx = idx
                 break
 
         if header_idx == -1:
             header_idx = 0
 
-        # 2. Đọc vào Pandas từ dòng tiêu đề phát hiện được
+        # 3. LỌC SẠCH DỮ LIỆU THÔ: Bỏ tất cả dòng chứa JSON cấu hình ("{" hoặc "PointCode")
+        clean_lines = []
+        # Lấy dòng tiêu đề
+        clean_lines.append(lines[header_idx])
+        
+        # Lấy các dòng dữ liệu phía sau, BỎ QUA các dòng chứa JSON
+        for line in lines[header_idx + 1:]:
+            # Dòng chứa JSON thường bắt đầu bằng dấu ngoặc nhọn hoặc có chữ PointCode
+            if '{"' in line or 'PointCode' in line or 'PointWeight' in line:
+                continue
+            if line.strip():  # Chỉ lấy dòng không rỗng
+                clean_lines.append(line)
+
+        # 4. Đưa chuỗi dòng đã làm sạch vào Pandas (dùng python engine để xử lý chuỗi an toàn tuyệt đối)
+        clean_csv_content = "\n".join(clean_lines)
         df = pd.read_csv(
-            io.StringIO(content), 
-            skiprows=header_idx, 
-            dtype=str, 
-            on_bad_lines='skip'
+            io.StringIO(clean_csv_content),
+            dtype=str,
+            engine='python',        # Chuyển sang Python Engine tránh crash C-parser
+            on_bad_lines='skip'     # Tự động bỏ qua các dòng nếu vẫn còn lệch cột
         )
 
-        # 3. Gán lại tên cho 4 cột đầu tiên (do file SMAS để trống 4 cột đầu ở dòng tiêu đề)
+        # 5. Đặt lại tên 4 cột đầu tiên của SMAS (vốn bị để trống tiêu đề)
         cols = list(df.columns)
         if len(cols) >= 4:
             cols[0] = "STT"
@@ -35,12 +51,11 @@ class AIImportWizard:
             cols[3] = "Họ và tên"
         df.columns = [str(c).strip() for c in cols]
 
-        # 4. Loại bỏ các dòng JSON metadata cấu hình SMAS & dòng trống
-        df = df[~df['STT'].astype(str).str.contains(r'\{|"Id"|Batch', na=False)]
+        # 6. Lọc chỉ giữ lại các dòng học sinh thực sự (có tên học sinh)
         df = df[df['Họ và tên'].notna() & (df['Họ và tên'].str.strip() != "")]
         df = df.reset_index(drop=True)
 
-        # 5. Ánh xạ cột tự động sang chuẩn hệ thống
+        # 7. Ánh xạ các cột điểm chính xác
         mapping = {
             "code": "Mã HS",
             "name": "Họ và tên",
@@ -51,7 +66,6 @@ class AIImportWizard:
             "tb": "TBM_HKI"
         }
 
-        # Tìm các cột điểm thực tế trong DataFrame
         found_mapping = {}
         for key, target_col in mapping.items():
             for col in df.columns:
@@ -59,7 +73,7 @@ class AIImportWizard:
                     found_mapping[key] = col
                     break
 
-        # Sửa kiểu dữ liệu an toàn chống Segfault cho PyArrow
+        # 8. Làm sạch toàn bộ dữ liệu trả về kiểu chuỗi (Tránh Segfault/ArrowTypeError)
         for col in df.columns:
             df[col] = df[col].fillna("").astype(str)
 
