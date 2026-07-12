@@ -18,7 +18,7 @@ if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].s
     api_key_input = st.session_state["gemini_api_key"]
 else:
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
-    st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
+    st.page_link("🏠_Trang_Chủ.py", label="**Nhấn vào đây để Quay lại Trang chủ**", icon="🔄")
     st.stop() 
 
 if "gemini_client" not in st.session_state:
