@@ -118,13 +118,13 @@ col10, col11, col12 = st.columns(3)
 
 with col10:
     with st.container(border=True):
-        st.markdown("### 🎓 10. Trợ lý giúp vẽ hình Hình học")
+        st.markdown("### 📐 10. Trợ lý giúp vẽ hình Hình học")
         st.write("Trợ lý AI giúp GV vẽ hình hình học theo đề bài ra để chèn vào KHBD hoặc lời giải trong đề bài.")
         if st.button("🚀 Mở ứng dụng Vẽ hình HH", key="btn_ve_hinh_hoc", use_container_width=True):
             st.switch_page("pages/10_📐_Vẽ_Hình_học_và_Đồ_thị.py")
 with col11:
     with st.container(border=True):
-        st.markdown("### 🎓 11. So sánh văn bản")
+        st.markdown("### 🛡️ 11. So sánh văn bản")
         st.write("Giúp người dùng so sánh, đối chiếu, đánh giá chất lượng văn bản so với mẫu và áp dụng chỉnh sửa.")
         if st.button("🚀 Mở ứng dụng So sánh VB", key="btn_so_sanh_van_ban", use_container_width=True):
             st.switch_page("pages/11_🛡️_So_sánh_văn_bản.py")
