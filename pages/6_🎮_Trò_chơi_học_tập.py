@@ -6,6 +6,36 @@ from ai_classroom_game.services.ai_service import AIService
 from ai_classroom_game.modules.interactives import render_lucky_wheel
 from ai_classroom_game.modules.exporters import DocumentExporter
 
+# 1. Đoạn CSS tùy chỉnh màu sắc cho st.page_link
+st.markdown(
+    """
+    <style>
+    /* Tuỳ chỉnh kiểu dáng cho tất cả các nút st.page_link */
+    div[data-testid="stPageLink"] a {
+        background-color: #0284C7 !important; /* Màu nền (Xanh dương) */
+        color: white !important;              /* Màu chữ */
+        border-radius: 8px !important;         /* Bo góc */
+        padding: 8px 16px !important;          /* Khoảng cách lề trong */
+        text-decoration: none !important;      /* Bỏ gạch chân */
+        font-weight: bold !important;          /* Chữ in đậm */
+        border: 1px solid #0369A1 !important;  /* Màu viền */
+        display: inline-flex !important;
+        align-items: center !important;
+        transition: all 0.3s ease !important;  /* Hiệu ứng chuyển mượt */
+    }
+
+    /* Hiệu ứng khi rê chuột (Hover) vào nút */
+    div[data-testid="stPageLink"] a:hover {
+        background-color: #0369A1 !important; /* Màu nền đậm hơn khi hover */
+        color: #F0F9FF !important;              /* Màu chữ khi hover */
+        border-color: #075985 !important;
+        transform: translateY(-2px);           /* Hiệu ứng nổi nhẹ */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 st.markdown(
     """
     <style>
