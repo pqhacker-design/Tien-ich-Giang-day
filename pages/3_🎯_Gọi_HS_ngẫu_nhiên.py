@@ -50,7 +50,7 @@ db = st.session_state.db
 
 # --- CHIA 2 TAB CHÍNH TẠI GIAO DIỆN PHẦN THÂN ---
 st.markdown("## 🎯 Gọi HS lên bảng ngẫu nhiên")
-tab_game, tab_config = st.tabs(["🎯 Trò Chơi & Lựa Chọn", "⚙️ Cấu Hình & Quản Lý Lớp"])
+tab_game, tab_config = st.tabs(["**| 🎯 Trò Chơi & Lựa Chọn**", "**| ⚙️ Cấu Hình & Quản Lý Lớp**"])
 
 # ==========================================
 # TAB 1: TRÒ CHƠI & LỰA CHỌN (HTML/JS COMPONENT)
@@ -443,7 +443,7 @@ with tab_config:
         with col_sel:
             curr_class_idx = class_list.index(db["currentClass"]) if db["currentClass"] in class_list else 0
             selected_class = st.selectbox(
-                "Lớp giảng dạy hiện tại:",
+                "**Lớp giảng dạy hiện tại:**",
                 class_list,
                 index=curr_class_idx,
                 key="config_select_class"
@@ -470,7 +470,7 @@ with tab_config:
 
         # Tạo lớp mới
         with st.form("form_create_class", clear_on_submit=True):
-            new_c = st.text_input("➕ Tạo lớp học mới:")
+            new_c = st.text_input("**➕ Tạo lớp học mới:**")
             if st.form_submit_button("Tạo lớp") and new_c.strip():
                 c_name = new_c.strip()
                 if c_name not in db["classes"]:
@@ -495,7 +495,7 @@ with tab_config:
             use_container_width=True
         )
 
-        up_file = st.file_uploader("📤 Nạp dữ liệu từ file .json đã lưu:", type=["json"])
+        up_file = st.file_uploader("**📤 Nạp dữ liệu từ file .json đã lưu:**", type=["json"])
         if up_file is not None:
             try:
                 up_db = json.load(up_file)
@@ -513,8 +513,8 @@ with tab_config:
         st.subheader(f"👥 Danh Sách Học Sinh Lớp: {db['currentClass']}")
 
         # Nhập hàng loạt từ Excel
-        with st.expander("📥 Nhập danh sách hàng loạt (Dán từ Excel)", expanded=False):
-            excel_paste = st.text_area("Dán danh sách học sinh (mỗi tên 1 dòng):", height=120, key="cfg_excel_input")
+        with st.expander("**📥 Nhập danh sách hàng loạt (Dán từ Excel)**", expanded=False):
+            excel_paste = st.text_area("*Dán danh sách học sinh (mỗi tên 1 dòng):*", height=120, key="cfg_excel_input")
             col_ex1, col_ex2 = st.columns(2)
             with col_ex1:
                 if st.button("➕ Thêm nối tiếp", use_container_width=True):
@@ -546,9 +546,9 @@ with tab_config:
             st.write("**Thêm học sinh mới**")
             col_s1, col_s2 = st.columns([2, 1])
             with col_s1:
-                s_name = st.text_input("Họ tên học sinh:", key="add_s_name")
+                s_name = st.text_input("*Họ tên học sinh:*", key="add_s_name")
             with col_s2:
-                s_gender = st.selectbox("Giới tính:", ["Nam", "Nữ"], key="add_s_gender")
+                s_gender = st.selectbox("*Giới tính:*", ["Nam", "Nữ"], key="add_s_gender")
             
             if st.form_submit_button("🔥 Xác Nhận Thêm") and s_name.strip():
                 cur_list = db["classes"].get(db["currentClass"], [])
