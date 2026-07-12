@@ -565,7 +565,7 @@ client = init_gemini_client(api_key_input)
 if 'current_document_content' not in st.session_state: 
     st.session_state.current_document_content = ""
 
-tab1, tab2, tab3 = st.tabs(["**| 📋 1. Chọn Môn học & Số câu**", "**| 📊 2. Phân bổ Ma trận & Điểm số**", "**| 📥 3. Đóng gói & Xuất Đề**"])
+tab1, tab2, tab3 = st.tabs(["**| 📋 Bước 1. Chọn Môn học & Số câu**", "**| 📊 Bước 2. Phân bổ Ma trận & Điểm số**", "**| 📥 Bước 3. Đóng gói & Xuất Đề**"])
 
 with tab1:
     col1, col2 = st.columns(2)
