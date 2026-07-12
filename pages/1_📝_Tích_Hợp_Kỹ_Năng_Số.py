@@ -6,6 +6,12 @@ from word_processor import WordProcessor
 st.markdown(
     """
     <style>
+    /* Căn giữa container chứa st.page_link */
+    div[data-testid="stPageLink"] {
+        display: flex !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }
     /* Tuỳ chỉnh kiểu dáng cho tất cả các nút st.page_link */
     div[data-testid="stPageLink"] a {
         background-color: #0284C7 !important; /* Màu nền (Xanh dương) */
