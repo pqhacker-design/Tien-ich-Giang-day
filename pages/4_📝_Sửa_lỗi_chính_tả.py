@@ -36,7 +36,6 @@ with st.expander("⚙️ **Cấu hình Tiêu chí kiểm tra Sổ Sách & Hồ s
     with col_cfg2:
         new_criterion = st.text_input("**Thêm mục kiểm tra bắt buộc:**")
     with col_cfg3:
-        st.write("&#160;")
         if st.button("Cập nhật tiêu chí", use_container_width=True, type="primary"):
             if new_criterion:
                 current_criteria[profile_type].append(new_criterion)
