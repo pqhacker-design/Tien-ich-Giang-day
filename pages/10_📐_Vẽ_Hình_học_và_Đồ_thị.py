@@ -5,6 +5,36 @@ from ai_math_drawer.ai_engine import AIEngine
 from ai_math_drawer.geometry_engine import GeometryEngine
 from ai_math_drawer.docx_exporter import DocxExporter
 
+# 1. Đoạn CSS tùy chỉnh màu sắc cho st.page_link
+st.markdown(
+    """
+    <style>
+    /* Tuỳ chỉnh kiểu dáng cho tất cả các nút st.page_link */
+    div[data-testid="stPageLink"] a {
+        background-color: #0284C7 !important; /* Màu nền (Xanh dương) */
+        color: white !important;              /* Màu chữ */
+        border-radius: 8px !important;         /* Bo góc */
+        padding: 8px 16px !important;          /* Khoảng cách lề trong */
+        text-decoration: none !important;      /* Bỏ gạch chân */
+        font-weight: bold !important;          /* Chữ in đậm */
+        border: 1px solid #0369A1 !important;  /* Màu viền */
+        display: inline-flex !important;
+        align-items: center !important;
+        transition: all 0.3s ease !important;  /* Hiệu ứng chuyển mượt */
+    }
+
+    /* Hiệu ứng khi rê chuột (Hover) vào nút */
+    div[data-testid="stPageLink"] a:hover {
+        background-color: #0369A1 !important; /* Màu nền đậm hơn khi hover */
+        color: #F0F9FF !important;              /* Màu chữ khi hover */
+        border-color: #075985 !important;
+        transform: translateY(-2px);           /* Hiệu ứng nổi nhẹ */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # 1. Cấu hình trang (Bắt buộc đặt ở đầu file)
 st.set_page_config(
     page_title="AI Vẽ Hình Học và Đồ Thị Toán Học",
