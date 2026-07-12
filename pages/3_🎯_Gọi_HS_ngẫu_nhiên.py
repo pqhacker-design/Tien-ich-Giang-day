@@ -438,7 +438,7 @@ with tab_config:
             db["currentClass"] = "6A1"
             save_database(db)
 
-        col_sel, col_del = st.columns([3, 1])
+        col_sel, col_del = st.columns([2, 2])
         with col_sel:
             curr_class_idx = class_list.index(db["currentClass"]) if db["currentClass"] in class_list else 0
             selected_class = st.selectbox(
