@@ -4,3 +4,10 @@ channels:
   - defaults
 dependencies:
   - python=3.11
+  - pandas
+  - openpyxl
+  - plotly
+  - pip:
+    - streamlit
+    - google-genai
+    - python-docx
