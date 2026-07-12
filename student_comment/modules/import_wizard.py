@@ -6,11 +6,11 @@ from typing import Tuple, Dict
 class AIImportWizard:
     @staticmethod
     def auto_detect_and_parse(uploaded_file) -> Tuple[pd.DataFrame, Dict[str, str]]:
-        # 1. Đọc tất cả nội dung thành danh sách các dòng text
+        # 1. Đọc nội dung file
         content = uploaded_file.getvalue().decode('utf-8-sig', errors='ignore')
         lines = content.splitlines()
 
-        # 2. Tìm dòng chứa tiêu đề cột điểm (DDGTX_TinhDiem / TBM_HKI)
+        # 2. Tìm dòng chứa tiêu đề điểm số (DDGTX_TinhDiem / TBM_HKI)
         header_idx = -1
         for idx, line in enumerate(lines[:25]):
             if "DDGTX_TinhDiem" in line or "TBM_HKI" in line or "DDGGK_TinhDiem" in line:
@@ -20,60 +20,74 @@ class AIImportWizard:
         if header_idx == -1:
             header_idx = 0
 
-        # 3. LỌC SẠCH DỮ LIỆU THÔ: Bỏ tất cả dòng chứa JSON cấu hình ("{" hoặc "PointCode")
+        # 3. Lọc bỏ dòng chứa cấu hình JSON ("{" hoặc "PointCode") và dòng trống
         clean_lines = []
-        # Lấy dòng tiêu đề
-        clean_lines.append(lines[header_idx])
+        clean_lines.append(lines[header_idx]) # Dòng header
         
-        # Lấy các dòng dữ liệu phía sau, BỎ QUA các dòng chứa JSON
         for line in lines[header_idx + 1:]:
-            # Dòng chứa JSON thường bắt đầu bằng dấu ngoặc nhọn hoặc có chữ PointCode
             if '{"' in line or 'PointCode' in line or 'PointWeight' in line:
                 continue
-            if line.strip():  # Chỉ lấy dòng không rỗng
+            if line.strip():
                 clean_lines.append(line)
 
-        # 4. Đưa chuỗi dòng đã làm sạch vào Pandas (dùng python engine để xử lý chuỗi an toàn tuyệt đối)
+        # 4. Đưa vào Pandas xử lý bằng python engine
         clean_csv_content = "\n".join(clean_lines)
         df = pd.read_csv(
             io.StringIO(clean_csv_content),
             dtype=str,
-            engine='python',        # Chuyển sang Python Engine tránh crash C-parser
-            on_bad_lines='skip'     # Tự động bỏ qua các dòng nếu vẫn còn lệch cột
+            engine='python',
+            on_bad_lines='skip'
         )
 
-        # 5. Đặt lại tên 4 cột đầu tiên của SMAS (vốn bị để trống tiêu đề)
-        cols = list(df.columns)
-        if len(cols) >= 4:
-            cols[0] = "STT"
-            cols[1] = "System_ID"
-            cols[2] = "Mã HS"
-            cols[3] = "Họ và tên"
-        df.columns = [str(c).strip() for c in cols]
+        # 5. Đặt tên chuẩn xác cho các cột theo VỊ TRÍ CỘT (Index-based)
+        # File SMAS chuẩn: Cột 0: STT, Cột 1: ID, Cột 2: Mã HS, Cột 3: Họ tên
+        col_names = list(df.columns)
+        
+        # Tạo danh sách tên cột mới an toàn
+        new_cols = []
+        for i, col in enumerate(col_names):
+            col_str = str(col).strip()
+            if i == 0:
+                new_cols.append("STT")
+            elif i == 1:
+                new_cols.append("System_ID")
+            elif i == 2:
+                new_cols.append("Mã HS")
+            elif i == 3:
+                new_cols.append("Họ và tên")
+            else:
+                # Giữ nguyên tên cột điểm từ SMAS hoặc đặt tên mặc định nếu rỗng
+                new_cols.append(col_str if col_str and not col_str.startswith("Unnamed") else f"Col_{i}")
 
-        # 6. Lọc chỉ giữ lại các dòng học sinh thực sự (có tên học sinh)
-        df = df[df['Họ và tên'].notna() & (df['Họ và tên'].str.strip() != "")]
-        df = df.reset_index(drop=True)
+        df.columns = new_cols
 
-        # 7. Ánh xạ các cột điểm chính xác
-        mapping = {
+        # 6. Lọc lấy dòng học sinh thực sự dựa vào CỘT THỨ 4 (Index 3 - Họ và tên)
+        name_col = df.columns[3]
+        df = df[df[name_col].notna() & (df[name_col].astype(str).str.strip() != "")]
+        
+        # Bỏ dòng lặp lại tiêu đề (nếu có)
+        df = df[df[name_col] != "Họ và tên"].reset_index(drop=True)
+
+        # 7. Ánh xạ các cột điểm tự động
+        found_mapping = {
             "code": "Mã HS",
-            "name": "Họ và tên",
-            "class": "Lớp",
-            "tx": "DDGTX_TinhDiem",
-            "gk": "DDGGK_TinhDiem",
-            "ck": "DDGCK_TinhDiem",
-            "tb": "TBM_HKI"
+            "name": name_col,
+            "class": "Lớp"
         }
 
-        found_mapping = {}
-        for key, target_col in mapping.items():
-            for col in df.columns:
-                if target_col.lower() in col.lower():
-                    found_mapping[key] = col
-                    break
+        # Tìm các cột điểm trong DataFrame
+        for col in df.columns:
+            col_lower = col.lower()
+            if "ddgtx" in col_lower and "tx" not in found_mapping:
+                found_mapping["tx"] = col
+            elif "ddggk" in col_lower:
+                found_mapping["gk"] = col
+            elif "ddgck" in col_lower:
+                found_mapping["ck"] = col
+            elif "tbm" in col_lower:
+                found_mapping["tb"] = col
 
-        # 8. Làm sạch toàn bộ dữ liệu trả về kiểu chuỗi (Tránh Segfault/ArrowTypeError)
+        # 8. Làm sạch tất cả các giá trị về dạng Chuỗi (String) an toàn
         for col in df.columns:
             df[col] = df[col].fillna("").astype(str)
 
