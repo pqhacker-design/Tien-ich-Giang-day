@@ -124,6 +124,7 @@ with col2:
                 label="💾 TẢI XUỐNG KHBD TÍCH HỢP (.DOCX)",
                 data=st.session_state['processed_file'],
                 file_name="KHBD_TichHopNangLucSo.docx",
+                type="primary",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 use_container_width=True
             )
