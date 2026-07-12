@@ -207,6 +207,7 @@ if "processed_json" in st.session_state:
         label="📥 TẢI XUỐNG FILE WORD (.DOCX) CHUẨN HÀNH CHÍNH GIÁO DỤC",
         data=st.session_state["word_file_bytes"],
         file_name=filename_export,
+        type="primary",
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         use_container_width=True
     )
