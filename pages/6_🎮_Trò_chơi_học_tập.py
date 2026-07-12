@@ -43,7 +43,7 @@ if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].s
     gemini_key = st.session_state["gemini_api_key"].strip()
 else:
     st.warning("⚠️ Vui lòng cấu hình Google Gemini API Key tại **Trang chủ** trước khi vận hành.")
-    st.page_link("🏠_Trang_Chủ.py", label="Nhấn vào đây để Quay lại Trang chủ", icon="🔄")
+    st.page_link("🏠_Trang_Chủ.py", label="**Nhấn vào đây để Quay lại Trang chủ**", icon="🔄")
     st.stop()
 
 # Khởi tạo AIService chỉ với gemini_key
