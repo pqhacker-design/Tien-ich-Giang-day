@@ -564,7 +564,7 @@ with tab_config:
         if current_students:
             st.caption(f"Tổng số: {len(current_students)} học sinh")
             for idx, s in enumerate(current_students):
-                c_item1, c_item2, c_item3 = st.columns([3, 2, 1])
+                c_item1, c_item2, c_item3 = st.columns([3, 2, 2])
                 c_item1.write(f"**{idx + 1}. {s['name']}**")
                 c_item2.write(f"Điểm: `{s['score']}đ`")
                 if c_item3.button("🗑️ Xóa", key=f"cfg_del_{s['id']}_{idx}"):
