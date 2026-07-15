@@ -92,7 +92,13 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
         grade_select = st.selectbox("**Khối lớp áp dụng:**", [f"Lớp {i}" for i in range(1, 13)], index=7)
     with col_dur:
         duration_select = st.text_input("**Thời lượng tiết dạy:**", value="2 Tiết")
-
+# Bổ sung tùy chọn định dạng giáo án
+    lesson_format = st.radio(
+        "**Định dạng Tiến trình dạy học (Mục III):**",
+        options=["Loại thường (Không chia cột)", "Loại 2 cột (Hoạt động của GV & HS | Nội dung)", "Loại 3 cột (Tiến trình | Hoạt động của GV & HS | Nội dung)"],
+        index=0,
+        horizontal=True
+    )
     # Xác định cấp học tự động phục vụ cấu hình phân phối năng lực số thích ứng
     grade_num = int(''.join(filter(str.isdigit, grade_select)))
     if grade_num <= 5: 
@@ -228,8 +234,8 @@ if "processed_json" in st.session_state:
             worksheet_export = generate_digital_worksheet(lesson_data)
             
             # Tạo stream và lưu dạng bytes để không bị lock bộ nhớ
-            stream = export_lesson_to_word(lesson_data, df_m_export, df_r_export, worksheet_export)
-            st.session_state["word_file_bytes"] = stream.getvalue()
+# Tìm đến dòng gọi export_lesson_to_word ở gần cuối file và sửa lại:
+    stream = export_lesson_to_word(lesson_data, df_m_export, df_r_export, worksheet_export, lesson_format=lesson_format)            st.session_state["word_file_bytes"] = stream.getvalue()
 
     filename_export = f"Giao_An_4.0_{lesson_data.get('thong_tin_chung',{}).get('ten_bai_hoc','Bai_Hoc')}.docx"
     
