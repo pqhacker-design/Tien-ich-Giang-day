@@ -42,6 +42,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 # Cấu hình cài đặt trang giao diện Streamlit tiên tiến
 st.set_page_config(
     page_title="AI KHBD Thông Minh 4.0",
@@ -49,18 +50,20 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
 st.markdown(
     """
     <style>
         /* Nhắm mục tiêu vào văn bản bên trong các nút Tab của Streamlit */
         button[data-baseweb="tab"] div p {
             font-weight: bold !important;
-            font-size: 1.05em !important; /* Có thể phóng to chữ lên một chút nếu muốn */
+            font-size: 1.05em !important;
         }
     </style>
     """,
     unsafe_allow_html=True
 )
+
 # Khởi tạo Cơ sở dữ liệu SQLite cục bộ để lưu trữ lịch sử soạn giáo án của giáo viên
 conn = sqlite3.connect('lessons_history.db', check_same_thread=False)
 c = conn.cursor()
@@ -76,11 +79,10 @@ st.info("Giúp GV soạn KHBD theo công văn 5512 có tích hợp năng lực s
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
 else:
-    # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
     st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
     st.page_link("🏠_Trang_Chủ.py", label="**Nhấn vào đây để Quay lại Trang chủ**", icon="🔄")
-    st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
+    st.stop()
 
 # --- CẤU HÌNH NHẬN DIỆN BÀI DẠY (ĐƯỢC ĐƯA LÊN TRANG CHÍNH) ---
 with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=False):
@@ -92,13 +94,20 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
         grade_select = st.selectbox("**Khối lớp áp dụng:**", [f"Lớp {i}" for i in range(1, 13)], index=7)
     with col_dur:
         duration_select = st.text_input("**Thời lượng tiết dạy:**", value="2 Tiết")
-# Bổ sung tùy chọn định dạng giáo án
-        lesson_format = st.radio(
-            "**Định dạng Tiến trình dạy học (Mục III):**",
-            options=["Loại thường (Không chia cột)", "Loại 2 cột (Hoạt động của GV & HS | Nội dung)", "Loại 3 cột (Tiến trình | Hoạt động của GV & HS | Nội dung)"],
-            index=0,
-            horizontal=True
-        )
+        
+    # Bổ sung tùy chọn định dạng giáo án và gán key để giữ nguyên trạng thái dữ liệu phiên
+    lesson_format = st.radio(
+        "**Định dạng Tiến trình dạy học (Mục III):**",
+        options=[
+            "Loại thường (Không chia cột)", 
+            "Loại 2 cột (Hoạt động của GV & HS | Nội dung)", 
+            "Loại 3 cột (Tiến trình | Hoạt động của GV & HS | Nội dung)"
+        ],
+        index=0,
+        horizontal=True,
+        key="selected_lesson_format"
+    )
+
     # Xác định cấp học tự động phục vụ cấu hình phân phối năng lực số thích ứng
     grade_num = int(''.join(filter(str.isdigit, grade_select)))
     if grade_num <= 5: 
@@ -111,7 +120,6 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
     st.info(f"Hệ thống tự động kích hoạt Khung năng lực số cấp: **{level_detected}**")
 
 st.write("**Tải KHBD cũ (.docx, .pdf) hoặc nhập văn bản thô để AI tự động chuyển đổi số hóa hành chính học tập.**")
-# Thiết kế Tab phân vùng các tính năng xử lý đầu vào dữ liệu khác nhau
 tab_upload, tab_direct, tab_history = st.tabs(["**| 📂 Chuẩn hóa KHBD từ KHBD đã có**", "**| 📝 Tạo KHBD bất kì theo yêu cầu**", "**| 📜 Lịch sử soạn thảo số**"])
 
 raw_input_text = ""
@@ -147,7 +155,7 @@ with tab_history:
     else:
         st.write("Chưa có lịch sử KHBD nào được lưu trữ cục bộ.")
 
-# Nút lệnh cốt lõi kích hoạt AI điều phối hoạt động chuyển dịch cấu trúc giáo án số
+# Nút lệnh cốt lõi kích hoạt AI điều phối hoạt động
 if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN KHBD 4.0", type="primary", use_container_width=True):
     if not raw_input_text.strip():
         st.warning("Cảnh báo nghiệp vụ: Chưa có dữ liệu đầu vào. Vui lòng tải file KHBD cũ hoặc nhập nội dung ý tưởng bài học.")
@@ -155,7 +163,6 @@ if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN KHBD 4.0", type="prima
         with st.spinner("Trợ lý AI đang phân tích chuỗi sư phạm, đồng bộ hóa Công văn 5512 và tích hợp Khung năng lực số..."):
             my_bar = st.progress(10)
             
-            # Cấu hình Metadata định danh và khung năng lực thích ứng tương thích cấp học
             meta_config = {
                 "subject": subject_select,
                 "grade": grade_select,
@@ -167,7 +174,6 @@ if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN KHBD 4.0", type="prima
             framework = get_digital_competency_framework(level_detected)
             my_bar.progress(40)
             
-            # Thực thi tác vụ gọi AI Gemini Pro sử dụng biến api_key_input đồng bộ
             result_json = generate_lesson_plan_ai(api_key_input, raw_input_text, meta_config, framework)
             my_bar.progress(80)
             
@@ -178,7 +184,6 @@ if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN KHBD 4.0", type="prima
             else:
                 st.session_state["processed_json"] = result_json
                 
-                # Lưu trữ bản ghi vào Database cục bộ SQLite bảo mật thông tin
                 topic_name = result_json.get("thong_tin_chung", {}).get("ten_bai_hoc", "Chưa rõ tên bài")
                 now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 c.execute("INSERT INTO history (time, topic, subject, grade, content) VALUES (?, ?, ?, ?, ?)",
@@ -195,7 +200,6 @@ if "processed_json" in st.session_state:
     st.markdown("---")
     st.header("🎯 KẾT QUẢ KHBD CHUẨN HÓA SỐ")
     
-    # Chia tab kết quả đầu ra: Giáo án, Bảng Ma trận năng lực, Phiếu bài tập số hóa cá nhân hóa học sinh
     tab_res_plan, tab_res_matrix, tab_res_sheet = st.tabs(["📋 Kế hoạch bài dạy (CV 5512)", "📊 Ma trận mục tiêu & Đánh giá", "📝 Phiếu học tập số"])
     
     with tab_res_plan:
@@ -227,15 +231,22 @@ if "processed_json" in st.session_state:
     st.markdown("---")
     st.subheader("💾 ĐÓNG GÓI VÀ XUẤT BẢN FILE ĐẦU RA")
     
-    # Chỉ tạo file Word một lần và lưu vào session_state để tránh sinh lại mỗi khi di chuột/re-run
     if "word_file_bytes" not in st.session_state or st.button("🔄 Tạo lại file Word"):
         with st.spinner("Đang đóng gói file Word chuẩn hành chính..."):
             df_m_export, df_r_export = generate_matrices(lesson_data)
             worksheet_export = generate_digital_worksheet(lesson_data)
             
-            # Tạo stream và lưu dạng bytes để không bị lock bộ nhớ
-# Tìm đến dòng gọi export_lesson_to_word ở gần cuối file và sửa lại:
-    stream = export_lesson_to_word(lesson_data, df_m_export, df_r_export, worksheet_export, lesson_format=lesson_format)            st.session_state["word_file_bytes"] = stream.getvalue()
+            # Đọc tùy chọn định dạng an toàn từ session_state trước khi xuất bản
+            current_format = st.session_state.get("selected_lesson_format", "Loại thường (Không chia cột)")
+            
+            stream = export_lesson_to_word(
+                lesson_data, 
+                df_m_export, 
+                df_r_export, 
+                worksheet_export, 
+                lesson_format=current_format
+            )
+            st.session_state["word_file_bytes"] = stream.getvalue()
 
     filename_export = f"Giao_An_4.0_{lesson_data.get('thong_tin_chung',{}).get('ten_bai_hoc','Bai_Hoc')}.docx"
     
@@ -252,14 +263,13 @@ if "processed_json" in st.session_state:
 # --- FOOTER CỐ ĐỊNH ---
 st.divider()
 
-# Chân trang (Footer)
 col_left, col_right = st.columns(2)
 with col_left:
     st.caption("Phát triển bởi Ngo Thanh Hung © 2026")
 with col_right:
     st.markdown(
-        "<div style='text-align: right; color: gray; font-size: 0.85em;'>"
-        "AI có thể mắc lỗi. Cần kiểm tra kỹ các thông tin quan trọng."
+        "<div style='text-align: right; color: gray; font-size: 0.85em;'>\n"
+        "AI có thể mắc lỗi. Cần kiểm tra kỹ các thông tin quan trọng.\n"
         "</div>", 
         unsafe_allow_html=True
     )
