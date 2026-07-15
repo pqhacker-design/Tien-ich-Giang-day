@@ -93,12 +93,12 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
     with col_dur:
         duration_select = st.text_input("**Thời lượng tiết dạy:**", value="2 Tiết")
 # Bổ sung tùy chọn định dạng giáo án
-    lesson_format = st.radio(
-        "**Định dạng Tiến trình dạy học (Mục III):**",
-        options=["Loại thường (Không chia cột)", "Loại 2 cột (Hoạt động của GV & HS | Nội dung)", "Loại 3 cột (Tiến trình | Hoạt động của GV & HS | Nội dung)"],
-        index=0,
-        horizontal=True
-    )
+        lesson_format = st.radio(
+            "**Định dạng Tiến trình dạy học (Mục III):**",
+            options=["Loại thường (Không chia cột)", "Loại 2 cột (Hoạt động của GV & HS | Nội dung)", "Loại 3 cột (Tiến trình | Hoạt động của GV & HS | Nội dung)"],
+            index=0,
+            horizontal=True
+        )
     # Xác định cấp học tự động phục vụ cấu hình phân phối năng lực số thích ứng
     grade_num = int(''.join(filter(str.isdigit, grade_select)))
     if grade_num <= 5: 
