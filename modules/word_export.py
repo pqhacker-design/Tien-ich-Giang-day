@@ -16,7 +16,7 @@ def set_cell_margins(cell, top=100, bottom=100, left=150, right=150):
         tcMar.append(node)
     tcPr.append(tcMar)
 
-def export_lesson_to_word(lesson_json, matrix_df, rubric_df, worksheet_data):
+def export_lesson_to_word(lesson_json, matrix_df, rubric_df, worksheet_data, lesson_format="Loại thường (Không chia cột)"):
     """Tạo file Microsoft Word .docx đạt chuẩn thể thức văn bản hành chính Việt Nam"""
     doc = docx.Document()
     
@@ -84,33 +84,106 @@ def export_lesson_to_word(lesson_json, matrix_df, rubric_df, worksheet_data):
     h3 = doc.add_paragraph()
     h3.add_run("III. TIẾN TRÌNH DẠY HỌC (CÔNG VĂN 5512)").bold = True
     
-    for hd in lesson_json.get("tien_trinh_day_hoc", []):
-        p_hd = doc.add_paragraph()
-        p_hd.add_run(hd.get("ten_hoat_dong", "Hoạt động")).bold = True
-        p_hd.paragraph_format.space_before = Pt(12)
-        
-        doc.add_paragraph().add_run("a) Mục tiêu: ").bold = True
-        doc.add_paragraph(hd.get("muc_tieu", ""))
-        
-        doc.add_paragraph().add_run("b) Nội dung: ").bold = True
-        doc.add_paragraph(hd.get("noi_dung", ""))
-        
-        doc.add_paragraph().add_run("c) Sản phẩm: ").bold = True
-        doc.add_paragraph(hd.get("san_pham", ""))
-        
-        doc.add_paragraph().add_run("d) Tổ chức thực hiện: ").bold = True
-        doc.add_paragraph(hd.get("to_chuc_thuc_hien", ""))
+    activities = lesson_json.get("tien_trinh_day_hoc", [])
+
+    if "Loại thường" in lesson_format:
+        # --- LOẠI THƯỜNG (KHÔNG CHIA CỘT) ---
+        for hd in activities:
+            p_hd = doc.add_paragraph()
+            p_hd.add_run(hd.get("ten_hoat_dong", "Hoạt động")).bold = True
+            p_hd.paragraph_format.space_before = Pt(12)
+            
+            doc.add_paragraph().add_run("a) Mục tiêu: ").bold = True
+            doc.add_paragraph(hd.get("muc_tieu", ""))
+            
+            doc.add_paragraph().add_run("b) Nội dung: ").bold = True
+            doc.add_paragraph(hd.get("noi_dung", ""))
+            
+            doc.add_paragraph().add_run("c) Sản phẩm: ").bold = True
+            doc.add_paragraph(hd.get("san_pham", ""))
+            
+            doc.add_paragraph().add_run("d) Tổ chức thực hiện: ").bold = True
+            doc.add_paragraph(hd.get("to_chuc_thuc_hien", ""))
+
+    elif "2 cột" in lesson_format:
+        # --- LOẠI 2 CỘT ---
+        for hd in activities:
+            p_hd = doc.add_paragraph()
+            p_hd.add_run(hd.get("ten_hoat_dong", "Hoạt động")).bold = True
+            p_hd.paragraph_format.space_before = Pt(12)
+            
+            doc.add_paragraph().add_run("a) Mục tiêu: ").bold = True
+            doc.add_paragraph(hd.get("muc_tieu", ""))
+            
+            doc.add_paragraph().add_run("b) Sản phẩm: ").bold = True
+            doc.add_paragraph(hd.get("san_pham", ""))
+
+            doc.add_paragraph().add_run("c) Nội dung & Tổ chức thực hiện: ").bold = True
+            
+            # Tạo bảng 2 cột: [Hoạt động của GV & HS] | [Nội dung cần đạt]
+            table = doc.add_table(rows=1, cols=2)
+            table.style = 'Table Grid'
+            
+            # Tiêu đề bảng
+            hdr_cells = table.rows[0].cells
+            hdr_cells[0].text = "Hoạt động của Giáo viên & Học sinh"
+            hdr_cells[1].text = "Nội dung kiến thức cần đạt"
+            for cell in hdr_cells:
+                cell.paragraphs[0].runs[0].font.bold = True
+                set_cell_margins(cell)
+            
+            # Thêm dòng nội dung hoạt động
+            row_cells = table.add_row().cells
+            row_cells[0].text = hd.get("to_chuc_thuc_hien", "")
+            row_cells[1].text = hd.get("noi_dung", "")
+            for cell in row_cells:
+                set_cell_margins(cell)
+            doc.add_paragraph() # Cách dòng sau mỗi bảng
+
+    elif "3 cột" in lesson_format:
+        # --- LOẠI 3 CỘT ---
+        for hd in activities:
+            p_hd = doc.add_paragraph()
+            p_hd.add_run(hd.get("ten_hoat_dong", "Hoạt động")).bold = True
+            p_hd.paragraph_format.space_before = Pt(12)
+            
+            doc.add_paragraph().add_run("a) Mục tiêu: ").bold = True
+            doc.add_paragraph(hd.get("muc_tieu", ""))
+            
+            doc.add_paragraph().add_run("b) Sản phẩm: ").bold = True
+            doc.add_paragraph(hd.get("san_pham", ""))
+
+            doc.add_paragraph().add_run("c) Tiến trình chi tiết: ").bold = True
+            
+            # Tạo bảng 3 cột: [Tiến trình] | [Hoạt động của GV & HS] | [Nội dung cần đạt]
+            table = doc.add_table(rows=1, cols=3)
+            table.style = 'Table Grid'
+            
+            hdr_cells = table.rows[0].cells
+            hdr_cells[0].text = "Tiến trình / Bước thực hiện"
+            hdr_cells[1].text = "Hoạt động của Giáo viên & Học sinh"
+            hdr_cells[2].text = "Nội dung cần đạt"
+            for cell in hdr_cells:
+                cell.paragraphs[0].runs[0].font.bold = True
+                set_cell_margins(cell)
+            
+            # Thêm dòng nội dung hoạt động
+            row_cells = table.add_row().cells
+            row_cells[0].text = "Chuyển giao nhiệm vụ -> Thực hiện -> Báo cáo thảo luận -> Đánh giá nhận xét."
+            row_cells[1].text = hd.get("to_chuc_thuc_hien", "")
+            row_cells[2].text = hd.get("noi_dung", "")
+            for cell in row_cells:
+                set_cell_margins(cell)
+            doc.add_paragraph() # Cách dòng sau mỗi bảng
 
     # Mục IV: Xuất bảng biểu ma trận mục tiêu bài dạy
     doc.add_page_break()
     h4 = doc.add_paragraph()
     h4.add_run("IV. MA TRẬN MỤC TIÊU BÀI DẠY 4.0").bold = True
     
-    # Tạo bảng tự động trong python-docx
     t_matrix = doc.add_table(rows=1, cols=len(matrix_df.columns))
     t_matrix.style = 'Table Grid'
     
-    # Format Header bảng dữ liệu màu sáng nhạt hành chính
     hdr_cells = t_matrix.rows[0].cells
     for i, col_name in enumerate(matrix_df.columns):
         hdr_cells[i].text = col_name
@@ -137,7 +210,7 @@ def export_lesson_to_word(lesson_json, matrix_df, rubric_df, worksheet_data):
     for item in worksheet_data.get("phieu_nhom", []):
         doc.add_paragraph(item)
 
-    # Ghi file vào bộ nhớ đệm luồng byte để tải xuống không qua đĩa cứng lưu tạm
+    # Ghi file vào bộ nhớ đệm
     file_stream = io.BytesIO()
     doc.save(file_stream)
     file_stream.seek(0)
