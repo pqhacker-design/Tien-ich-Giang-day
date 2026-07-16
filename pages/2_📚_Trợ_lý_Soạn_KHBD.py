@@ -94,34 +94,19 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
         grade_select = st.selectbox("**Khối lớp áp dụng:**", [f"Lớp {i}" for i in range(1, 13)], index=7)
     with col_dur:
         duration_select = st.text_input("**Thời lượng tiết dạy:**", value="2 Tiết")
-
-    # BỔ SUNG: Cấu hình ngôn ngữ giáo án
-    col_lang, col_format = st.columns(2)
-    with col_lang:
-        language_option = st.selectbox(
-            "**Ngôn ngữ hiển thị giáo án:**",
-            options=[
-                "Thuần Tiếng Việt",
-                "Song ngữ: Tiếng Việt & Tiếng Anh",
-                "Song ngữ: Tiếng Việt & Tiếng Trung",
-                "Song ngữ: Tiếng Việt & Tiếng Hàn",
-                "Song ngữ: Tiếng Việt & Tiếng Nhật"
-            ],
-            index=0,
-            key="selected_language_option"
-        )
-    with col_format:
-        lesson_format = st.radio(
-            "**Định dạng Tiến trình dạy học (Mục III):**",
-            options=[
-                "Loại thường (Không chia cột)", 
-                "Loại 2 cột (Hoạt động của GV & HS | Nội dung)", 
-                "Loại 3 cột (Tiến trình | Hoạt động của GV & HS | Nội dung)"
-            ],
-            index=0,
-            horizontal=True,
-            key="selected_lesson_format"
-        )
+        
+    # Bổ sung tùy chọn định dạng giáo án và gán key để giữ nguyên trạng thái dữ liệu phiên
+    lesson_format = st.radio(
+        "**Định dạng Tiến trình dạy học (Mục III):**",
+        options=[
+            "Loại thường (Không chia cột)", 
+            "Loại 2 cột (Hoạt động của GV & HS | Nội dung)", 
+            "Loại 3 cột (Tiến trình | Hoạt động của GV & HS | Nội dung)"
+        ],
+        index=0,
+        horizontal=True,
+        key="selected_lesson_format"
+    )
 
     # Xác định cấp học tự động phục vụ cấu hình phân phối năng lực số thích ứng
     grade_num = int(''.join(filter(str.isdigit, grade_select)))
@@ -183,8 +168,7 @@ if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN KHBD 4.0", type="prima
                 "grade": grade_select,
                 "level": level_detected,
                 "duration": duration_select,
-                "topic": "Bài học phát triển số",
-                "language_style": language_option
+                "topic": "Bài học phát triển số"
             }
             
             framework = get_digital_competency_framework(level_detected)
