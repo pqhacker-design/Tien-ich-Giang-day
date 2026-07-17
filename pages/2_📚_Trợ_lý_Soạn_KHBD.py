@@ -87,7 +87,7 @@ else:
 # --- CẤU HÌNH NHẬN DIỆN BÀI DẠY (ĐƯỢC ĐƯA LÊN TRANG CHÍNH) ---
 with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=False):
     # Thay đổi từ 3 cột thành 4 cột để thêm tùy chọn mức độ giáo án
-    col_sub, col_grd, col_dur, col_type = st.columns(4)
+    col_sub, col_grd, col_dur = st.columns(3)
     
     with col_sub:
         subject_select = st.text_input("**Môn học giáo viên giảng dạy:**", value="Toán học")
@@ -95,6 +95,10 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
         grade_select = st.selectbox("**Khối lớp áp dụng:**", [f"Lớp {i}" for i in range(1, 13)], index=7)
     with col_dur:
         duration_select = st.text_input("**Thời lượng tiết dạy:**", value="2 Tiết")
+           
+    # Bổ sung tùy chọn định dạng giáo án và gán key để giữ nguyên trạng thái dữ liệu phiên
+    col_type, col_lesson = st.colums(2)
+
     with col_type:
         # Tùy chọn Mức độ giáo án theo yêu cầu của bạn
         lesson_type_select = st.selectbox(
@@ -102,19 +106,18 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
             ["Giáo án tiêu chuẩn", "Giáo án dành phụ đạo HS yếu", "Giáo án dạy HS giỏi"],
             index=0
         )
-        
-    # Bổ sung tùy chọn định dạng giáo án và gán key để giữ nguyên trạng thái dữ liệu phiên
-    lesson_format = st.radio(
-        "**Định dạng Tiến trình dạy học (Mục III):**",
-        options=[
-            "Loại thường (Không chia cột)", 
-            "Loại 2 cột (Hoạt động của GV & HS | Nội dung)", 
-            "Loại 3 cột (Tiến trình | Hoạt động của GV & HS | Nội dung)"
-        ],
-        index=0,
-        horizontal=True,
-        key="selected_lesson_format"
-    )
+    with col_lesson:
+        lesson_format = st.radio(
+            "**Định dạng Tiến trình dạy học (Mục III):**",
+            options=[
+                "Loại thường (Không chia cột)", 
+                "Loại 2 cột (Hoạt động của GV & HS | Nội dung)", 
+                "Loại 3 cột (Tiến trình | Hoạt động của GV & HS | Nội dung)"
+            ],
+            index=0,
+            horizontal=True,
+            key="selected_lesson_format"
+        )
 
     # Xác định cấp học tự động phục vụ cấu hình phân phối năng lực số thích ứng
     grade_num = int(''.join(filter(str.isdigit, grade_select)))
