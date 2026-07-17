@@ -86,7 +86,8 @@ else:
 
 # --- CẤU HÌNH NHẬN DIỆN BÀI DẠY (ĐƯỢC ĐƯA LÊN TRANG CHÍNH) ---
 with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=False):
-    col_sub, col_grd, col_dur = st.columns(3)
+    # Thay đổi từ 3 cột thành 4 cột để thêm tùy chọn mức độ giáo án
+    col_sub, col_grd, col_dur, col_type = st.columns(4)
     
     with col_sub:
         subject_select = st.text_input("**Môn học giáo viên giảng dạy:**", value="Toán học")
@@ -94,6 +95,13 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
         grade_select = st.selectbox("**Khối lớp áp dụng:**", [f"Lớp {i}" for i in range(1, 13)], index=7)
     with col_dur:
         duration_select = st.text_input("**Thời lượng tiết dạy:**", value="2 Tiết")
+    with col_type:
+        # Tùy chọn Mức độ giáo án theo yêu cầu của bạn
+        lesson_type_select = st.selectbox(
+            "**Mức độ/Loại giáo án:**", 
+            ["Giáo án tiêu chuẩn", "Giáo án dành phụ đạo HS yếu", "Giáo án dạy HS giỏi"],
+            index=0
+        )
         
     # Bổ sung tùy chọn định dạng giáo án và gán key để giữ nguyên trạng thái dữ liệu phiên
     lesson_format = st.radio(
@@ -163,11 +171,13 @@ if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN KHBD 4.0", type="prima
         with st.spinner("Trợ lý AI đang phân tích chuỗi sư phạm, đồng bộ hóa Công văn 5512 và tích hợp Khung năng lực số..."):
             my_bar = st.progress(10)
             
+            # Đã tích hợp biến "lesson_type" vào meta_config để gửi thông tin sang mô-đun AI
             meta_config = {
                 "subject": subject_select,
                 "grade": grade_select,
                 "level": level_detected,
                 "duration": duration_select,
+                "lesson_type": lesson_type_select,
                 "topic": "Bài học phát triển số"
             }
             
