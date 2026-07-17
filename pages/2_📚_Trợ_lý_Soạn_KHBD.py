@@ -97,7 +97,7 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
         duration_select = st.text_input("**Thời lượng tiết dạy:**", value="2 Tiết")
            
     # Bổ sung tùy chọn định dạng giáo án và gán key để giữ nguyên trạng thái dữ liệu phiên
-    col_type, col_lesson = st.colums(3)
+    col_type, col_lesson, col_free = st.colums(3)
 
     with col_type:
         # Tùy chọn Mức độ giáo án theo yêu cầu của bạn
@@ -118,6 +118,7 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
             horizontal=True,
             key="selected_lesson_format"
         )
+    with col_free:
 
     # Xác định cấp học tự động phục vụ cấu hình phân phối năng lực số thích ứng
     grade_num = int(''.join(filter(str.isdigit, grade_select)))
