@@ -97,13 +97,13 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
         duration_select = st.text_input("**Thời lượng tiết dạy:**", value="2 Tiết")
            
     # Bổ sung tùy chọn định dạng giáo án và gán key để giữ nguyên trạng thái dữ liệu phiên
-    col_type, col_lesson = st.colums(2)
+    col_type, col_lesson = st.colums(2,1)
 
     with col_type:
         # Tùy chọn Mức độ giáo án theo yêu cầu của bạn
         lesson_type_select = st.selectbox(
             "**Mức độ/Loại giáo án:**", 
-            ["Giáo án tiêu chuẩn", "Giáo án dành phụ đạo HS yếu", "Giáo án dạy HS giỏi"],
+            ["Giáo án tiêu chuẩn", "Giáo án phụ đạo HS yếu", "Giáo án dạy HS giỏi"],
             index=0
         )
     with col_lesson:
