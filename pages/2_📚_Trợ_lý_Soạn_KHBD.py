@@ -97,7 +97,7 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
         duration_select = st.text_input("**Thời lượng tiết dạy:**", value="2 Tiết")
            
     # Bổ sung tùy chọn định dạng giáo án và gán key để giữ nguyên trạng thái dữ liệu phiên
-    col_type, col_lesson = st.colums(2,1)
+    col_type, col_lesson = st.colums(3)
 
     with col_type:
         # Tùy chọn Mức độ giáo án theo yêu cầu của bạn
