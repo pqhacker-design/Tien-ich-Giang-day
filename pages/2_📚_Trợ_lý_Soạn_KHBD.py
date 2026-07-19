@@ -4,7 +4,6 @@ import sqlite3
 from datetime import datetime
 
 # Import các mô-đun nghiệp vụ đã xây dựng
-from modules.doc_reader import read_docx, read_pdf, analyze_metadata
 from modules.digital_competency import get_digital_competency_framework
 from modules.lesson_ai import generate_lesson_plan_ai
 from modules.cv5512_generator import format_html_preview
@@ -73,19 +72,19 @@ conn.commit()
 
 # --- Thân Giao Diện Chính Ứng Dụng ---
 st.markdown("## 🚀 Soạn KHBD tự động theo 5512")
-st.info("Giúp GV soạn KHBD theo công văn 5512 có tích hợp năng lực số.")
+st.info("Giúp GV soạn KHBD theo công văn 5512 có tích hợp năng lực số và phân hóa mức độ dạy học.")
 
 # --- LẤY API KEY TẬP TRUNG TỪ TRANG CHỦ ---
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
 else:
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
+    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
     st.page_link("🏠_Trang_Chủ.py", label="**Nhấn vào đây để Quay lại Trang chủ**", icon="🔄")
     st.stop()
 
 # --- CẤU HÌNH NHẬN DIỆN BÀI DẠY (ĐƯỢC ĐƯA LÊN TRANG CHÍNH) ---
-with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=False):
-    # Thay đổi từ 3 cột thành 4 cột để thêm tùy chọn mức độ giáo án
+with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=True):
     col_sub, col_grd, col_dur, col_type = st.columns(4)
     
     with col_sub:
@@ -95,12 +94,12 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
     with col_dur:
         duration_select = st.text_input("**Thời lượng tiết dạy:**", value="2 Tiết")
     with col_type:
-        # Tùy chọn Mức độ giáo án theo yêu cầu của bạn
         lesson_type_select = st.selectbox(
             "**Mức độ/Loại giáo án:**", 
-            ["Giáo án tiêu chuẩn", "Giáo án phụ đạo HS yếu", "Giáo án dạy HS giỏi"],
+            ["Giáo án tiêu chuẩn", "Giáo án dành phụ đạo HS yếu", "Giáo án dạy HS giỏi"],
             index=0
         )
+        
     # Bổ sung tùy chọn định dạng giáo án và gán key để giữ nguyên trạng thái dữ liệu phiên
     lesson_format = st.radio(
         "**Định dạng Tiến trình dạy học (Mục III):**",
@@ -125,29 +124,17 @@ with st.expander("⚙️ **CẤU HÌNH NHẬN DIỆN BÀI DẠY**", expanded=Fal
 
     st.info(f"Hệ thống tự động kích hoạt Khung năng lực số cấp: **{level_detected}**")
 
-st.write("**Tải KHBD cũ (.docx, .pdf) hoặc nhập văn bản thô để AI tự động chuyển đổi số hóa hành chính học tập.**")
-tab_upload, tab_direct, tab_history = st.tabs(["**| 📂 Chuẩn hóa KHBD từ KHBD đã có**", "**| 📝 Tạo KHBD bất kì theo yêu cầu**", "**| 📜 Lịch sử soạn thảo số**"])
+st.write("**Nhập thông tin yêu cầu hoặc chuỗi ý tưởng bài dạy dưới đây để AI thiết kế bài giảng phân hóa tối ưu.**")
+tab_direct, tab_history = st.tabs(["**| 📝 Tạo KHBD theo yêu cầu bài học**", "**| 📜 Lịch sử soạn thảo số**"])
 
 raw_input_text = ""
 
-with tab_upload:
-    uploaded_file = st.file_uploader("**Kéo và thả file Word (.docx) hoặc tài liệu PDF của KHBD cũ vào đây:**", type=["docx", "pdf"])
-    if uploaded_file is not None:
-        file_bytes = uploaded_file.read()
-        if uploaded_file.name.endswith(".docx"):
-            raw_input_text = read_docx(file_bytes)
-        elif uploaded_file.name.endswith(".pdf"):
-            raw_input_text = read_pdf(file_bytes)
-            
-        st.success(f"Đọc thành công file: {uploaded_file.name}. Hệ thống đã nạp nội dung thô phân tích.")
-        with st.expander("Xem trước dữ liệu văn bản thô trích xuất từ file"):
-            st.text_area("Nội dung gốc đọc được:", value=raw_input_text, height=150, disabled=True)
-
 with tab_direct:
-    direct_text = st.text_area("**Nếu không tải file, hãy copy nội dung bài dạy hoặc chuỗi ý tưởng bài dạy vào đây:**", height=100, 
-                               placeholder="Ví dụ: Bài 3: Khái niệm liên kết hóa học hóa học lớp 10, thời lượng 2 tiết...")
-    if direct_text:
-        raw_input_text = direct_text
+    raw_input_text = st.text_area(
+        "**Nhập tên bài học, mục tiêu chính hoặc tóm tắt ý tưởng nội dung bạn muốn biên soạn:**", 
+        height=180, 
+        placeholder="Ví dụ:\nBài 15: Định lí Pythagore (Toán 8).\nYêu cầu bài học: Giúp học sinh nắm được công thức định lý, biết cách tính độ dài cạnh huyền/cạnh góc vuông và ứng dụng vào một số bài toán thực tế đời sống..."
+    )
 
 with tab_history:
     st.markdown("### Nhật ký các KHBD đã tạo trên hệ thống máy tính giáo viên")
@@ -164,12 +151,11 @@ with tab_history:
 # Nút lệnh cốt lõi kích hoạt AI điều phối hoạt động
 if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN KHBD 4.0", type="primary", use_container_width=True):
     if not raw_input_text.strip():
-        st.warning("Cảnh báo nghiệp vụ: Chưa có dữ liệu đầu vào. Vui lòng tải file KHBD cũ hoặc nhập nội dung ý tưởng bài học.")
+        st.warning("Cảnh báo nghiệp vụ: Chưa có nội dung bài dạy. Vui lòng nhập tên bài hoặc chuỗi ý tưởng bài học vào khung văn bản.")
     else:
-        with st.spinner("Trợ lý AI đang phân tích chuỗi sư phạm, đồng bộ hóa Công văn 5512 và tích hợp Khung năng lực số..."):
+        with st.spinner("Trợ lý AI đang phân tích chuỗi sư phạm, thiết lập ma trận mục tiêu theo mức độ yêu cầu..."):
             my_bar = st.progress(10)
             
-            # Đã tích hợp biến "lesson_type" vào meta_config để gửi thông tin sang mô-đun AI
             meta_config = {
                 "subject": subject_select,
                 "grade": grade_select,
@@ -199,7 +185,7 @@ if st.button("🔥 KÍCH HOẠT TRỢ LÝ AI BIÊN SOẠN KHBD 4.0", type="prima
                 conn.commit()
                 
                 my_bar.progress(100)
-                st.success("🎉 AI đã chuyển đổi và chuẩn hóa thành công kế hoạch bài dạy chuẩn 4.0!")
+                st.success("🎉 AI đã biên soạn và chuẩn hóa thành công kế hoạch bài dạy chuẩn phân hóa số!")
 
 # --- KHÔNG GIAN HIỂN THỊ KẾT QUẢ ĐẦU RA SƯ PHẠM ---
 if "processed_json" in st.session_state:
