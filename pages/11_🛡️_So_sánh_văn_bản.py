@@ -92,7 +92,6 @@ if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].s
 else:
     # Nếu chưa nhập key ở trang chủ, hiển thị thông báo nhắc nhở và dừng app con lại
     st.warning("⚠️ Vui lòng quay lại **Trang chủ** để nhập Google Gemini API Key trước khi sử dụng tính năng này.")
-    st.info("💡 Mẹo: Nhập một lần tại trang chủ, tất cả các công cụ khác sẽ tự động kích hoạt.")
     st.page_link("🏠_Trang_Chủ.py", label="**Nhấn vào đây để Quay lại Trang chủ**", icon="🔄")
     st.stop() # Dừng không chạy các đoạn code phía dưới để tránh lỗi crash
 # ==============================================================================
