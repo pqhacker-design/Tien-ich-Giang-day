@@ -75,7 +75,7 @@ with st.expander("**🔑 Cấu hình kết nối AI (Nhập API key của bạn 
     elif st.session_state.get("api_key_valid"):
         st.info("ℹ️ Hệ thống đang sử dụng API Key đã xác thực thành công.")
     else:
-        st.warning("⚠️ Vui lòng nhập API Key để bắt đầu sử dụng.")
+        st.warning("⚠️ Vui lòng nhập API Key để bắt đầu sử dụng các ứng dụng.")
         
 # 4. DANH SÁCH ỨNG DỤNG THÀNH PHẦN (Được đẩy lên sát bên trên)
 st.markdown(
