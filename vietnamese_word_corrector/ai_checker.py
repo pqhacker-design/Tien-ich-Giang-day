@@ -68,15 +68,19 @@ def classify_paragraphs_with_ai(paragraph_list):
 
 def analyze_document_with_ai(full_text, filename):
     prompt = f"""
-    Bạn là Chuyên gia Đánh giá Hồ sơ Giáo dục & Thể thức Văn bản Hành chính (NĐ 30/2020/NĐ-CP).
-    Hãy đọc và phân tích toàn bộ văn bản sau đây:
+    Bạn là Chuyên gia Đánh giá Hồ sơ Giáo dục & Thể thức Văn bản Hành chính (Nghị định 30/2020/NĐ-CP).
+    Hãy đọc và phân tích văn bản sau đây:
     Tên file: {filename}
     Nội dung văn bản:
     {full_text[:4000]}
 
+    Nhiệm vụ đặc biệt: Hãy soi kỹ các lỗi về:
+    1. LỖI VIẾT HOA: Sai quy tắc NĐ 30/2020/NĐ-CP (Tên cơ quan, tổ chức, chức danh, tên địa lý, đầu câu, danh từ riêng, tên loại văn bản...).
+    2. LỖI DẤU CÂU & CHÍNH TẢ: Thừa/thiếu dấu câu, đặt sai vị trí dấu câu, viết tắt sai quy chuẩn, lỗi ngắt câu.
+
     Yêu cầu xuất kết quả theo đúng định dạng JSON chuẩn như sau (không kèm văn bản dẫn dắt):
     {{
-       "loai_ho_so": "Hồ sơ Thuyết minh / Báo cáo",
+       "loai_ho_so": "Hồ sơ Thuyết minh / Báo cáo / Kế hoạch",
        "do_tin_cay": 95,
        "diem": {{
           "the_thuc": 90,
@@ -93,9 +97,10 @@ def analyze_document_with_ai(full_text, filename):
           "nang_luc_chung": "Phù hợp",
           "nang_luc_dac_thu": "Tốt"
        }},
-       "de_xuat_cai_tien": ["Căn chỉnh tiêu đề căn giữa theo quy định"],
+       "de_xuat_cai_tien": ["Căn chỉnh tiêu đề căn giữa theo quy định", "Kiểm tra lại viết hoa chức danh"],
        "loi_the_thuc": [
-          {{"stt": 1, "loai": "Thể thức", "goc": "1. tổng quan", "de_xuat": "Chuyển thành chữ in hoa IN ĐẬM", "muc_do": "Trung bình"}}
+          {{"stt": 1, "loai": "Viết hoa", "goc": "bộ giáo dục và đào tạo", "de_xuat": "Bộ Giáo dục và Đào tạo", "muc_do": "Cao"}},
+          {{"stt": 2, "loai": "Dấu câu", "goc": "kế hoạch .", "de_xuat": "kế hoạch.", "muc_do": "Trung bình"}}
        ]
     }}
     """
@@ -108,7 +113,7 @@ def analyze_document_with_ai(full_text, filename):
         except Exception:
             pass
             
-    # Kết quả dự phòng an toàn nếu AI không phản hồi JSON
+    # Kết quả dự phòng an toàn
     return {
         "loai_ho_so": "Văn bản Hành chính / Giáo dục",
         "do_tin_cay": 80,
@@ -116,6 +121,6 @@ def analyze_document_with_ai(full_text, filename):
         "xep_loai": "Khá",
         "thieu_sot_cau_truc": [],
         "gdpt_2018_check": {"pham_chat": "Đạt", "nang_luc_chung": "Đạt", "nang_luc_dac_thu": "Đạt"},
-        "de_xuat_cai_tien": ["Cần kiểm tra lại các quy tắc in hoa tiêu đề"],
+        "de_xuat_cai_tien": ["Cần kiểm tra lại các quy tắc in hoa tiêu đề và viết hoa danh từ riêng"],
         "loi_the_thuc": []
     }
