@@ -93,8 +93,8 @@ if uploaded_file is not None:
     
     col_chk1, col_chk2 = st.columns(2)
     with col_chk1:
-        c_thethuc = st.checkbox("Kiểm tra thể thức (NĐ 30/2020/NĐ-CP)", value=True)
-        c_chinhta = st.checkbox("Kiểm tra chính tả nâng cao", value=True)
+        c_thethuc = st.checkbox("Kiểm tra thể thức & Viết hoa (NĐ 30/2020/NĐ-CP)", value=True)
+        c_chinhta = st.checkbox("Kiểm tra chính tả & Dấu câu (Quy tắc Regex)", value=True)
     with col_chk2:
         c_nguphap = st.checkbox("Kiểm tra ngữ pháp & Hành văn", value=True)
         c_hoso = st.checkbox("Phân tích chiều sâu Hồ sơ Giáo dục (GDPT 2018)", value=True)
