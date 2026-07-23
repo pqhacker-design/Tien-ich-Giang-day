@@ -98,28 +98,28 @@ SUBJECTS_CONFIG = {
 # Module chuyển đổi LaTeX -> MathML -> OMML (Word Math)
 try:
     import latex2mathml.converter
+    from lxml import etree
     HAS_LATEX2MATHML = True
 except ImportError:
     HAS_LATEX2MATHML = False
 
-# XSLT Chuyển từ MathML sang OMML của Microsoft Word
+# Bảng biến đổi XSLT chuẩn cho Microsoft Word (MathML -> OMML Inline)
 MML2OMML_XSL = """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:mml="http://www.w3.org/1998/Math/MathML"
     xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">
-  <xsl:output method="xml" indent="yes" omit-xml-declaration="yes"/>
+  <xsl:output method="xml" indent="no" omit-xml-declaration="yes"/>
   
   <xsl:template match="mml:math">
-    <m:oMathPara>
-      <m:oMath>
-        <xsl:apply-templates/>
-      </m:oMath>
-    </m:oMathPara>
+    <m:oMath>
+      <xsl:apply-templates/>
+    </m:oMath>
   </xsl:template>
 
   <xsl:template match="mml:mi|mml:mn|mml:mo">
     <m:r>
+      <m:rPr><m:sty m:val="p"/></m:rPr>
       <m:t><xsl:value-of select="."/></m:t>
     </m:r>
   </xsl:template>
@@ -151,7 +151,7 @@ MML2OMML_XSL = """<?xml version="1.0" encoding="UTF-8"?>
       <m:e><xsl:apply-templates/></m:e>
     </m:rad>
   </xsl:template>
-  
+
   <xsl:template match="*">
     <xsl:apply-templates/>
   </xsl:template>
@@ -159,29 +159,64 @@ MML2OMML_XSL = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 def latex_to_omml_element(latex_str):
-    """
-    Chuyển chuỗi LaTeX thành thẻ XML OMML (Microsoft Office Math)
-    """
+    """Chuyển chuỗi LaTeX thành phần tử XML công thức chuẩn cho Word"""
     if not HAS_LATEX2MATHML:
         return None
     try:
-        # Bước 1: LaTeX -> MathML
+        # Chuẩn hóa một số ký hiệu đặc biệt thường gặp trong đề thi Việt Nam
+        latex_str = latex_str.replace(r'\parallel', '||').replace(r'\sim', '~')
+        
+        # Bước 1: Chuyển LaTeX sang MathML
         mathml_str = latex2mathml.converter.convert(latex_str)
         
-        # Bước 2: Parse MathML XML
-        from lxml import etree
-        xslt_root = etree.XML(MML2OMML_XSL)
+        # Bước 2: Dùng XSLT biến đổi sang OMML (Word Math)
+        xslt_root = etree.XML(MML2OMML_XSL.encode('utf-8'))
         transform = etree.XSLT(xslt_root)
         
         mml_root = etree.XML(mathml_str.encode('utf-8'))
         omml_doc = transform(mml_root)
         
         omml_str = str(omml_doc)
-        # Bỏ thẻ wrapper ngoài cùng nếu cần để chèn inline
-        omml_element = parse_xml(omml_str)
-        return omml_element
+        return parse_xml(omml_str)
     except Exception:
         return None
+
+def add_math_run_to_paragraph(paragraph, text, convert_to_equation=True):
+    """
+    Tách văn bản và chèn công thức Word Equation inline mượt mà
+    """
+    if not text:
+        return
+    
+    # 1. Làm sạch ký tự HTML và chuẩn hóa xuống dòng
+    text = str(text).replace('<br>', '\n').replace('<br/>', '\n').replace('\\n', '\n').strip()
+    lines = text.split('\n')
+    
+    for index, line in enumerate(lines):
+        if index > 0:
+            paragraph.add_run().add_break()
+            
+        if not line.strip():
+            continue
+            
+        if convert_to_equation and HAS_LATEX2MATHML:
+            # Tách các đoạn nằm trong cặp dấu $...$
+            parts = re.split(r'(\$.*?\$)', line)
+            for part in parts:
+                if part.startswith('$') and part.endswith('$') and len(part) > 2:
+                    latex_code = part[1:-1].strip()
+                    omml_elem = latex_to_omml_element(latex_code)
+                    if omml_elem is not None:
+                        # Chèn trực tiếp XML công thức vào đúng vị trí chuỗi văn bản (Inline)
+                        paragraph._p.append(omml_elem)
+                    else:
+                        # Phương án dự phòng nếu công thức quá phức tạp: Giữ nguyên văn bản
+                        paragraph.add_run(part)
+                else:
+                    if part:
+                        paragraph.add_run(part)
+        else:
+            paragraph.add_run(line)
         
 def extract_text_from_docx(file_bytes):
     try:
@@ -193,40 +228,6 @@ def extract_text_from_docx(file_bytes):
         return "\n".join(fullText)
     except Exception as e:
         return f"Lỗi đọc file Word: {str(e)}"
-
-def add_math_run_to_paragraph(paragraph, text, convert_to_equation=False):
-    if not text: 
-        return
-    
-    text = str(text).replace('\\n', '\n').strip()
-    lines = text.split('\n')
-    
-    for index, line in enumerate(lines):
-        if index > 0:
-            paragraph.add_run().add_break()
-        
-        if not line.strip():
-            continue
-            
-        if convert_to_equation and HAS_LATEX2MATHML:
-            # Tách chuỗi văn bản thông thường và đoạn kẹp bởi $...$
-            parts = re.split(r'(\$.*?\$)', line)
-            for part in parts:
-                if part.startswith('$') and part.endswith('$') and len(part) > 2:
-                    latex_code = part[1:-1].strip()
-                    omml_elem = latex_to_omml_element(latex_code)
-                    if omml_elem is not None:
-                        # Append trực tiếp phần tử Equation XML vào paragraph
-                        paragraph._p.append(omml_elem)
-                    else:
-                        # Nếu lỗi parse thì giữ nguyên văn bản LaTeX gốc
-                        paragraph.add_run(part)
-                else:
-                    paragraph.add_run(part)
-        else:
-            # Nếu không bật convert hoặc thiếu thư viện -> xuất văn bản trơn
-            paragraph.add_run(line)
-
 # ==========================================
 # KHỞI TẠO SESSION STATE
 # ==========================================
