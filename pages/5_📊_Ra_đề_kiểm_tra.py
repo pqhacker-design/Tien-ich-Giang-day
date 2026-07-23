@@ -7,6 +7,7 @@ import copy
 import zipfile
 from io import BytesIO
 import pandas as pd
+import xml.etree.ElementTree as ET
 
 # Thư viện xử lý tài liệu Word chuyên sâu
 import docx
@@ -94,6 +95,94 @@ SUBJECTS_CONFIG = {
 # ==========================================
 # TRÍCH XUẤT VÀ KẾT NỐI GEMINI AI
 # ==========================================
+# Module chuyển đổi LaTeX -> MathML -> OMML (Word Math)
+try:
+    import latex2mathml.converter
+    HAS_LATEX2MATHML = True
+except ImportError:
+    HAS_LATEX2MATHML = False
+
+# XSLT Chuyển từ MathML sang OMML của Microsoft Word
+MML2OMML_XSL = """<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:mml="http://www.w3.org/1998/Math/MathML"
+    xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">
+  <xsl:output method="xml" indent="yes" omit-xml-declaration="yes"/>
+  
+  <xsl:template match="mml:math">
+    <m:oMathPara>
+      <m:oMath>
+        <xsl:apply-templates/>
+      </m:oMath>
+    </m:oMathPara>
+  </xsl:template>
+
+  <xsl:template match="mml:mi|mml:mn|mml:mo">
+    <m:r>
+      <m:t><xsl:value-of select="."/></m:t>
+    </m:r>
+  </xsl:template>
+
+  <xsl:template match="mml:mfrac">
+    <m:f>
+      <m:num><xsl:apply-templates select="*[1]"/></m:num>
+      <m:den><xsl:apply-templates select="*[2]"/></m:den>
+    </m:f>
+  </xsl:template>
+
+  <xsl:template match="mml:msup">
+    <m:sSup>
+      <m:e><xsl:apply-templates select="*[1]"/></m:e>
+      <m:sup><xsl:apply-templates select="*[2]"/></m:sup>
+    </m:sSup>
+  </xsl:template>
+
+  <xsl:template match="mml:msub">
+    <m:sSub>
+      <m:e><xsl:apply-templates select="*[1]"/></m:e>
+      <m:sub><xsl:apply-templates select="*[2]"/></m:sub>
+    </m:sSub>
+  </xsl:template>
+
+  <xsl:template match="mml:msqrt">
+    <m:rad>
+      <m:radPr><m:degHide m:val="1"/></m:radPr>
+      <m:e><xsl:apply-templates/></m:e>
+    </m:rad>
+  </xsl:template>
+  
+  <xsl:template match="*">
+    <xsl:apply-templates/>
+  </xsl:template>
+</xsl:stylesheet>
+"""
+
+def latex_to_omml_element(latex_str):
+    """
+    Chuyển chuỗi LaTeX thành thẻ XML OMML (Microsoft Office Math)
+    """
+    if not HAS_LATEX2MATHML:
+        return None
+    try:
+        # Bước 1: LaTeX -> MathML
+        mathml_str = latex2mathml.converter.convert(latex_str)
+        
+        # Bước 2: Parse MathML XML
+        from lxml import etree
+        xslt_root = etree.XML(MML2OMML_XSL)
+        transform = etree.XSLT(xslt_root)
+        
+        mml_root = etree.XML(mathml_str.encode('utf-8'))
+        omml_doc = transform(mml_root)
+        
+        omml_str = str(omml_doc)
+        # Bỏ thẻ wrapper ngoài cùng nếu cần để chèn inline
+        omml_element = parse_xml(omml_str)
+        return omml_element
+    except Exception:
+        return None
+        
 def extract_text_from_docx(file_bytes):
     try:
         doc = Document(BytesIO(file_bytes))
@@ -105,16 +194,37 @@ def extract_text_from_docx(file_bytes):
     except Exception as e:
         return f"Lỗi đọc file Word: {str(e)}"
 
-def add_math_run_to_paragraph(paragraph, text):
+def add_math_run_to_paragraph(paragraph, text, convert_to_equation=False):
     if not text: 
         return
-    # Giữ nguyên dấu \ và $ của LaTeX, chỉ thay thế xuống dòng thực tế
+    
     text = str(text).replace('\\n', '\n').strip()
     lines = text.split('\n')
+    
     for index, line in enumerate(lines):
         if index > 0:
             paragraph.add_run().add_break()
-        if line.strip():
+        
+        if not line.strip():
+            continue
+            
+        if convert_to_equation and HAS_LATEX2MATHML:
+            # Tách chuỗi văn bản thông thường và đoạn kẹp bởi $...$
+            parts = re.split(r'(\$.*?\$)', line)
+            for part in parts:
+                if part.startswith('$') and part.endswith('$') and len(part) > 2:
+                    latex_code = part[1:-1].strip()
+                    omml_elem = latex_to_omml_element(latex_code)
+                    if omml_elem is not None:
+                        # Append trực tiếp phần tử Equation XML vào paragraph
+                        paragraph._p.append(omml_elem)
+                    else:
+                        # Nếu lỗi parse thì giữ nguyên văn bản LaTeX gốc
+                        paragraph.add_run(part)
+                else:
+                    paragraph.add_run(part)
+        else:
+            # Nếu không bật convert hoặc thiếu thư viện -> xuất văn bản trơn
             paragraph.add_run(line)
 
 # ==========================================
@@ -340,7 +450,7 @@ def generate_step2_questions(client, config, matrix_data, subject_rule, raw_inpu
     raw = re.sub(r'^```json\s*|```$', '', raw, flags=re.IGNORECASE).strip()
     return json.loads(raw, strict=False)
 
-def build_single_docx(config, data, code_label, include_matrix=True):
+def build_single_docx(config, data, code_label, include_matrix=True, convert_to_equation=False):
     doc = Document()
     for section in doc.sections:
         section.top_margin = Inches(0.79)
@@ -499,17 +609,18 @@ def build_single_docx(config, data, code_label, include_matrix=True):
             p_q = doc.add_paragraph()
             muc_do = q.get('muc_do', 'NB')
             p_q.add_run(f"Câu {q.get('id', '')} ({muc_do}_TN): ").bold = True
-            add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''))
+            add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''), convert_to_equation)
+            
             p_opts = doc.add_paragraph()
             p_opts.paragraph_format.left_indent = Inches(0.3)
             p_opts.add_run("A. ").bold = True
-            add_math_run_to_paragraph(p_opts, q.get('A', ''))
+            add_math_run_to_paragraph(p_opts, q.get('A', ''), convert_to_equation)
             p_opts.add_run("   B. ").bold = True
-            add_math_run_to_paragraph(p_opts, q.get('B', ''))
+            add_math_run_to_paragraph(p_opts, q.get('B', ''), convert_to_equation)
             p_opts.add_run("   C. ").bold = True
-            add_math_run_to_paragraph(p_opts, q.get('C', ''))
+            add_math_run_to_paragraph(p_opts, q.get('C', ''), convert_to_equation)
             p_opts.add_run("   D. ").bold = True
-            add_math_run_to_paragraph(p_opts, q.get('D', ''))
+            add_math_run_to_paragraph(p_opts, q.get('D', ''), convert_to_equation)
 
     list_ds = de.get("trac_nghiem_dung_sai", [])
     if list_ds:
@@ -519,14 +630,14 @@ def build_single_docx(config, data, code_label, include_matrix=True):
             p_q = doc.add_paragraph()
             muc_do = q.get('muc_do', 'TH')
             p_q.add_run(f"Câu {q.get('id', '')} ({muc_do}_TN): ").bold = True
-            add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''))
+            add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''), convert_to_equation)
             cac_y = q.get("cac_y", {})
             for key in ['a', 'b', 'c', 'd']:
                 if key in cac_y:
                     p_y = doc.add_paragraph()
                     p_y.paragraph_format.left_indent = Inches(0.4)
                     p_y.add_run(f"{key}) ").bold = True
-                    add_math_run_to_paragraph(p_y, cac_y.get(key, ''))
+                    add_math_run_to_paragraph(p_y, cac_y.get(key, ''), convert_to_equation)
 
     list_tln = de.get("trac_nghiem_tra_loi_ngan", [])
     if list_tln:
@@ -536,7 +647,7 @@ def build_single_docx(config, data, code_label, include_matrix=True):
             p_q = doc.add_paragraph()
             muc_do = q.get('muc_do', 'VD')
             p_q.add_run(f"Câu {q.get('id', '')} ({muc_do}_TN): ").bold = True
-            add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''))
+            add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''), convert_to_equation)
 
     list_tl = de.get("tu_luan", [])
     if list_tl:
@@ -546,29 +657,18 @@ def build_single_docx(config, data, code_label, include_matrix=True):
             p_q = doc.add_paragraph()
             muc_do = q.get('muc_do', 'VDC')
             p_q.add_run(f"Câu {q.get('id', '')} ({muc_do}_TL): ").bold = True
-            add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''))
+            add_math_run_to_paragraph(p_q, q.get('cau_hoi', ''), convert_to_equation)
 
     doc.add_page_break()
     doc.add_paragraph().add_run(f"HƯỚNG DẪN CHẤM & ĐÁP ÁN - MÃ ĐỀ: {code_label}\n").bold = True
     da = data.get('dap_an_chi_tiet', {})
     
-    if da.get('trac_nghiem_4_lua_chon'):
-        doc.add_paragraph().add_run("Đáp án Phần I:").bold = True
-        ans_table1 = doc.add_table(rows=1, cols=2)
-        ans_table1.style = 'Table Grid'
-        ans_table1.rows[0].cells[0].text = "Câu hỏi"
-        ans_table1.rows[0].cells[1].text = "Đáp án"
-        for q_id, val in da['trac_nghiem_4_lua_chon'].items():
-            rc = ans_table1.add_row().cells
-            rc[0].text = f"Câu {q_id}"
-            rc[1].text = str(val)
-
     if da.get('tu_luan'):
         doc.add_paragraph().add_run("\nHướng dẫn giải chi tiết Phần IV (Tự luận):").bold = True
-        for q_id, detail in da['tu_luan'].items() if isinstance(da['tu_luan'], dict) else enumerate(da['tu_luan']):
+        for q_id, detail in (da['tu_luan'].items() if isinstance(da['tu_luan'], dict) else enumerate(da['tu_luan'])):
             p_tl = doc.add_paragraph()
             p_tl.add_run(f"Câu {q_id}: ").bold = True
-            add_math_run_to_paragraph(p_tl, str(detail))
+            add_math_run_to_paragraph(p_tl, str(detail), convert_to_equation)
             
     bio = BytesIO()
     doc.save(bio)
@@ -839,7 +939,16 @@ with tab3:
             "score_part1": score_part1, "score_part2": score_part2, "score_part3": score_part3, "score_part4": score_part4,
             "matrix_template": matrix_template, "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio
         }
-        inc_mat = st.checkbox("Chèn bảng Ma trận phân bổ vào đầu file đề", value=True)
+        
+        col_opt1, col_opt2 = st.columns(2)
+        with col_opt1:
+            inc_mat = st.checkbox("Chèn bảng Ma trận phân bổ vào đầu file đề", value=True)
+        with col_opt2:
+            convert_eq = st.checkbox("📐 Tự động chuyển mã LaTeX sang Word Equation (Native Math)", value=True, 
+                                     help="Yêu cầu cài đặt gói `latex2mathml` và `lxml` trong Python")
+            if convert_eq and not HAS_LATEX2MATHML:
+                st.warning("⚠️ Môi trường chưa cài thư viện `latex2mathml`. File sẽ tự động xuất dạng văn bản mã LaTeX trơn $...$")
+
         export_mode = st.radio("**Hình thức xuất bản bộ đề:**", ["Tải file đơn lẻ", "Nén tất cả mã đề vào file ZIP", "Gộp chung vào 1 file Word"])
         
         if export_mode == "Tải file đơn lẻ":
@@ -848,14 +957,15 @@ with tab3:
                 all_available_codes.remove("ĐỀ GỐC")
                 all_available_codes = ["ĐỀ GỐC"] + all_available_codes
             sel_code = st.selectbox("**Chọn đề cần xuất bản:**", all_available_codes)
-            docx_buf = build_single_docx(config_pkg, st.session_state.multi_codes_data[sel_code], sel_code, include_matrix=inc_mat)
+            
+            docx_buf = build_single_docx(config_pkg, st.session_state.multi_codes_data[sel_code], sel_code, include_matrix=inc_mat, convert_to_equation=convert_eq)
             st.download_button(label=f"📥 TẢI FILE WORD [{sel_code}]", data=docx_buf, file_name=f"De_{subject}_{sel_code}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
             
         elif export_mode == "Nén tất cả mã đề vào file ZIP":
             zip_buffer = BytesIO()
             with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
                 for c_code, c_data in st.session_state.multi_codes_data.items():
-                    d_buf = build_single_docx(config_pkg, c_data, c_code, include_matrix=inc_mat)
+                    d_buf = build_single_docx(config_pkg, c_data, c_code, include_matrix=inc_mat, convert_to_equation=convert_eq)
                     filename_in_zip = f"De_Goc_{subject}_Lop{grade}.docx" if c_code == "ĐỀ GỐC" else f"De_{subject}_Lop{grade}_MaDe_{c_code}.docx"
                     zip_file.writestr(filename_in_zip, d_buf.getvalue())
             zip_buffer.seek(0)
@@ -869,10 +979,12 @@ with tab3:
                 all_codes = ["ĐỀ GỐC"] + all_codes
             for idx, c_code in enumerate(all_codes):
                 c_data = st.session_state.multi_codes_data[c_code]
-                temp_buf = build_single_docx(config_pkg, c_data, c_code, include_matrix=inc_mat)
+                temp_buf = build_single_docx(config_pkg, c_data, c_code, include_matrix=inc_mat, convert_to_equation=convert_eq)
                 t_doc = Document(temp_buf)
-                for element in t_doc.element.body: main_doc.element.body.append(element)
-                if idx < len(all_codes) - 1: main_doc.add_page_break()
+                for element in t_doc.element.body: 
+                    main_doc.element.body.append(element)
+                if idx < len(all_codes) - 1: 
+                    main_doc.add_page_break()
                 
             all_buf = BytesIO()
             main_doc.save(all_buf)
