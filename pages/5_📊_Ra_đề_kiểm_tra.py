@@ -79,16 +79,16 @@ st.markdown("""
 # DANH SÁCH TẤT CẢ CÁC MÔN HỌC & ĐẶC THÙ KÝ HIỆU
 # ==========================================
 SUBJECTS_CONFIG = {
-    "Toán học": "Sử dụng ký tự Unicode toán học trực tiếp trong văn bản trơn. Số mũ dùng kí tự mũ trực tiếp như ², ³, ⁴ (x², cm²). Phân số viết dạng chia ngang (x + 1)/(x - 3). Hình học dùng ΔABC, ∽, ⊥, //.",
-    "Vật lý": "Đơn vị đo lường phải chuẩn hóa (Ω, W, J, m/s²). Kí hiệu mũ trực tiếp như s², m³.",
-    "Hóa học": "BẮT BUỘC dùng chỉ số dưới Unicode thực tế cho công thức phân tử: H₂SO₄, Ca(OH)₂, Al₂(SO₄)₃. Mũi tên phản ứng dạng → hoặc ⇌.",
-    "Tin học": "Các đoạn mã giả, code Python, C++, HTML hoặc ký hiệu logic (AND, OR, NOT, ⊕) phải đặt trong dấu `...` hoặc bọc khối rõ ràng.",
-    "Công nghệ": "Ký hiệu mạch điện, thông số kỹ thuật điện trở, bản vẽ kỹ thuật hoặc sơ đồ khối phải mô tả tường minh bằng ký hiệu hoa văn chuẩn.",
-    "Ngữ văn": "Các ngữ liệu văn học, đoạn thơ, đoạn văn trích dẫn phải được bọc trong dấu ngoặc kép hoặc ghi rõ nguồn. Câu hỏi trắc nghiệm/tự luận tập trung vào đọc hiểu và làm văn.",
-    "Tiếng Anh / Ngoại ngữ": "Toàn bộ câu hỏi, phương án lựa chọn và văn bản đọc hiểu phải viết bằng ngôn ngữ đích chuẩn bản xứ, không sai chính tả, có phần trọng âm, ngữ âm rõ ràng.",
-    "Lịch sử & Địa lý": "Mốc thời gian, số liệu thống kê tọa độ, ký hiệu bản đồ, số liệu kinh tế - xã hội phải chính xác tuyệt đối theo dòng sự kiện và Atlat.",
-    "Giáo dục Kinh tế và Pháp luật": "Các thuật ngữ pháp lý, điều luật, tình huống thực tế phải bọc trong quy chuẩn trích dẫn lập pháp.",
-    "Sinh học / KHTN": "Ký hiệu sơ đồ phép lai (P, F₁, F₂), alen (A₁, a), nhiễm sắc thể (2n, n) hoặc công thức phân tử sinh học phải viết chuẩn xác."
+    "Toán học": "TẤT CẢ các công thức, biến số, biểu thức toán học BẮT BUỘC phải đặt trong dấu LaTeX kẹp giữa cặp $...$ (ví dụ: $x^2 + 2x + 1 = 0$, $\Delta ABC$, $\frac{a}{b}$, $\sqrt{x}$, $\parallel$).",
+    "Vật lý": "Các công thức, biến số, chỉ số, đơn vị đo có số mũ hoặc phân số BẮT BUỘC đặt trong LaTeX $...$ (ví dụ: $10\text{ m/s}^2$, $R = \frac{U}{I}$, $\Omega$).",
+    "Hóa học": "Các công thức hóa học, chỉ số, phương trình phản ứng BẮT BUỘC đặt trong LaTeX $...$ (ví dụ: $\text{H}_2\text{SO}_4$, $\text{Ca(OH)}_2$, $\rightarrow$, $\rightleftharpoons$).",
+    "Tin học": "Các đoạn mã giả, code Python, C++, HTML hoặc ký hiệu logic (AND, OR, NOT, ⊕) đặt trong dấu `...` hoặc khối rõ ràng.",
+    "Công nghệ": "Ký hiệu mạch điện, thông số kỹ thuật điện trở mô tả tường minh chuẩn xác.",
+    "Ngữ văn": "Các ngữ liệu văn học, đoạn thơ bọc trong dấu ngoặc kép hoặc ghi rõ nguồn.",
+    "Tiếng Anh / Ngoại ngữ": "Viết bằng ngôn ngữ đích chuẩn bản xứ, ngữ âm rõ ràng.",
+    "Lịch sử & Địa lý": "Mốc thời gian, số liệu thống kê tọa độ chính xác tuyệt đối.",
+    "Giáo dục Kinh tế và Pháp luật": "Thuật ngữ pháp lý bọc trong quy chuẩn trích dẫn lập pháp.",
+    "Sinh học / KHTN": "Ký hiệu sơ đồ phép lai ($P$, $F_1$, $F_2$), alen ($A_1$, $a$), nhiễm sắc thể ($2n$) bọc trong LaTeX $...$."
 }
 
 # ==========================================
@@ -106,13 +106,14 @@ def extract_text_from_docx(file_bytes):
         return f"Lỗi đọc file Word: {str(e)}"
 
 def add_math_run_to_paragraph(paragraph, text):
-    if not text: return
-    text = str(text).replace('\\n', '\n').replace('\\', '').replace('$', '').strip()
+    if not text: 
+        return
+    # Giữ nguyên dấu \ và $ của LaTeX, chỉ thay thế xuống dòng thực tế
+    text = str(text).replace('\\n', '\n').strip()
     lines = text.split('\n')
     for index, line in enumerate(lines):
         if index > 0:
-            new_run = paragraph.add_run()
-            new_run.add_break()
+            paragraph.add_run().add_break()
         if line.strip():
             paragraph.add_run(line)
 
@@ -277,21 +278,20 @@ def generate_step2_questions(client, config, matrix_data, subject_rule, raw_inpu
 
     THÔNG TIN THỜI GIAN LÀM BÀI BẮT BUỘC TUÂN THỦ:
     - Tổng thời gian làm bài: {config['duration']} phút cho tổng số {config['num_tn_4_lua_chon'] + config['num_tn_dung_sai'] + config['num_tn_tra_loi_ngan'] + config['num_tl']} câu hỏi.
-    - Do đó, bạn phải tự cân đối và khống chế "độ dài" và "độ phức tạp" của từng câu hỏi sao cho một học sinh thuộc nhóm đối tượng ({config['difficulty']}) có thể hoàn thành bài thi một cách hợp lý trong đúng {config['duration']} phút.
-    - VÍ DỤ: Đề {config['duration']} phút mà ngắn (ví dụ 15 phút) thì câu hỏi trắc nghiệm phải ngắn gọn, hỏi thẳng vào bản chất, công thức tính nhanh, phần tự luận (nếu có) phải là bài toán cơ bản. Không được ra câu hỏi tốn quá nhiều thời gian đọc hay tính toán.
+    - Tự cân đối độ dài và độ phức tạp từng câu hỏi phù hợp.
+
     Yêu cầu số lượng câu hỏi và cơ cấu điểm số:
-    - Phần I (Trắc nghiệm nhiều lựa chọn): {config['num_tn_4_lua_chon']} câu. Tổng điểm phần này: {config['score_part1']} điểm.
-    - Phần II (Trắc nghiệm Đúng/Sai): {config['num_tn_dung_sai']} câu. Tổng điểm phần này: {config['score_part2']} điểm.
-    - Phần III (Trắc nghiệm Trả lời ngắn): {config['num_tn_tra_loi_ngan']} câu. Tổng điểm phần này: {config['score_part3']} điểm.
-    - Phần IV (Tự luận): {config['num_tl']} câu. Tổng điểm phần này: {config['score_part4']} điểm.
-    
-    * LƯU Ý PHÂN HÓA HỌC SINH: Câu hỏi thuộc mức độ Vận dụng cao (VDC) trong đề phải chiếm đúng trọng số tương đương {config['score_vdc_custom']} điểm trên tổng số điểm của phần chứa nó.
+    - Phần I (Trắc nghiệm nhiều lựa chọn): {config['num_tn_4_lua_chon']} câu ({config['score_part1']} điểm).
+    - Phần II (Trắc nghiệm Đúng/Sai): {config['num_tn_dung_sai']} câu ({config['score_part2']} điểm).
+    - Phần III (Trắc nghiệm Trả lời ngắn): {config['num_tn_tra_loi_ngan']} câu ({config['score_part3']} điểm).
+    - Phần IV (Tự luận): {config['num_tl']} câu ({config['score_part4']} điểm).
+    * Điểm Vận dụng cao (VDC): {config['score_vdc_custom']} điểm.
 
-    QUY ĐỊNH ĐỊNH DẠNG TOÁN HỌC & KHTN (BẮT BUỘC KHÔNG DÙNG LATEX):
-    - TUYỆT ĐỐI KHÔNG sử dụng ký tự $, \, frac, neq, sim, triangle, hoặc ^.
-    - Sử dụng ký tự Unicode toán học trực tiếp trong văn bản trơn (Ví dụ: x², cm², ΔABC, ∽, ⊥, //, →, ⇌, ·, ≠, °).
+    QUY ĐỊNH ĐỊNH DẠNG CÔNG THỨC TOÁN HỌC & KHTN (BẮT BUỘC DÙNG LATEX):
+    - TẤT CẢ các biểu thức toán học, công thức hóa học, vật lý, ký hiệu hình học, biểu thức chứa biến (như x, y, a, b...), phân số, căn thức, số mũ BẮT BUỘC phải bọc trong cặp dấu $...$ (ví dụ: $x^2 + 2x + 1 = 0$, $\\frac{{a}}{{b}}$, $\\sqrt{{x}}$, $\\Delta ABC$, $\\parallel$, $\\text{{H}}_2\\text{{SO}}_4$).
+    - Trong chuỗi JSON, lưu ý escape các dấu gạch chéo ngược `\\` chuẩn để JSON không bị lỗi syntax (vd: `\\\\frac`, `\\\\sqrt`).
 
-    YÊU CẦU QUAN TRỌNG: Từng câu hỏi trong mỗi danh sách PHẢI được gán nhãn thuộc tính mức độ nhận thức "muc_do" (nhận giá trị là "NB", "TH", "VD", hoặc "VDC") dựa trên ma trận bản đặc tả.
+    YÊU CẦU QUAN TRỌNG: Từng câu hỏi PHẢI có thuộc tính "muc_do" ("NB", "TH", "VD", "VDC").
 
     BẮT BUỘC TRẢ VỀ JSON NGUYÊN BẢN CÓ CẤU TRÚC SAU:
     {{
@@ -329,7 +329,6 @@ def generate_step2_questions(client, config, matrix_data, subject_rule, raw_inpu
         prompt_text += f"\nNGUỒN KIẾN THỨC BẮT BUỘC ĐỂ SOẠN CÂU HỎI:\n\"\"\"\n{raw_input_data}\n\"\"\""
         contents_to_send.append(prompt_text)
 
-    # Gọi API bằng SDK mới client.models.generate_content
     response = client.models.generate_content(
         model='gemini-2.5-flash',
         contents=contents_to_send,
