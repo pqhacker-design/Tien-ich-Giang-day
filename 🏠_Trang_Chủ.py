@@ -31,7 +31,7 @@ def check_gemini_api_key(api_key: str) -> tuple[bool, str]:
         
         # Gửi request nhẹ để kiểm tra kết nối (sử dụng gemini-2.5-flash)
         client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.6-flash",
             contents="ping"
         )
         return True, "API Key hợp lệ và sẵn sàng sử dụng!"
