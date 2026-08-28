@@ -8,7 +8,7 @@ class GeminiService:
         if not api_key:
             raise ValueError("API Key không được để trống.")
         self.client = genai.Client(api_key=api_key)
-        self.model_name = "gemini-2.5-flash"
+        self.model_name = "gemini-3.6-flash"
 
     def analyze_and_integrate(self, doc_text: str, cap_hoc: str, integration_type: str) -> dict:
         """
