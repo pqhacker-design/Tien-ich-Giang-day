@@ -150,6 +150,11 @@ with col8:
         if st.button("🚀 Mở ứng dụng Vẽ hình HH", key="btn_ve_hinh_hoc", use_container_width=True):
             st.switch_page("pages/8_📐_Vẽ_Hình_học_và_Đồ_thị.py")
 with col9:
+    with st.container(border=True):
+        st.markdown("#### 📐 9. Chưa có app")
+        st.write("Chưa bổ sung app nên để trống")
+        if st.button("🚀 Mở ứng dụng ....", key="btn_gi_do", use_container_width=True):
+            st.switch_page("pages/8_📐_Vẽ_Hình_học_và_Đồ_thị.py")
     
 st.markdown("---")
 
