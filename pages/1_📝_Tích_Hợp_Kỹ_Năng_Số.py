@@ -64,9 +64,10 @@ with st.expander("⚙️ **CẤU HÌNH HỆ THỐNG:**", expanded=False):
             ["Năng lực số", "Năng lực AI", "Cả hai"]
         )
 
-# --- MÀN HÌNH CHÍNH ---
-col1, col2 = st.columns([1, 1])
-with col1:
+# --- MÀN HÌNH CHÍNH: 2 CỘT ---
+col_left, col_right = st.columns([2, 1])
+
+with col_left:
     with st.container(border=True):
         st.markdown(
             """
@@ -85,7 +86,6 @@ with col1:
         if uploaded_file is not None:
             file_bytes = uploaded_file.read()
             st.success(f"✔️ Đã tải lên file thành công: **{uploaded_file.name}**")
-            # Lưu tên file gốc vào session state để dùng khi download
             st.session_state['original_filename'] = uploaded_file.name
             
             if st.button("🚀 Bắt đầu tích hợp", type="primary", use_container_width=True):
@@ -114,22 +114,19 @@ with col1:
                     except Exception as e:
                         st.error(f"❌ Đã xảy ra lỗi trong quá trình xử lý: {str(e)}")
 
-with col2:
-    with st.container(border=True):
-        st.markdown(
-            """
-            <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
-                <h4 style="margin: 0; color: #0369A1;">🖥️ 2. Kết quả & Tải về</h4>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-        
-        if 'ai_result' in st.session_state and 'processed_file' in st.session_state:
+    # --- Hiển thị kết quả và nút tải xuống NGAY DƯỚI ĐÂY ---
+    if 'ai_result' in st.session_state and 'processed_file' in st.session_state:
+        with st.container(border=True):
+            st.markdown(
+                """
+                <div style="background-color: #E0F2FE; padding: 4px; border-left: 5px solid #0284C7; border-radius: 4px; margin-bottom: 10px;">
+                    <h4 style="margin: 0; color: #0369A1;">📋 2. Kết quả tích hợp</h4>
+                </div>
+                """, 
+                unsafe_allow_html=True
+            )
             res = st.session_state['ai_result']
             sua_doi_list = res.get('sua_doi', [])
-            
-            st.markdown("### 📋 Các vị trí đã được tích hợp:")
             
             if not sua_doi_list:
                 st.warning("AI không tìm thấy hoặc không đề xuất vị trí tích hợp nào phù hợp.")
@@ -151,11 +148,10 @@ with col2:
             
             st.markdown("---")
             
-            # Tạo tên file mới từ tên gốc đã lưu
+            # Tạo tên file mới từ tên gốc
             original_name = st.session_state.get('original_filename', 'KHBD_TichHop')
-            # Loại bỏ phần mở rộng .docx nếu có
             if original_name.lower().endswith('.docx'):
-                base_name = original_name[:-5]  # cắt bỏ '.docx'
+                base_name = original_name[:-5]
             else:
                 base_name = original_name
             download_filename = f"{base_name}_Tichhop_So_AI.docx"
@@ -168,8 +164,21 @@ with col2:
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 use_container_width=True
             )
-        else:
-            st.info("Chưa có dữ liệu xử lý. Vui lòng hoàn thành các bước ở cột bên trái.")
+
+with col_right:
+    st.markdown("### ℹ️ Hướng dẫn sử dụng")
+    st.markdown("""
+    - **Tải lên** file giáo án Word (.docx) của bạn.
+    - Chọn **loại tích hợp** bạn muốn: Năng lực số, Năng lực AI hoặc cả hai.
+    - Nhấn **"Bắt đầu tích hợp"** để hệ thống tự động phân tích và chèn nội dung.
+    - Sau khi xử lý, kết quả và nút tải xuống sẽ hiển thị ngay bên dưới.
+    - Tải file đã tích hợp về máy.
+    """)
+    st.markdown("#### 📌 Các năng lực được tích hợp:")
+    st.markdown("""
+    - **Năng lực số** (CT GDPT 2018): Kỹ năng sử dụng CNTT, xử lý dữ liệu, an toàn số, giao tiếp trực tuyến.
+    - **Năng lực AI** (QĐ 2422/QĐ-BGDĐT): Nhận thức về AI, ứng dụng AI vào học tập, tư duy phản biện về AI.
+    """)
 
 st.divider()
 col_left, col_right = st.columns(2)
