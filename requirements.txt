@@ -1,6 +1,7 @@
 streamlit
 streamlit-option-menu
 streamlit-extras
+streamlit-paste-button
 python-docx
 python-pptx
 reportlab
