@@ -17,6 +17,9 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import nsdecls, qn
 
+# Thư viện hỗ trợ dán ảnh từ bộ nhớ tạm (Clipboard)
+from streamlit_paste_button import paste_image_button
+
 # Import Google GenAI SDK mới
 from google import genai
 from google.genai import types
@@ -51,6 +54,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 # ==========================================
 # CẤU HÌNH TRANG & GIAO DIỆN
 # ==========================================
@@ -64,10 +68,10 @@ st.set_page_config(
 st.markdown("""
 <style>
 /* Nhắm mục tiêu vào văn bản bên trong các nút Tab của Streamlit */
-        button[data-baseweb="tab"] div p {
-            font-weight: bold !important;
-            font-size: 1.05em !important; /* Có thể phóng to chữ lên một chút nếu muốn */
-        }
+    button[data-baseweb="tab"] div p {
+        font-weight: bold !important;
+        font-size: 1.05em !important;
+    }
     .main-title { font-size: 2.3rem; font-weight: 700; color: #1E3A8A; text-align: center; margin-bottom: 1.5rem; }
     .section-header { font-size: 1.3rem; font-weight: 600; color: #0F766E; margin-top: 1.5rem; margin-bottom: 1rem; border-left: 5px solid #0F766E; padding-left: 10px; }
     .stButton>button { width: 100%; background-color: #0F766E; color: white; border-radius: 8px; font-weight: 600; padding: 10px; }
@@ -80,9 +84,9 @@ st.markdown("""
 # DANH SÁCH TẤT CẢ CÁC MÔN HỌC & ĐẶC THÙ KÝ HIỆU
 # ==========================================
 SUBJECTS_CONFIG = {
-    "Toán học": "TẤT CẢ các công thức, biến số, biểu thức toán học BẮT BUỘC phải đặt trong dấu LaTeX kẹp giữa cặp $...$ (ví dụ: $x^2 + 2x + 1 = 0$, $\Delta ABC$, $\frac{a}{b}$, $\sqrt{x}$, $\parallel$).",
-    "Vật lý": "Các công thức, biến số, chỉ số, đơn vị đo có số mũ hoặc phân số BẮT BUỘC đặt trong LaTeX $...$ (ví dụ: $10\text{ m/s}^2$, $R = \frac{U}{I}$, $\Omega$).",
-    "Hóa học": "Các công thức hóa học, chỉ số, phương trình phản ứng BẮT BUỘC đặt trong LaTeX $...$ (ví dụ: $\text{H}_2\text{SO}_4$, $\text{Ca(OH)}_2$, $\rightarrow$, $\rightleftharpoons$).",
+    "Toán học": "TẤT CẢ các công thức, biến số, biểu thức toán học BẮT BUỘC phải đặt trong dấu LaTeX kẹp giữa cặp $...$ (ví dụ: $x^2 + 2x + 1 = 0$, $\\Delta ABC$, $\\frac{a}{b}$, $\\sqrt{x}$, $\\parallel$).",
+    "Vật lý": "Các công thức, biến số, chỉ số, đơn vị đo có số mũ hoặc phân số BẮT BUỘC đặt trong LaTeX $...$ (ví dụ: $10\\text{ m/s}^2$, $R = \\frac{U}{I}$, $\\Omega$).",
+    "Hóa học": "Các công thức hóa học, chỉ số, phương trình phản ứng BẮT BUỘC đặt trong LaTeX $...$ (ví dụ: $\\text{H}_2\\text{SO}_4$, $\\text{Ca(OH)}_2$, $\\rightarrow$, $\\rightleftharpoons$).",
     "Tin học": "Các đoạn mã giả, code Python, C++, HTML hoặc ký hiệu logic (AND, OR, NOT, ⊕) đặt trong dấu `...` hoặc khối rõ ràng.",
     "Công nghệ": "Ký hiệu mạch điện, thông số kỹ thuật điện trở mô tả tường minh chuẩn xác.",
     "Ngữ văn": "Các ngữ liệu văn học, đoạn thơ bọc trong dấu ngoặc kép hoặc ghi rõ nguồn.",
@@ -163,13 +167,9 @@ def latex_to_omml_element(latex_str):
     if not HAS_LATEX2MATHML:
         return None
     try:
-        # Chuẩn hóa một số ký hiệu đặc biệt thường gặp trong đề thi Việt Nam
         latex_str = latex_str.replace(r'\parallel', '||').replace(r'\sim', '~')
-        
-        # Bước 1: Chuyển LaTeX sang MathML
         mathml_str = latex2mathml.converter.convert(latex_str)
         
-        # Bước 2: Dùng XSLT biến đổi sang OMML (Word Math)
         xslt_root = etree.XML(MML2OMML_XSL.encode('utf-8'))
         transform = etree.XSLT(xslt_root)
         
@@ -182,13 +182,10 @@ def latex_to_omml_element(latex_str):
         return None
 
 def add_math_run_to_paragraph(paragraph, text, convert_to_equation=True):
-    """
-    Tách văn bản và chèn công thức Word Equation inline mượt mà
-    """
+    """Tách văn bản và chèn công thức Word Equation inline mượt mà"""
     if not text:
         return
     
-    # 1. Làm sạch ký tự HTML và chuẩn hóa xuống dòng
     text = str(text).replace('<br>', '\n').replace('<br/>', '\n').replace('\\n', '\n').strip()
     lines = text.split('\n')
     
@@ -200,17 +197,14 @@ def add_math_run_to_paragraph(paragraph, text, convert_to_equation=True):
             continue
             
         if convert_to_equation and HAS_LATEX2MATHML:
-            # Tách các đoạn nằm trong cặp dấu $...$
             parts = re.split(r'(\$.*?\$)', line)
             for part in parts:
                 if part.startswith('$') and part.endswith('$') and len(part) > 2:
                     latex_code = part[1:-1].strip()
                     omml_elem = latex_to_omml_element(latex_code)
                     if omml_elem is not None:
-                        # Chèn trực tiếp XML công thức vào đúng vị trí chuỗi văn bản (Inline)
                         paragraph._p.append(omml_elem)
                     else:
-                        # Phương án dự phòng nếu công thức quá phức tạp: Giữ nguyên văn bản
                         paragraph.add_run(part)
                 else:
                     if part:
@@ -228,6 +222,7 @@ def extract_text_from_docx(file_bytes):
         return "\n".join(fullText)
     except Exception as e:
         return f"Lỗi đọc file Word: {str(e)}"
+
 # ==========================================
 # KHỞI TẠO SESSION STATE
 # ==========================================
@@ -236,6 +231,8 @@ if 'step1_data' not in st.session_state: st.session_state.step1_data = None
 if 'multi_codes_data' not in st.session_state: st.session_state.multi_codes_data = {}
 if 'alignment_table' not in st.session_state: st.session_state.alignment_table = None
 if 'user_custom_req' not in st.session_state: st.session_state.user_custom_req = ""
+if 'pasted_images_list' not in st.session_state: st.session_state.pasted_images_list = []
+if 'current_document_content' not in st.session_state: st.session_state.current_document_content = ""
 
 # ==========================================
 # THUẬT TOÁN ĐẢO ĐỀ MULTI-CODE
@@ -267,7 +264,6 @@ def generate_shuffled_bundle(original_data, start_code, num_codes):
                 old_id = f"Câu {old_idx + 1}"
                 
                 q['id'] = int(new_id)
-                # Thuộc tính q['muc_do'] được giữ nguyên nhờ deepcopy
                 
                 opts = { "A": q.get("A",""), "B": q.get("B",""), "C": q.get("C",""), "D": q.get("D","") }
                 old_correct_key = shuffled_data['dap_an_chi_tiet']['trac_nghiem_4_lua_chon'].get(str(old_idx + 1))
@@ -302,7 +298,6 @@ def generate_shuffled_bundle(original_data, start_code, num_codes):
 
 def init_gemini_client(api_key):
     try:
-        # Khởi tạo Client mới của SDK google-genai
         client = genai.Client(api_key=api_key)
         return client
     except Exception as e:
@@ -357,8 +352,15 @@ def generate_step1_matrix(client, config, raw_input_data):
         prompt_text += f"\n[Yêu cầu tùy biến bổ sung từ giáo viên: {st.session_state.user_custom_req}]\n"
 
     contents_to_send = []
-    if isinstance(raw_input_data, dict) and "mime_type" in raw_input_data:
-        # Sử dụng types.Part.from_bytes cho dữ liệu tệp trong google-genai
+    if isinstance(raw_input_data, list):
+        for item in raw_input_data:
+            if isinstance(item, dict) and "mime_type" in item:
+                contents_to_send.append(types.Part.from_bytes(
+                    data=item["data"],
+                    mime_type=item["mime_type"]
+                ))
+        contents_to_send.append(prompt_text)
+    elif isinstance(raw_input_data, dict) and "mime_type" in raw_input_data:
         media_part = types.Part.from_bytes(
             data=raw_input_data["data"],
             mime_type=raw_input_data["mime_type"]
@@ -369,7 +371,6 @@ def generate_step1_matrix(client, config, raw_input_data):
         prompt_text += f"\nNGUỒN DỮ LIỆU KIẾN THỨC BẮT BUỘC:\n\"\"\"\n{raw_input_data}\n\"\"\""
         contents_to_send.append(prompt_text)
 
-    # Gọi API bằng SDK mới client.models.generate_content
     response = client.models.generate_content(
         model='gemini-2.5-flash',
         contents=contents_to_send,
@@ -429,7 +430,15 @@ def generate_step2_questions(client, config, matrix_data, subject_rule, raw_inpu
     }}
     """
     contents_to_send = []
-    if isinstance(raw_input_data, dict) and "mime_type" in raw_input_data:
+    if isinstance(raw_input_data, list):
+        for item in raw_input_data:
+            if isinstance(item, dict) and "mime_type" in item:
+                contents_to_send.append(types.Part.from_bytes(
+                    data=item["data"],
+                    mime_type=item["mime_type"]
+                ))
+        contents_to_send.append(prompt_text)
+    elif isinstance(raw_input_data, dict) and "mime_type" in raw_input_data:
         media_part = types.Part.from_bytes(
             data=raw_input_data["data"],
             mime_type=raw_input_data["mime_type"]
@@ -504,7 +513,6 @@ def build_single_docx(config, data, code_label, include_matrix=True, convert_to_
                 row[6].text = f"{tl.get('nb',0)}/{tl.get('th',0)}/{tl.get('vd',0)}/{tl.get('vdc',0)}"
                 row[7].text = f"{item.get('tong_diem_phan_tram', 10)}%"
         else:
-            # Mẫu đơn giản: Tách rõ số câu TN và TL theo từng mức độ nhận thức
             m_table = doc.add_table(rows=1, cols=5)
             m_table.style = 'Table Grid'
             m_hdrs = ['Chủ đề / Nội dung kiến thức', 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao']
@@ -512,7 +520,6 @@ def build_single_docx(config, data, code_label, include_matrix=True, convert_to_
                 m_table.rows[0].cells[idx].text = h
                 m_table.rows[0].cells[idx].paragraphs[0].runs[0].font.bold = True
             
-            # Khởi tạo các biến tích lũy tổng số câu
             total_nb_tn, total_nb_tl = 0, 0
             total_th_tn, total_th_tl = 0, 0
             total_vd_tn, total_vd_tl = 0, 0
@@ -527,7 +534,6 @@ def build_single_docx(config, data, code_label, include_matrix=True, convert_to_
                 tln = item.get('tra_loi_ngan', {})
                 tl = item.get('tu_luan', {})
                 
-                # Phân nhóm: TN (Trắc nghiệm nhiều lựa chọn + Đúng sai + Trả lời ngắn) và TL (Tự luận)
                 nb_tn = nlc.get('nb', 0) + ds.get('nb', 0) + tln.get('nb', 0)
                 nb_tl = tl.get('nb', 0)
                 
@@ -540,19 +546,16 @@ def build_single_docx(config, data, code_label, include_matrix=True, convert_to_
                 vdc_tn = 0 
                 vdc_tl = tl.get('vdc', 0)
                 
-                # Điền dữ liệu vào bảng
                 row[1].text = f"TN: {nb_tn} | TL: {nb_tl}"
                 row[2].text = f"TN: {th_tn} | TL: {th_tl}"
                 row[3].text = f"TN: {vd_tn} | TL: {vd_tl}"
                 row[4].text = f"TN: {vdc_tn} | TL: {vdc_tl}"
                 
-                # Tích lũy vào tổng
                 total_nb_tn += nb_tn; total_nb_tl += nb_tl
                 total_th_tn += th_tn; total_th_tl += th_tl
                 total_vd_tn += vd_tn; total_vd_tl += vd_tl
                 total_vdc_tn += vdc_tn; total_vdc_tl += vdc_tl
 
-            # --- HÀNG TỔNG SỐ CÂU ---
             row_total_q = m_table.add_row().cells
             row_total_q[0].text = "Tổng số câu"
             row_total_q[1].text = f"TN: {total_nb_tn} | TL: {total_nb_tl}"
@@ -560,10 +563,8 @@ def build_single_docx(config, data, code_label, include_matrix=True, convert_to_
             row_total_q[3].text = f"TN: {total_vd_tn} | TL: {total_vd_tl}"
             row_total_q[4].text = f"TN: {total_vdc_tn} | TL: {total_vdc_tl}"
             
-            # --- HÀNG TỔNG SỐ ĐIỂM ---
             row_total_p = m_table.add_row().cells
             row_total_p[0].text = "Tổng số điểm"
-            
             row_total_p[1].text = f"{config.get('nb_ratio', 40) / 10} điểm"
             row_total_p[2].text = f"{config.get('th_ratio', 30) / 10} điểm"
             row_total_p[3].text = f"{config.get('vd_ratio', 20) / 10} điểm"
@@ -574,19 +575,16 @@ def build_single_docx(config, data, code_label, include_matrix=True, convert_to_
                 row_total_p[i].paragraphs[0].runs[0].font.bold = True
 
         doc.add_paragraph()
-    # --- BỔ SUNG: VẼ BẢNG BẢN ĐẶC TẢ ---
         if 'bang_dac_ta' in data and data['bang_dac_ta']:
             doc.add_heading("II. BẢN ĐẶC TẢ PHƯƠNG ÁN RA ĐỀ", level=2)
             dt_table = doc.add_table(rows=1, cols=7)
             dt_table.style = 'Table Grid'
             dt_hdrs = ['Mã ĐT', 'Chủ đề', 'Nội dung', 'Mức độ', 'Yêu cầu cần đạt', 'Số câu', 'Điểm']
             
-            # Ghi tiêu đề bảng
             for idx, h in enumerate(dt_hdrs):
                 dt_table.rows[0].cells[idx].text = h
                 dt_table.rows[0].cells[idx].paragraphs[0].runs[0].font.bold = True
                 
-            # Đổ dữ liệu từ JSON vào bảng Word
             for item in data['bang_dac_ta']:
                 row = dt_table.add_row().cells
                 row[0].text = str(item.get('id_dac_ta', ''))
@@ -597,7 +595,7 @@ def build_single_docx(config, data, code_label, include_matrix=True, convert_to_
                 row[5].text = str(item.get('so_cau', ''))
                 row[6].text = str(item.get('diem', ''))
             
-            doc.add_paragraph() # Dòng trống giãn cách
+            doc.add_paragraph()
             
     doc.add_heading("III. NỘI DUNG CÂU HỎI", level=2)
     de = data.get('de_kiem_tra', {})
@@ -681,6 +679,7 @@ def build_single_docx(config, data, code_label, include_matrix=True, convert_to_
 # ==========================================
 st.markdown('<div class="main-title">Trợ Lý Ra Đề Kiểm Tra</div>', unsafe_allow_html=True)
 st.info('Hỗ trợ GV ra đề kiểm tra kèm Ma trận và Bảng đặc tả')
+
 if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"].strip() != "":
     api_key_input = st.session_state["gemini_api_key"]
 else:
@@ -688,11 +687,8 @@ else:
     st.page_link("🏠_Trang_Chủ.py", label="**Nhấn vào đây để Quay lại Trang chủ**", icon="🔄")
     st.stop()
 
-# Khởi tạo client mới
+# Khởi tạo client Gemini
 client = init_gemini_client(api_key_input)
-
-if 'current_document_content' not in st.session_state: 
-    st.session_state.current_document_content = ""
 
 tab1, tab2, tab3 = st.tabs(["**| 📋 Bước 1. Chọn Môn học & Số câu**", "**| 📊 Bước 2. Phân bổ Ma trận & Điểm số**", "**| 📥 Bước 3. Đóng gói & Xuất Đề**"])
 
@@ -701,13 +697,13 @@ with tab1:
     with col1:
         with st.container(border=True):
             st.markdown(
-        """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 6px;">
-            <h6 style="margin: 0; color: #0369A1;">Lựa chọn bộ môn & Thông tin chung</h6>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+                """
+                <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 6px;">
+                    <h6 style="margin: 0; color: #0369A1;">Lựa chọn bộ môn & Thông tin chung</h6>
+                </div>
+                """, 
+                unsafe_allow_html=True
+            )
             subject = st.selectbox("**Chọn môn học cần thiết lập đề thi:**", list(SUBJECTS_CONFIG.keys()))
             grade = st.selectbox("**Khối lớp học:**", [str(i) for i in range(1, 13)], index=7)
             exam_type = st.selectbox("**Hình thức kiểm tra:**", ["15 phút", "45 phút", "Giữa học kỳ I", "Cuối học kỳ I", "Giữa học kỳ II", "Cuối học kỳ II"])
@@ -726,21 +722,19 @@ with tab1:
     with col2:
         with st.container(border=True):
             st.markdown(
-        """
-        <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 6px;">
-            <h6 style="margin: 0; color: #0369A1;">Cấu hình số lượng câu hỏi</h6>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+                """
+                <div style="background-color: #E0F2FE; padding: 4px; border-left: 3px solid #0284C7; border-radius: 4px; margin-bottom: 6px;">
+                    <h6 style="margin: 0; color: #0369A1;">Cấu hình số lượng câu hỏi</h6>
+                </div>
+                """, 
+                unsafe_allow_html=True
+            )
             
-            # Lựa chọn cấu trúc đề thi chính
             exam_format = st.selectbox(
                 "**Chọn cấu trúc / dạng đề kiểm tra:**",
                 ["Trắc nghiệm + Tự luận", "Trắc nghiệm 100%", "Tự luận 100%"]
             )
             
-            # Xử lý logic số lượng câu hỏi theo dạng đề
             if exam_format == "Trắc nghiệm 100%":
                 num_tn_4_lua_chon = st.number_input("**Trắc nghiệm nhiều lựa chọn (Phần I):**", min_value=0, max_value=40, value=12)
                 num_tn_dung_sai = st.number_input("**Trắc nghiệm Đúng/Sai (Phần II):**", min_value=0, max_value=10, value=2, help="Mỗi câu dạng này có 4 ý Đúng / Sai")
@@ -775,23 +769,87 @@ with tab2:
         """, 
         unsafe_allow_html=True
     )
-    content_source = st.radio("**Chọn phương thức cung cấp nội dung:**", ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức"], horizontal=True)
+    content_source = st.radio(
+        "**Chọn phương thức cung cấp nội dung:**", 
+        ["Nhập tay danh sách chủ đề", "Upload file tài liệu đa phương thức", "📋 Dán nhiều ảnh chụp màn hình (Multi-page Clipboard)"], 
+        horizontal=True
+    )
     
     if content_source == "Nhập tay danh sách chủ đề":
         topics_list = st.text_area("**Danh sách các chủ đề kiến thức:**", value="Chương 1: Khái niệm cơ bản\nChương 2: Bài toán vận dụng liên quan", height=100)
         st.session_state.current_document_content = topics_list
-    else:
+
+    elif content_source == "Upload file tài liệu đa phương thức":
         uploaded_doc = st.file_uploader("**Tải lên tài liệu:**", type=["docx", "txt", "pdf", "png", "jpg", "jpeg"])
-        user_custom_req = st.text_input("**Yêu cầu bổ sung khi đọc tài liệu:**", value="")
+        user_custom_req = st.text_input("**Yêu cầu bổ sung khi đọc tài liệu:**", value="", key="req_upload")
         st.session_state.user_custom_req = user_custom_req.strip()
         
         if uploaded_doc is not None:
             file_bytes = uploaded_doc.read()
             file_ext = uploaded_doc.name.split('.')[-1].lower()
-            if file_ext == "txt": st.session_state.current_document_content = str(file_bytes, "utf-8")
-            elif file_ext == "docx": st.session_state.current_document_content = extract_text_from_docx(file_bytes)
-            elif file_ext == "pdf": st.session_state.current_document_content = {"mime_type": "application/pdf", "data": file_bytes}
-            elif file_ext in ["png", "jpg", "jpeg"]: st.session_state.current_document_content = {"mime_type": "image/png" if file_ext == "png" else "image/jpeg", "data": file_bytes}
+            if file_ext == "txt": 
+                st.session_state.current_document_content = str(file_bytes, "utf-8")
+            elif file_ext == "docx": 
+                st.session_state.current_document_content = extract_text_from_docx(file_bytes)
+            elif file_ext == "pdf": 
+                st.session_state.current_document_content = {"mime_type": "application/pdf", "data": file_bytes}
+            elif file_ext in ["png", "jpg", "jpeg"]: 
+                st.session_state.current_document_content = {"mime_type": "image/png" if file_ext == "png" else "image/jpeg", "data": file_bytes}
+            st.success("✅ Đã nhận file tài liệu!")
+
+    elif content_source == "📋 Dán nhiều ảnh chụp màn hình (Multi-page Clipboard)":
+        st.caption("💡 Chụp trang 1 (Windows + Shift + S / Cmd + Shift + 4) ➔ Bấm nút dán ➔ Chụp tiếp trang 2 ➔ Bấm nút dán để thêm nhiều trang liên tiếp.")
+        
+        col_paste_btn, col_clear_btn = st.columns([3, 1])
+        with col_paste_btn:
+            paste_result = paste_image_button(
+                label="📋 Dán thêm ảnh chụp từ Clipboard",
+                text_color="#ffffff",
+                background_color="#0F766E",
+                hover_background_color="#0D9488",
+            )
+        with col_clear_btn:
+            if st.button("🗑️ Xóa toàn bộ ảnh đã dán"):
+                st.session_state.pasted_images_list = []
+                st.session_state.current_document_content = None
+                st.rerun()
+
+        # Kiểm tra và thêm ảnh mới vào danh sách
+        if paste_result.image_data is not None:
+            img = paste_result.image_data
+            img_byte_arr = BytesIO()
+            img.save(img_byte_arr, format='PNG')
+            img_bytes = img_byte_arr.getvalue()
+            
+            new_img_data = {
+                "mime_type": "image/png",
+                "data": img_bytes,
+                "preview": img
+            }
+            
+            # Tránh lưu trùng lặp khi Streamlit re-render
+            if not st.session_state.pasted_images_list or st.session_state.pasted_images_list[-1]["data"] != img_bytes:
+                st.session_state.pasted_images_list.append(new_img_data)
+                st.toast(f"✅ Đã thêm ảnh trang {len(st.session_state.pasted_images_list)} thành công!")
+
+        user_custom_req = st.text_input("**Yêu cầu bổ sung khi đọc toàn bộ ảnh:**", value="", placeholder="Ví dụ: Tập trung vào các dạng bài tập ở trang 1 và 2...", key="req_multi_paste")
+        st.session_state.user_custom_req = user_custom_req.strip()
+
+        # Hiển thị và đồng bộ dữ liệu vào session_state
+        if st.session_state.pasted_images_list:
+            st.session_state.current_document_content = [
+                {"mime_type": item["mime_type"], "data": item["data"]} 
+                for item in st.session_state.pasted_images_list
+            ]
+            st.write(f"**Danh sách ảnh đã dán ({len(st.session_state.pasted_images_list)} trang):**")
+            
+            cols = st.columns(3)
+            for idx, item in enumerate(st.session_state.pasted_images_list):
+                with cols[idx % 3]:
+                    st.image(item["preview"], caption=f"Trang {idx + 1}", use_container_width=True)
+        else:
+            st.session_state.current_document_content = None
+            st.info("Chưa có ảnh nào được dán. Hãy chụp màn hình tài liệu rồi bấm nút dán ở trên.")
 
     # ==========================================
     # ĐỒNG BỘ LOGIC PHÂN BỔ ĐIỂM SỐ TỰ ĐỘNG
@@ -811,7 +869,7 @@ with tab2:
         with col_s1: score_part1 = st.number_input("**Điểm Phần I (Trắc nghiệm):**", min_value=0.0, max_value=10.0, value=4.0, step=0.25)
         with col_s2: score_part2 = st.number_input("**Điểm Phần II (Đúng/Sai):**", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
         with col_s3: score_part3 = st.number_input("**Điểm Phần III (Trả lời ngắn):**", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
-        score_part4 = 0.0  # Khóa cứng Tự luận
+        score_part4 = 0.0
         with col_s4: st.number_input("**Điểm Phần IV (Tự luận):**", value=0.0, disabled=True)
         with col_vdc: score_vdc_custom = st.number_input("**Điểm phần VDC:**", min_value=0.0, max_value=5.0, value=1.0, step=0.25)
 
@@ -825,7 +883,7 @@ with tab2:
         with col_s4: score_part4 = st.number_input("**Điểm Phần IV (Tự luận):**", min_value=10.0, max_value=10.0, value=10.0, disabled=True, help="Thuần tự luận mặc định là 10 điểm")
         with col_vdc: score_vdc_custom = st.number_input("**Điểm phần VDC:**", min_value=0.0, max_value=5.0, value=2.0, step=0.25)
 
-    else: # Trắc nghiệm + Tự luận kết hợp
+    else:
         with col_s1: score_part1 = st.number_input("**Điểm Phần I (Trắc nghiệm):**", min_value=0.0, max_value=10.0, value=3.0, step=0.25)
         with col_s2: score_part2 = st.number_input("**Điểm Phần II (Đúng/Sai):**", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
         with col_s3: score_part3 = st.number_input("**Điểm Phần III (Trả lời ngắn):**", min_value=0.0, max_value=10.0, value=2.0, step=0.25)
@@ -880,7 +938,7 @@ with tab2:
             if total_ratio != 100:
                 st.error("Tổng tỷ lệ phần trăm phân bổ điểm phải bằng 100% trước khi khởi tạo.")
             elif not st.session_state.current_document_content:
-                st.error("Vui lòng cung cấp danh sách chủ đề hoặc tải file tài liệu đính kèm lên trước.")
+                st.error("Vui lòng cung cấp danh sách chủ đề hoặc tải/dán ảnh tài liệu đính kèm lên trước.")
             else:
                 config_pkg = {
                     "subject": subject, "grade": grade, "duration": duration, "num_tn_4_lua_chon": num_tn_4_lua_chon, 
@@ -890,7 +948,7 @@ with tab2:
                     "nb_ratio": nb_ratio, "th_ratio": th_ratio, "vd_ratio": vd_ratio, "vdc_ratio": vdc_ratio,
                     "difficulty": level_choice, "matrix_template": matrix_template
                 }
-                with st.spinner("AI đang tính toán khung ma trận đặc tả..."):
+                with st.spinner("AI đang tính toán khung ma trận đặc tả từ tài liệu/ảnh đã cung cấp..."):
                     try:
                         st.session_state.step1_data = generate_step1_matrix(client, config_pkg, st.session_state.current_document_content)
                         st.success("✅ Đã thiết lập xong Khung đặc tả bộ môn!")
