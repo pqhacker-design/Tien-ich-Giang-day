@@ -85,6 +85,8 @@ with col1:
         if uploaded_file is not None:
             file_bytes = uploaded_file.read()
             st.success(f"✔️ Đã tải lên file thành công: **{uploaded_file.name}**")
+            # Lưu tên file gốc vào session state để dùng khi download
+            st.session_state['original_filename'] = uploaded_file.name
             
             if st.button("🚀 Bắt đầu tích hợp", type="primary", use_container_width=True):
                 with st.spinner("🔄 Đang đọc dữ liệu và gửi phân tích tới Gemini AI..."):
@@ -136,10 +138,9 @@ with col2:
                     anchor = item.get('anchor_text', 'Không rõ vị trí')
                     content = item.get('insert_content', 'Không có nội dung')
                     loai = item.get('loai', 'Năng lực số')
-                    # Thêm biểu tượng và màu sắc để phân biệt
                     if loai == "Năng lực AI":
                         icon = "🧠"
-                        color = "#D97706"  # màu vàng cam
+                        color = "#D97706"
                     else:
                         icon = "💻"
                         color = "#0066CC"
@@ -150,10 +151,19 @@ with col2:
             
             st.markdown("---")
             
+            # Tạo tên file mới từ tên gốc đã lưu
+            original_name = st.session_state.get('original_filename', 'KHBD_TichHop')
+            # Loại bỏ phần mở rộng .docx nếu có
+            if original_name.lower().endswith('.docx'):
+                base_name = original_name[:-5]  # cắt bỏ '.docx'
+            else:
+                base_name = original_name
+            download_filename = f"{base_name}_Tichhop_So_AI.docx"
+            
             st.download_button(
                 label="💾 TẢI XUỐNG KHBD ĐÃ TÍCH HỢP (.DOCX)",
                 data=st.session_state['processed_file'],
-                file_name="KHBD_TichHop_So_AI.docx",
+                file_name=download_filename,
                 type="primary",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 use_container_width=True
