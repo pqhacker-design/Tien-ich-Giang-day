@@ -99,7 +99,6 @@ SUBJECTS_CONFIG = {
 # ==========================================
 # TRÍCH XUẤT VÀ KẾT NỐI GEMINI AI
 # ==========================================
-# Module chuyển đổi LaTeX -> MathML -> OMML (Word Math)
 try:
     import latex2mathml.converter
     from lxml import etree
@@ -107,7 +106,6 @@ try:
 except ImportError:
     HAS_LATEX2MATHML = False
 
-# Bảng biến đổi XSLT chuẩn cho Microsoft Word (MathML -> OMML Inline)
 MML2OMML_XSL = """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -163,7 +161,6 @@ MML2OMML_XSL = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 def latex_to_omml_element(latex_str):
-    """Chuyển chuỗi LaTeX thành phần tử XML công thức chuẩn cho Word"""
     if not HAS_LATEX2MATHML:
         return None
     try:
@@ -182,7 +179,6 @@ def latex_to_omml_element(latex_str):
         return None
 
 def add_math_run_to_paragraph(paragraph, text, convert_to_equation=True):
-    """Tách văn bản và chèn công thức Word Equation inline mượt mà"""
     if not text:
         return
     
@@ -233,6 +229,7 @@ if 'alignment_table' not in st.session_state: st.session_state.alignment_table =
 if 'user_custom_req' not in st.session_state: st.session_state.user_custom_req = ""
 if 'pasted_images_list' not in st.session_state: st.session_state.pasted_images_list = []
 if 'current_document_content' not in st.session_state: st.session_state.current_document_content = ""
+if 'paste_counter' not in st.session_state: st.session_state.paste_counter = 0
 
 # ==========================================
 # THUẬT TOÁN ĐẢO ĐỀ MULTI-CODE
@@ -798,21 +795,26 @@ with tab2:
             st.success("✅ Đã nhận file tài liệu!")
 
     elif content_source == "📋 Dán nhiều ảnh chụp màn hình (Multi-page Clipboard)":
-        st.caption("💡 Chụp trang 1 (Windows + Shift + S / Cmd + Shift + 4) ➔ Bấm nút dán ➔ Chụp tiếp trang 2 ➔ Bấm nút dán để thêm nhiều trang liên tiếp.")
+        st.caption("💡 Chụp trang 1 ➔ Bấm nút dán ➔ Chụp tiếp trang 2 ➔ Bấm nút dán để thêm nhiều trang liên tiếp.")
         
         col_paste_btn, col_clear_btn = st.columns([3, 1])
+        
+        with col_clear_btn:
+            if st.button("🗑️ Xóa toàn bộ ảnh", use_container_width=True):
+                st.session_state.pasted_images_list = []
+                st.session_state.current_document_content = None
+                st.session_state.paste_counter += 1
+                st.toast("🧹 Đã xóa toàn bộ ảnh đã dán!")
+                st.rerun()
+
         with col_paste_btn:
             paste_result = paste_image_button(
                 label="📋 Dán thêm ảnh chụp từ Clipboard",
                 text_color="#ffffff",
                 background_color="#0F766E",
                 hover_background_color="#0D9488",
+                key=f"paste_img_btn_{st.session_state.paste_counter}"
             )
-        with col_clear_btn:
-            if st.button("🗑️ Xóa toàn bộ ảnh đã dán"):
-                st.session_state.pasted_images_list = []
-                st.session_state.current_document_content = None
-                st.rerun()
 
         # Kiểm tra và thêm ảnh mới vào danh sách
         if paste_result.image_data is not None:
@@ -821,18 +823,18 @@ with tab2:
             img.save(img_byte_arr, format='PNG')
             img_bytes = img_byte_arr.getvalue()
             
-            new_img_data = {
-                "mime_type": "image/png",
-                "data": img_bytes,
-                "preview": img
-            }
-            
-            # Tránh lưu trùng lặp khi Streamlit re-render
-            if not st.session_state.pasted_images_list or st.session_state.pasted_images_list[-1]["data"] != img_bytes:
-                st.session_state.pasted_images_list.append(new_img_data)
+            existing_bytes = [item["data"] for item in st.session_state.pasted_images_list]
+            if img_bytes not in existing_bytes:
+                st.session_state.pasted_images_list.append({
+                    "mime_type": "image/png",
+                    "data": img_bytes,
+                    "preview": img
+                })
+                st.session_state.paste_counter += 1
                 st.toast(f"✅ Đã thêm ảnh trang {len(st.session_state.pasted_images_list)} thành công!")
+                st.rerun()
 
-        user_custom_req = st.text_input("**Yêu cầu bổ sung khi đọc toàn bộ ảnh:**", value="", placeholder="Ví dụ: Tập trung vào các dạng bài tập ở trang 1 và 2...", key="req_multi_paste")
+        user_custom_req = st.text_input("**Yêu cầu bổ sung khi đọc toàn bộ ảnh:**", value="", placeholder="Ví dụ: Lấy phần lý thuyết ở trang 1 và bài tập trang 2...", key="req_multi_paste")
         st.session_state.user_custom_req = user_custom_req.strip()
 
         # Hiển thị và đồng bộ dữ liệu vào session_state
