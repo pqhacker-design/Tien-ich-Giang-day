@@ -12,9 +12,7 @@ st.set_page_config(
 # --- QUẢN LÝ TÀI KHOẢN ĐĂNG NHẬP ---
 # Bạn có thể thêm nhiều tài khoản theo định dạng: "tên_đăng_nhập": "mật_khẩu"
 USER_CREDENTIALS = {
-    "admin": "123456",
-    "giaovien": "gv2026",
-    "thayhung": "0913117321"
+    "pqhacker@gmail.com": "300506",
 }
 
 if "authenticated" not in st.session_state:
