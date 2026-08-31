@@ -1,7 +1,19 @@
 import json
+from pydantic import BaseModel, Field
+from typing import List, Literal
 from google import genai
 from google.genai import types
 from google.genai.errors import APIError
+
+# Định nghĩa Schema cấu trúc dữ liệu trả về chuẩn mực
+class SuaDoiItem(BaseModel):
+    anchor_text: str = Field(description="Trích dẫn nguyên văn một câu hoặc đoạn ngắn có thật trong giáo án để làm điểm neo chèn.")
+    insert_content: str = Field(description="Nội dung tích hợp ngắn gọn, chuẩn sư phạm, bắt đầu bằng hành động của HS.")
+    loai: Literal["Năng lực số", "Năng lực AI"] = Field(description="Loại năng lực được tích hợp: 'Năng lực số' hoặc 'Năng lực AI'.")
+
+class TichHopResult(BaseModel):
+    sua_doi: List[SuaDoiItem]
+
 
 class GeminiService:
     def __init__(self, api_key: str):
@@ -21,65 +33,79 @@ class GeminiService:
   6. Giải quyết vấn đề trong môi trường số
 """
         level_guide = {
-            "Tiểu học": "\n- Cấp Tiểu học: Thao tác thiết bị cơ bản, tìm kiếm đơn giản, ý thức bảo vệ tư thế, mắt và thông tin cá nhân.",
-            "THCS": "\n- Cấp THCS: Khai thác phần mềm môn học, đánh giá thông tin, làm việc nhóm trực tuyến an toàn, tôn trọng bản quyền.",
-            "THPT": "\n- Cấp THPT: Phân tích dữ liệu, sáng tạo sản phẩm số đa phương tiện, an toàn thông tin và giải quyết vấn đề thực tế.",
-            "Tự động nhận diện": "\n- Tự nhận diện cấp học theo từng bài để tích hợp nội dung phù hợp với đối tượng học sinh."
+            "Tiểu học": "\n- Tiểu học: Thao tác đơn giản, tìm kiếm cơ bản, ý thức bảo vệ mắt, tư thế và an toàn riêng tư.",
+            "THCS": "\n- THCS: Sử dụng phần mềm học tập, đánh giá thông tin, làm việc nhóm trực tuyến an toàn, bản quyền.",
+            "THPT": "\n- THPT: Xử lý và phân tích dữ liệu, tạo sản phẩm số, an toàn thông tin và giải quyết bài toán thực tế.",
+            "Tự động nhận diện": "\n- Nhận diện cấp học của từng bài để đưa ra mức độ yêu cầu phù hợp."
         }
         return base_framework + level_guide.get(cap_hoc, level_guide["Tự động nhận diện"])
 
     def analyze_and_integrate(self, doc_text: str, cap_hoc: str, integration_type: str) -> dict:
         tt02_info = self._get_tt02_framework_prompt(cap_hoc)
 
+        ai_framework_info = """
+* Khung Năng lực AI (QĐ 2422/QĐ-BGDĐT):
+  - Nhận thức về AI: Nhận diện công nghệ AI quanh ta, hiểu cách AI học từ dữ liệu.
+  - Ứng dụng AI: Sử dụng AI để hỗ trợ tìm kiếm ý tưởng, tóm tắt bài đọc, dịch thuật, gợi ý giải bài tập, tạo hình ảnh minh họa.
+  - Tư duy phản biện & Đạo đức AI: Nhận biết AI có thể sai (ảo giác), kiểm chứng lại nguồn tin, sử dụng AI có trách nhiệm, trung thực trong học tập.
+"""
+
         if integration_type == "Năng lực số":
-            focus_instruction = f"- Tích hợp Năng lực số (TT 02/2025/TT-BGDĐT):\n{tt02_info}"
+            focus_instruction = f"""
+YÊU CẦU: CHỈ TÍCH HỢP NĂNG LỰC SỐ (TT 02/2025/TT-BGDĐT).
+{tt02_info}
+Trường 'loai' trong JSON TẤT CẢ phải là 'Năng lực số'.
+"""
         elif integration_type == "Năng lực AI":
-            focus_instruction = "- Tích hợp Năng lực AI (QĐ 2422/QĐ-BGDĐT): Nhận thức AI, ứng dụng AI trong học tập, tư duy phản biện và đạo đức AI."
-        else:
-            focus_instruction = f"- Tích hợp cả Năng lực số (TT 02/2025/TT-BGDĐT) và Năng lực AI (QĐ 2422/QĐ-BGDĐT):\n{tt02_info}"
+            focus_instruction = f"""
+YÊU CẦU: CHỈ TÍCH HỢP NĂNG LỰC AI (QĐ 2422/QĐ-BGDĐT).
+{ai_framework_info}
+Trường 'loai' trong JSON TẤT CẢ phải là 'Năng lực AI'.
+"""
+        else:  # "Cả hai"
+            focus_instruction = f"""
+YÊU CẦU BẮT BUỘC KHI CHỌN 'CẢ HAI':
+Bạn PHẢI tích hợp CẢ 2 NHÓM NĂNG LỰC trong bài học:
+1. NĂNG LỰC SỐ (theo TT 02/2025/TT-BGDĐT):
+{tt02_info}
+
+2. NĂNG LỰC AI (theo QĐ 2422/QĐ-BGDĐT):
+{ai_framework_info}
+
+QUY TẮC PHÂN BỔ BẮT BUỘC:
+- Danh sách `sua_doi` trả về PHẢI CÓ CẢ CÁC MỤC có `"loai": "Năng lực số"` VÀ CÁC MỤC có `"loai": "Năng lực AI"`. Tuyệt đối không được bỏ quên Năng lực AI.
+- Ví dụ:
+  + Ở mục Mục tiêu bài học: Đề xuất 1 mục Năng lực số và 1 mục Năng lực AI.
+  + Ở các Hoạt động học: Tích hợp hoạt động dùng công cụ số (tra cứu/vẽ hình/bảng tính) cho Năng lực số, và hoạt động dùng AI (nhờ chatbot gợi ý ý tưởng, đối chiếu kết quả của AI, phản biện nội dung do AI tạo ra) cho Năng lực AI.
+"""
 
         prompt = f"""
 Bạn là chuyên gia giáo dục và chuyển đổi số trong giáo dục phổ thông Việt Nam.
-Hãy đọc toàn bộ tài liệu giáo án bên dưới (có thể có nhiều bài dạy). Duyệt lần lượt từng bài dạy từ trên xuống dưới và đề xuất nội dung tích hợp.
+Hãy phân tích tài liệu giáo án dưới đây và đề xuất các vị trí tích hợp.
 
 {focus_instruction}
 
-QUY TẮC BẮT BUỘC VỀ anchor_text (Điểm neo để tìm vị trí chèn):
-1. `anchor_text` PHẢI là một câu hoặc dòng chữ CÓ THẬT trong văn bản gốc.
-2. Sao chép NGUYÊN VĂN (Plain text), TUYỆT ĐỐI KHÔNG thêm dấu markdown như **, *, #, gạch đầu dòng tự chế.
-3. Không chọn cụm từ quá ngắn (như "Mục tiêu" hay "Hoạt động 1"). Hãy chọn một câu dài khoảng 5 - 15 từ chứa ngữ cảnh của bài đó để không bị nhầm lẫn giữa các bài.
+QUY TẮC QUAN TRỌNG VỀ anchor_text (Điểm neo để tìm vị trí):
+1. `anchor_text` PHẢI trích dẫn NGUYÊN VĂN một câu/dòng chữ có thật trong tài liệu giáo án (Plain text, không thêm dấu `**` hay markdown).
+2. Trích đoạn dài từ 5 - 15 từ đặc trưng cho bài học đó để thuật toán tìm kiếm chính xác vị trí.
 
-Cấu trúc phản hồi JSON:
-{{
-    "sua_doi": [
-        {{
-            "anchor_text": "Trích nguyên văn một dòng hoặc câu có thật trong giáo án",
-            "insert_content": "Nội dung tích hợp bổ sung ngắn gọn",
-            "loai": "Năng lực số"
-        }}
-    ]
-}}
-
-Nội dung giáo án gốc:
+Nội dung giáo án gốc cần tích hợp:
 ----------------------------------
 {doc_text}
 ----------------------------------
 """
+
         try:
             response = self.client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
-                    temperature=0.2
+                    response_schema=TichHopResult,
+                    temperature=0.3
                 )
             )
             result_json = json.loads(response.text)
-            if integration_type != "Cả hai":
-                default_loai = "Năng lực số" if integration_type == "Năng lực số" else "Năng lực AI"
-                for item in result_json.get('sua_doi', []):
-                    if 'loai' not in item:
-                        item['loai'] = default_loai
             return result_json
         except APIError as ae:
             raise RuntimeError(f"Lỗi kết nối Gemini API: {str(ae)}")
