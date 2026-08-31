@@ -37,7 +37,7 @@ st.set_page_config(
 )
 
 st.markdown("## 🤖 Tích hợp Năng lực số và Năng lực AI tự động vào KHBD")
-st.info("Giúp GV tích hợp Năng lực số (CT GDPT 2018) và Năng lực AI (QĐ 2422/QĐ-BGDĐT) nhanh chóng và chuẩn xác.")
+st.info("Giúp GV tích hợp Năng lực số (Thông tư 02/2025/TT-BGDĐT) và Năng lực AI (QĐ 2422/QĐ-BGDĐT) nhanh chóng và chuẩn xác.")
 
 # --- CẤU HÌNH HỆ THỐNG ---
 with st.expander("⚙️ **CẤU HÌNH HỆ THỐNG:**", expanded=False):
@@ -176,7 +176,7 @@ with col_right:
     """)
     st.markdown("#### 📌 Các năng lực được tích hợp:")
     st.markdown("""
-    - **Năng lực số** (CT GDPT 2018): Kỹ năng sử dụng CNTT, xử lý dữ liệu, an toàn số, giao tiếp trực tuyến.
+    - **Năng lực số** (TT 02/2025/TT-BGDĐT): Kỹ năng sử dụng CNTT, xử lý dữ liệu, an toàn số, giao tiếp trực tuyến.
     - **Năng lực AI** (QĐ 2422/QĐ-BGDĐT): Nhận thức về AI, ứng dụng AI vào học tập, tư duy phản biện về AI.
     """)
 
