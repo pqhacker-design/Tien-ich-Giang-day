@@ -22,7 +22,7 @@ class WordProcessor:
 
     @staticmethod
     def insert_paragraph_after(paragraph, text, color_rgb, prefix=""):
-        """Chèn đoạn văn mới sau paragraph với prefix và màu sắc."""
+        """Chèn đoạn văn mới liền sau paragraph chỉ định."""
         new_p = OxmlElement('w:p')
         paragraph._p.addnext(new_p)
         new_para = Paragraph(new_p, paragraph._parent)
@@ -40,10 +40,12 @@ class WordProcessor:
         doc = Document(io.BytesIO(file_bytes))
         sua_doi_list = ai_data.get('sua_doi', [])
         
-        # Màu sắc phân biệt
         color_digital = RGBColor(0, 102, 204)   # Xanh dương
         color_ai = RGBColor(214, 107, 0)        # Vàng cam
         
+        # Danh sách lưu các đoạn văn đã chèn để không chèn đè trùng lặp tại cùng 1 vị trí nếu không cần thiết
+        used_paragraphs = set()
+
         for item in sua_doi_list:
             anchor = item.get('anchor_text', '').strip()
             content = item.get('insert_content', '').strip()
@@ -52,31 +54,29 @@ class WordProcessor:
             if not anchor or not content:
                 continue
             
-            # Xác định prefix và màu
-            if loai == "Năng lực AI":
-                prefix = "[Năng lực AI]:"
-                color = color_ai
-            else:
-                prefix = "[Năng lực số]:"
-                color = color_digital
+            prefix = "[Năng lực AI]:" if loai == "Năng lực AI" else "[Năng lực số]:"
+            color = color_ai if loai == "Năng lực AI" else color_digital
             
             inserted = False
             
-            # Tìm trong paragraph
+            # 1. Quét tìm trong danh sách Paragraphs
             for para in doc.paragraphs:
-                if anchor in para.text:
+                # Điều kiện: Khớp anchor và đoạn này chưa bị chèn bởi thao tác trước đó
+                if anchor in para.text and para not in used_paragraphs:
                     WordProcessor.insert_paragraph_after(para, content, color, prefix)
+                    used_paragraphs.add(para)
                     inserted = True
                     break
             
-            # Tìm trong bảng
+            # 2. Nếu không có trong Paragraph thông thường, tìm tiếp trong Tables
             if not inserted:
                 for table in doc.tables:
                     for row in table.rows:
                         for cell in row.cells:
                             for para in cell.paragraphs:
-                                if anchor in para.text:
+                                if anchor in para.text and para not in used_paragraphs:
                                     WordProcessor.insert_paragraph_after(para, content, color, prefix)
+                                    used_paragraphs.add(para)
                                     inserted = True
                                     break
                             if inserted:
