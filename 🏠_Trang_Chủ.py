@@ -9,6 +9,56 @@ st.set_page_config(
     layout="wide"
 )
 
+# --- QUẢN LÝ TÀI KHOẢN ĐĂNG NHẬP ---
+# Bạn có thể thêm nhiều tài khoản theo định dạng: "tên_đăng_nhập": "mật_khẩu"
+USER_CREDENTIALS = {
+    "admin": "123456",
+    "giaovien": "gv2026",
+    "thayhung": "0913117321"
+}
+
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+if "username" not in st.session_state:
+    st.session_state["username"] = ""
+
+def login_form():
+    """Giao diện form đăng nhập bảo vệ ứng dụng."""
+    col1, col2, col3 = st.columns([1, 1.2, 1])
+    with col2:
+        with st.container(border=True):
+            st.markdown("<h3 style='text-align: center; color: #0284C7;'>🔐 ĐĂNG NHẬP HỆ THỐNG</h3>", unsafe_allow_html=True)
+            st.caption("<div style='text-align: center;'>Hệ sinh thái Trợ lý Giáo dục AI</div>", unsafe_allow_html=True)
+            st.write("")
+            
+            username = st.text_input("👤 Tên đăng nhập:")
+            password = st.text_input("🔑 Mật khẩu:", type="password")
+            
+            if st.button("🚀 Đăng nhập", type="primary", use_container_width=True):
+                user_clean = username.strip()
+                if user_clean in USER_CREDENTIALS and USER_CREDENTIALS[user_clean] == password:
+                    st.session_state["authenticated"] = True
+                    st.session_state["username"] = user_clean
+                    st.success("Đăng nhập thành công!")
+                    st.rerun()
+                else:
+                    st.error("❌ Tên đăng nhập hoặc mật khẩu không chính xác.")
+
+# Kiểm tra nếu chưa đăng nhập thì hiển thị form đăng nhập và dừng chương trình
+if not st.session_state["authenticated"]:
+    login_form()
+    st.stop()
+
+# --- GIAO DIỆN SAU KHI ĐĂNG NHẬP THÀNH CÔNG ---
+
+# Sidebar hiển thị thông tin tài khoản và nút Đăng xuất
+with st.sidebar:
+    st.success(f"👤 Xin chào: **{st.session_state['username']}**")
+    if st.button("🚪 Đăng xuất", use_container_width=True):
+        st.session_state["authenticated"] = False
+        st.session_state["username"] = ""
+        st.rerun()
+
 # 2. Tiêu đề chính
 st.markdown("## 🎓 Hệ sinh thái Trợ lý Giáo dục AI  ([Get API key](https://aistudio.google.com/api-keys))")
 st.caption("Nền tảng CNTT và AI hỗ trợ giảng dạy và học tập bám sát Chương trình GDPT 2018. (LƯU Ý: AI không làm giúp bạn, AI chỉ hỗ trợ cho bạn.)")
@@ -29,9 +79,9 @@ def check_gemini_api_key(api_key: str) -> tuple[bool, str]:
         # Khởi tạo Client từ google.genai
         client = genai.Client(api_key=clean_key)
         
-        # Gửi request nhẹ để kiểm tra kết nối (sử dụng gemini-2.5-flash)
+        # Gửi request nhẹ để kiểm tra kết nối
         client.models.generate_content(
-            model="gemini-3.6-flash",
+            model="gemini-2.5-flash",
             contents="ping"
         )
         return True, "API Key hợp lệ và sẵn sàng sử dụng!"
